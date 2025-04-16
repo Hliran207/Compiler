@@ -1,17 +1,23 @@
+%{
+    #include <stdio.h>
+    #include "y.tab.h"
+    int yyerror(char *s)
+%}
+
 
 %%
 
 /*KEYWORDS & TYPES*/
 
-"bool"      {return BOOL;}
-"char"      {return CHAR;}
-"int"       {return INT;}
-"real"      {return REAL;}
-"string"    {return STRING;}
-"int*"      {return INTPTR;}
-"char*"     {return CHARPTR;}
-"real*"     {return REALPTR;}
-"type"      {return TYPE;}
+"bool"          {return BOOL;}
+"char"          {return CHAR;}
+"int"           {return INT;} 
+"real"          {return REAL;}
+"string"        {return STRING;}
+"int\\*"        {return INTPTR;}
+"char\\*"       {return CHARPTR;}
+"real\\*"       {return REALPTR;}
+"type"          {return TYPE;}
 
 /* STATEMENTS & LOOP */
 
@@ -47,13 +53,12 @@
 "!="    {return NOT_EQL;}
 "+"     {return PLUS;}
 "*"     {return MULTI;}
-"&"     {return ADRESS;}
+"&"     {return ADDRESS;}
 
 
 /* OTHER LEXEMES */
 
 "|"     {return LENGTH;}
-"begin" {return BEGIN;}
 ";"     {return SEMICOLON;}
 ":"     {return COLON;}
 ","     {return COMMA;}
@@ -66,15 +71,14 @@
 
 
 #->([^<]|<(?!-#))*<-#   {/* Skip comment entirely; no token is returned to the parser */}
-true                    {return TRUE;}
-false                   {return FALSE;}
-\'[ -~]\'               { yylval.charVal = yytext[1]; return CHAR_LIT; }
-0                       { yylval.intVal = 0; return INT_LIT;}
-[-+]?[1-9][0-9]*             {yylval.intVal = strtol(yytext,NULL, 10); return INT_LIT;}
-0[xX][0-9A-Fa-f]+       {yylval.intVal = strtol(yytext, NULL, 16); return INT_LIT;}
-[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][-+]?[0-9]+)? {yylval.realVal = atof(yytext); return REAL_LIT;}
-\"[^\\"\n]*\"           {yylval.strVal = strdup(yytext); return STRING_LIT;}
-[a-zA-Z][a-zA-Z0-9_]*  {yylval.string = strdup(yytext); return ID;}
+true                                                {return B_TRUE;}
+false                                               {return B_FALSE;}
+\'[ -~]\'                                           {yylval.str = yytext[1]; return CHAR_LIT; }
+[-+]?[1-9][0-9]*|[0-9]                              {yylval.str = strdup(yytext); return DEC_LIT;}
+0[xX][0-9A-F]+                                      {yylval.str = strdup(yytext); return HEX_LIT;}
+[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][-+]?[0-9]+)? {yylval.str = strdup(yytext); return REAL_LIT;}
+\"[^\\"\n]*\"                                       {yylval.str = strdup(yytext); return STRING_LIT;}
+[a-zA-Z][a-zA-Z0-9_]*                               {yylval.str = strdup(yytext); return ID;}
 %%
 
 
