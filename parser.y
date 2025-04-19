@@ -27,15 +27,14 @@ void printTabs(int numOfTabs);
 
 %token <str> BOOL CHAR INT REAL STRING INTPTR CHARPTR REALPTR TYPE
 %token <str> IF ELIF ELSE WHILE FOR VAR PAR RETURN NULLL DO RETURNS BEGIN_T END DEF CALL AND NOT OR
-%token <str> DIV ASSINGMENT EQL GREATER GREATER_EQL LESS LESS_EQL MINUS NOT_EQL PLUS MULTI ADDRESS
+%token <str> DIV ASSIGNMENT EQL GREATER GREATER_EQL LESS LESS_EQL MINUS NOT_EQL PLUS MULTI ADDRESS
 %token <str> LENGTH SEMICOLON COLON COMMA OPENBRACE CLOSEBRACE OPENPAREN CLOSEPAREN OPENBRACKET CLOSEBRACKET
 %token <str> B_TRUE B_FALSE CHAR_LIT STRING_LIT DEC_LIT HEX_LIT REAL_LIT ID
 
 %type <node> program function_list function returns_spec parameter_list param_decl_list
 %type <node> param_decl type opt_var var_decl_list var_decl var_item_list var_item
-%type <node> literal stat_list stat call_stat if_stat while_stat do_while_stat
-%type <node> for_stat assignment_stat return_stat expression else_part
-%type <node> lhs update init
+%type <node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat
+%type <node> for_stat assignment_stat return_stat expression condition expression_list for_header update_exp
 
 %left PLUS MINUS
 %left MULTI DIV
@@ -112,7 +111,7 @@ var_decl_list :
             ;
 
 var_decl : 
-            TYPE type var_item_list SEMICOLON {$$=mkNode("VAR_DECL",$2,$3);}
+            TYPE type COLON var_item_list SEMICOLON {$$=mkNode("VAR_DECL",$2,$4);}
             ;
 
 var_item_list : 
@@ -143,124 +142,107 @@ literal :
                 
 stat_list:
             {$$ = mkNode("empty_state_list", NULL,NULL);}
-            | stat_list stat {$$ = mkNode("STATE_LIST", $1, $2);}
+            | stat {$$ = $1;}
+            | stat stat_list {$$ = mkNode("statements", $1, $2);}
             ;
 
 stat:
             function {$$=$1;}
-            | call_stat {$$=$1;}
-            | if_stat {$$=$1;}
-            | while_stat {$$=$1;}
-            | do_while_stat {$$=$1;}
-            | for_stat {$$=$1;}
-            | assignment_stat {$$=$1;}
-            | return_stat {$$=$1;}
-            | BEGIN_T stat_list END { $$ = mkNode("block", $2, NULL); }
+            | assignment_stat {$$ = $1;}
+            | if_stat {$$ = $1;}
+            | while_stat {$$ = $1;}
+            | for_stat {$$ = $1;}
+            | do_while_stat {$$ = $1;}
+            | block_stat {$$ = $1;}
+            | return_stat {$$ = $1;}
+            | call_stat {$$ = $1;}
         ;
 
 call_stat:
-            ID ASSINGMENT CALL ID OPENPAREN parameter_list CLOSEPAREN SEMICOLON
+            ID ASSIGNMENT CALL ID OPENPAREN parameter_list CLOSEPAREN SEMICOLON
             {
-                $$ = mkNode("ASSINGMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4,NULL,NULL),$6));
+                $$ = mkNode( "ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4,NULL,NULL),$6));
             }
             | CALL ID OPENPAREN parameter_list CLOSEPAREN SEMICOLON {
                 $$ = mkNode("PROC_CALL", mkNode($2,NULL,NULL), $4);
             }
             ;
 if_stat:
-            IF expression COLON opt_var BEGIN_T stat_list END else_part
-            {
-                Node *condNode = mkNode("CONDITION", $2, NULL);
-                Node *bodyNode = mkNode("IF_DO", $4, $6);
-                $$ = mkNode("IF",condNode, mkNode("IF_BODY", bodyNode,$8));
-            }
-            | IF expression COLON stat SEMICOLON else_part{
-                Node *condNode = mkNode("CONDITION", $2,NULL);
-                $$ = mkNode("IF",condNode, mkNode("IF_BODY", $4,$6));
-            }
+            IF expression COLON block_stat {$$ = mkNode("if", $2, $4);}
+            | IF expression COLON block_stat ELSE COLON block_stat {$$ = mkNode("if-else", $2, mkNode("then", $4, mkNode("else", $7, NULL)));}
+            | IF expression COLON block_stat ELIF expression COLON block_stat {$$ = mkNode("if-elif", $2, mkNode("then", $4, mkNode("elif-cond", $6, $8)));}
+            | IF expression COLON block_stat ELIF expression COLON block_stat ELSE COLON block_stat {$$ = mkNode("if-elif-else", $2, mkNode("then", $4, mkNode("elif-cond", $6, mkNode("elif-then", $8, mkNode("else", $11, NULL)))));}
             ;
-
-else_part:
-            {$$ = mkNode("ELSE_EMPTY", NULL,NULL);}
-            |ELSE COLON opt_var BEGIN_T stat_list END{
-                $$ = mkNode("ELSE", $3, $5);
-            }
-            |ELSE COLON stat SEMICOLON {
-                $$ = mkNode("ELSE", NULL, $3);
-            }
-            |ELIF expression COLON opt_var BEGIN_T stat_list END else_part
-            {
-                Node *condnode = mkNode("CONDITION", $2, NULL);
-                Node *bodynode = mkNode("ELIF_DO", $4, $6);
-                $$ = mkNode("ELIF", condnode, mkNode("ELIF_BODY", bodynode, $8));
-            }
-            |ELIF expression COLON stat SEMICOLON else_part {
-                Node *condnode = mkNode("CONDITION", $2, NULL);
-                $$ = mkNode("ELIF", condnode, mkNode("ELIF_BODY", $4, $6));
-            }
-            ;
-
 
 while_stat:
-            WHILE expression COLON opt_var BEGIN_T stat_list END{
-                Node *condNode = mkNode("CONDITION", $2, NULL);
-                Node *bodyNode = mkNode("WHILE_BODY", $4, $6);
-                $$ = mkNode("WHILE", condNode, bodyNode);
-            }
-            |WHILE expression COLON stat SEMICOLON{
-                Node *condNode = mkNode("CONDITION", $2, NULL);
-                $$ = mkNode("WHILE", condNode, $4);
-            }
+            WHILE expression COLON block_stat {$$ = mkNode("while", $2, $4);}
             ;
 
 do_while_stat:
-            DO COLON opt_var BEGIN_T stat_list END WHILE COLON expression SEMICOLON{
-                Node *bodyNode = mkNode("DO_BODY", $3, $5);
-                Node *condNode = mkNode("CONDITION", $9, NULL);
-                $$ = mkNode("DO_WHILE", bodyNode, condNode);
-            }
+            DO COLON block_stat WHILE expression SEMICOLON {$$ = mkNode("do-while", $3, mkNode("cond", $5, NULL));}
             ;
 
 for_stat:
-            FOR OPENPAREN init SEMICOLON expression SEMICOLON update CLOSEPAREN COLON opt_var BEGIN_T stat_list END{
-                Node *initnode = mkNode("INIT", $3, NULL);
-                Node *condnode = mkNode("CONDITION", $5, NULL);
-                Node *updatenode = mkNode("UPDATE", $7, NULL);
-                Node *forsetup = mkNode("FOR_SETUP", initnode, mkNode("FOR_UPDATE", condnode, updatenode));
-                Node *bodynode = mkNode("FOR_BODY", $10, $12);
-                $$ = mkNode("FOR", forsetup, bodynode);
-            }
-            ;
-    
-init:
-                assignment_stat {$$=$1;}
+            FOR for_header COLON block_stat {$$ = mkNode("for", $2, $4);}
+            | FOR for_header COLON opt_var block_stat {$$ = mkNode("for", $2, mkNode("block", $5, $4));}
             ;
 
-update:
-                assignment_stat {$$ = $1;}
+for_header:
+            OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN 
+            {$$ = mkNode("for-header", mkNode("init", mkNode($2, NULL, NULL), $4), 
+                                    mkNode("loop", $6, $8));}
+            ;   
+
+update_exp:
+            ID ASSIGNMENT expression {$$ = mkNode("update", mkNode($1, NULL, NULL), $3);}
             ;
+
+condition:
+            expression {$$ = $1;}
+            | NOT condition {$$ = mkNode("not", $2, NULL);}
+            | OPENPAREN condition CLOSEPAREN {$$ = $2;}
+            | B_TRUE {$$ = mkNode("true", NULL, NULL);}
+            | B_FALSE {$$ = mkNode("false", NULL, NULL);}
+            ;
+
+
+block_stat:
+            BEGIN_T stat_list END {$$ = mkNode("block", $2, NULL);}
+            | opt_var BEGIN_T stat_list END {$$ = mkNode("block", $3, $1);}
+            ;
+
 
 assignment_stat:
-                lhs ASSINGMENT expression SEMICOLON {
-                $$ = mkNode("ASSIGNMENT", $1, $3);
+                ID ASSIGNMENT expression SEMICOLON {$$ = mkNode("assign", mkNode($1, NULL, NULL), $3);}
+                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON {
+                    
+                    $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
+                }
+                |MULTI ID ASSIGNMENT expression SEMICOLON {$$ = mkNode("pointer_assign", mkNode($2, NULL, NULL), $4);}
+                |ID ASSIGNMENT ADDRESS ID SEMICOLON {$$ = mkNode("ref_assign", mkNode($1, NULL, NULL), mkNode($4, NULL, NULL));}
+                |ID ASSIGNMENT NULLL SEMICOLON {$$ = mkNode("null_assign", mkNode($1, NULL, NULL), mkNode("null", NULL, NULL));}
+                |ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT DEC_LIT SEMICOLON {
+                    $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
+                }
+                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT STRING_LIT SEMICOLON {
+                    $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
+                }
+                | ID CLOSEBRACKET expression OPENBRACKET ASSIGNMENT expression SEMICOLON {
+                    $$ = mkNode("array_assign", mkNode($1, $3, NULL), $6);
                 }
                 ;
 
-
-lhs: 
-                ID {$$ = mkNode($1, NULL,NULL);}
-                | ID OPENBRACKET expression CLOSEBRACKET {
-                    $$ = mkNode("ARRAY_ELEMENT", mkNode($1, NULL, NULL), $3);
-                }
-                |MULTI ID %prec NOT {
-                    $$ = mkNode("DEREFERENCE", mkNode($2, NULL,NULL), NULL);
-                }
-                ;
+                
 
 return_stat:
                 RETURN expression SEMICOLON {$$ = mkNode("RETURN", $2, NULL);}
-                | RETURN literal SEMICOLON {$$ = mkNode("RETURN", $2, NULL);}
+
                 ;
+
+expression_list: 
+    expression {$$ = $1;}
+    | expression COMMA expression_list {$$ = mkNode("expr_list", $1, $3);}
+    ;
 
 expression:     
                 expression PLUS expression { $$ = mkNode("+", $1, $3); }

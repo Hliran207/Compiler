@@ -43,7 +43,7 @@ int yyerror(char *s);
 
 
 "/"             {return DIV; }
-"="             {return ASSINGMENT; }
+"="             {return ASSIGNMENT; }
 "=="            {return EQL; }    
 ">"             {return GREATER; }
 ">="            {return GREATER_EQL; }
