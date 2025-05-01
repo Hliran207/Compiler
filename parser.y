@@ -54,12 +54,13 @@ function_list :
             ;
 
 function : 
-            DEF ID OPENPAREN parameter_list CLOSEPAREN COLON returns_spec opt_var BEGIN_T stat_list END{ 
+            DEF ID OPENPAREN parameter_list CLOSEPAREN COLON returns_spec opt_var BEGIN_T stat_list return_stat END{ 
             /* create nodes for readability */
             Node *idnode=mkNode($2,NULL,NULL);
             Node *parametersnodes=mkNode("PARAMETERS",$4,NULL);
             Node *returnsnode=mkNode("RETURNS",$7,NULL);
-            Node *bodynode=mkNode("BODY",$8,$10);
+            Node *body_statements = mkNode("statements", $10, $11);
+            Node *bodynode=mkNode("BODY",$8,body_statements);
             Node *defbody=mkNode("DEF_BODY",returnsnode,bodynode);
             $$=mkNode("FUNCTION",idnode,mkNode("FUNC_PARTS", parametersnodes,defbody));
             } 
@@ -154,17 +155,24 @@ stat:
             | for_stat {$$ = $1;}
             | do_while_stat {$$ = $1;}
             | block_stat {$$ = $1;}
-            | return_stat {$$ = $1;}
+            /* | return_stat {$$ = $1;} */
             | call_stat {$$ = $1;}
         ;
 
 call_stat:
-            ID ASSIGNMENT CALL ID OPENPAREN parameter_list CLOSEPAREN SEMICOLON
+            ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
             {
                 $$ = mkNode( "ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4,NULL,NULL),$6));
             }
-            | CALL ID OPENPAREN parameter_list CLOSEPAREN SEMICOLON {
+            | ID ASSIGNMENT CALL ID OPENPAREN CLOSEPAREN SEMICOLON
+            {
+                $$ = mkNode( "ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4,NULL,NULL),NULL));
+            }
+            | CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON {
                 $$ = mkNode("PROC_CALL", mkNode($2,NULL,NULL), $4);
+            }
+            | CALL ID OPENPAREN CLOSEPAREN SEMICOLON {
+                $$ = mkNode("PROC_CALL", mkNode($2,NULL,NULL), NULL);
             }
             ;
 if_stat:
@@ -208,7 +216,7 @@ condition:
 
 block_stat:
             BEGIN_T stat_list END {$$ = mkNode("block", $2, NULL);}
-            | opt_var BEGIN_T stat_list END {$$ = mkNode("block", $3, $1);}
+            /* | opt_var BEGIN_T stat_list END {$$ = mkNode("block", $3, $1);} */
             ;
 
 
@@ -279,7 +287,6 @@ expression:
 
 %%
 
-#include "lex.yy.c"
 
 Node *mkNode(char *token, Node *left, Node *right) {
     Node *newNode = (Node *)malloc(sizeof(Node));

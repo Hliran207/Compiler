@@ -1,17 +1,41 @@
-def _main_():
+def foo(par1 int:x; par2 int:y; par3 char:z): returns int
 var
-        type int:a;
-        type int:x;
+    
+    type int:a:0;
+    type char:c;
+    type int:x,z;
+    type int:y;
+    type string:b[100]:"moshe";
+    type int:i;
+    type int:n:15;
+    type int:xx;
+    type int:temp;
+    type int:t:5;
+    type int:aj:10;
 begin
-        x = 5;
+    a = 1;
+    b = "moshe";
+    y = &x;
+    y = &z;
+    temp = t*t;
+    b[5] = 'N';
+    *a = 5;
 
-        if x > 0:
-        begin
-            x = 1;
-        end
-        else:
-        begin
-            x = 2;
-        end
+    do:
+    begin
+        a = a + 1;
+    end
+    while a < 10;
+
+    
+
+    a = call foo(x,y,z);
+
+    for (i=10; n>10; i=i+1):
+    begin
+        
+        xx = 10;
+    end
+
     
 end
