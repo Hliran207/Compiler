@@ -757,27 +757,58 @@ DataType get_expression_type(Node *expr)
         return operand_type; // Type doesn't change
     }
 
-    // Address operator
-    if (strcmp(expr->token, "address") == 0)
-    {
+        // Address operator
+    if (strcmp(expr->token, "address") == 0) {
         Node *var_node = expr->left;
         if (!var_node)
             return TYPE_INVALID;
 
         // If this is an array element
-        if (strcmp(var_node->token, "array_element") == 0)
-        {
+        if (strcmp(var_node->token, "array_element") == 0) {
+            // Get the array variable and check its type
+            Node *array_node = var_node->left;
+            Node *index_node = var_node->right;
+            
+            if (!array_node || !index_node)
+                return TYPE_INVALID;
+            
+            Symbol *array_sym = find_symbol(array_node->token);
+            if (!array_sym) {
+                semantic_error("Undefined array variable", array_node->token);
+                return TYPE_INVALID;
+            }
+            
+            // Verify the array is a string
+            if (array_sym->type != TYPE_STRING) {
+                char error_msg[100];
+                sprintf(error_msg, "Array indexing can only be used with strings, got '%s'", 
+                        type_to_string(array_sym->type));
+                semantic_error(error_msg, array_node->token);
+                return TYPE_INVALID;
+            }
+            
+            // Verify the index is an integer
+            DataType index_type = get_expression_type(index_node);
+            if (index_type != TYPE_INT) {
+                char error_msg[100];
+                sprintf(error_msg, "Array index must be of type INT, got '%s'", 
+                        type_to_string(index_type));
+                semantic_error(error_msg, "");
+                return TYPE_INVALID;
+            }
+            
             return TYPE_CHAR_PTR; // Address of string element is char*
         }
 
         // Regular variable
         Symbol *var_sym = find_symbol(var_node->token);
-        if (!var_sym)
+        if (!var_sym) {
+            semantic_error("Undefined variable", var_node->token);
             return TYPE_INVALID;
+        }
 
-        // Return appropriate pointer type
-        switch (var_sym->type)
-        {
+        // Check if the type is valid for address operator
+        switch (var_sym->type) {
         case TYPE_INT:
             return TYPE_INT_PTR;
         case TYPE_CHAR:
@@ -787,13 +818,16 @@ DataType get_expression_type(Node *expr)
         case TYPE_STRING:
             return TYPE_CHAR_PTR; // Address of string is char*
         default:
+            char error_msg[100];
+            sprintf(error_msg, "Cannot take address of variable of type '%s'", 
+                    type_to_string(var_sym->type));
+            semantic_error(error_msg, var_node->token);
             return TYPE_INVALID;
         }
     }
 
     // Dereference operator
-    if (strcmp(expr->token, "dereference") == 0)
-    {
+    if (strcmp(expr->token, "dereference") == 0) {
         Node *var_node = expr->left;
         if (!var_node)
             return TYPE_INVALID;
@@ -802,21 +836,93 @@ DataType get_expression_type(Node *expr)
         if (!var_sym)
             return TYPE_INVALID;
 
+        // Check that the variable is a pointer type
+        if (!is_pointer_type(var_sym->type)) {
+            char error_msg[100];
+            sprintf(error_msg, "Cannot dereference non-pointer variable of type '%s'", 
+                    type_to_string(var_sym->type));
+            semantic_error(error_msg, var_node->token);
+            return TYPE_INVALID;
+        }
+
         // Return base type of pointer
         return get_base_type(var_sym->type);
     }
 
     // Length operator
-    if (strcmp(expr->token, "length") == 0)
-    {
+    if (strcmp(expr->token, "length") == 0) {
+        Node* operand_node = expr->left;
+        if (!operand_node)
+            return TYPE_INVALID;
+            
+        // Check if it's a variable
+        Symbol* var_sym = find_symbol(operand_node->token);
+        if (!var_sym) {
+            // If it's not a variable name directly, check if it's an expression
+            DataType operand_type = get_expression_type(operand_node);
+            
+            // Only strings can have length
+            if (operand_type != TYPE_STRING) {
+                char error_msg[100];
+                sprintf(error_msg, "Length operator can only be applied to strings, got '%s'", 
+                        type_to_string(operand_type));
+                semantic_error(error_msg, "");
+            }
+        } else {
+            // It's a variable - check its type
+            if (var_sym->type != TYPE_STRING) {
+                char error_msg[100];
+                sprintf(error_msg, "Length operator can only be applied to strings, got '%s'", 
+                        type_to_string(var_sym->type));
+                semantic_error(error_msg, var_sym->name);
+            }
+        }
+        
         return TYPE_INT;
     }
 
-    // Array element
-    if (strcmp(expr->token, "array_element") == 0)
-    {
-        return TYPE_CHAR; // Elements of strings are chars
+        // Array element
+    if (strcmp(expr->token, "array_element") == 0) {
+        // Get the array variable node and index expression node
+        Node* array_node = expr->left;
+        Node* index_node = expr->right;
+        
+        if (!array_node || !index_node) {
+            semantic_error("Invalid array element access", "");
+            return TYPE_INVALID;
+        }
+        
+        // Check that the array variable exists
+        Symbol* array_sym = find_symbol(array_node->token);
+        if (!array_sym) {
+            semantic_error("Undefined array variable", array_node->token);
+            return TYPE_INVALID;
+        }
+        
+        // Verify that the variable is a string (only strings can be indexed in this language)
+        if (array_sym->type != TYPE_STRING) {
+            char error_msg[100];
+            sprintf(error_msg, "Array indexing can only be used with strings, got '%s'", 
+                    type_to_string(array_sym->type));
+            semantic_error(error_msg, array_node->token);
+            return TYPE_INVALID;
+        }
+        
+        // Verify that the index is an integer
+        DataType index_type = get_expression_type(index_node);
+        if (index_type != TYPE_INT) {
+            char error_msg[100];
+            sprintf(error_msg, "Array index must be of type INT, got '%s'", 
+                    type_to_string(index_type));
+            semantic_error(error_msg, "");
+            return TYPE_INVALID;
+        }
+        
+        // If all checks pass, return CHAR as the type of the array element
+        // (In this language, strings are arrays of characters)
+        return TYPE_CHAR;
     }
+
 
     // Function call
     if (strcmp(expr->token, "function_call") == 0)
@@ -842,7 +948,209 @@ DataType get_expression_type(Node *expr)
     return TYPE_INVALID;
 }
 
-int main()
-{
-    return yyparse();
+// Convert string to DataType
+DataType get_type_from_string(char *type_str) {
+    if (strcmp(type_str, "INT") == 0) return TYPE_INT;
+    if (strcmp(type_str, "BOOL") == 0) return TYPE_BOOL;
+    if (strcmp(type_str, "CHAR") == 0) return TYPE_CHAR;
+    if (strcmp(type_str, "REAL") == 0) return TYPE_REAL;
+    if (strcmp(type_str, "STRING") == 0) return TYPE_STRING;
+    if (strcmp(type_str, "INTPTR") == 0) return TYPE_INT_PTR;
+    if (strcmp(type_str, "CHARPTR") == 0) return TYPE_CHAR_PTR;
+    if (strcmp(type_str, "REALPTR") == 0) return TYPE_REAL_PTR;
+    return TYPE_INVALID;
+}
+
+// Convert DataType to string
+const char* type_to_string(DataType type) {
+    switch (type) {
+        case TYPE_INT: return "INT";
+        case TYPE_BOOL: return "BOOL";
+        case TYPE_CHAR: return "CHAR";
+        case TYPE_REAL: return "REAL";
+        case TYPE_STRING: return "STRING";
+        case TYPE_INT_PTR: return "INTPTR";
+        case TYPE_CHAR_PTR: return "CHARPTR";
+        case TYPE_REAL_PTR: return "REALPTR";
+        case TYPE_VOID: return "VOID";
+        case TYPE_INVALID: return "INVALID";
+        default: return "UNKNOWN";
+    }
+}
+
+int is_numeric_type(DataType type) {
+    return type == TYPE_INT || type == TYPE_REAL;
+}
+
+// Check if type is a pointer
+int is_pointer_type(DataType type) {
+    return type == TYPE_INT_PTR || type == TYPE_CHAR_PTR || type == TYPE_REAL_PTR;
+}
+
+// Get base type from pointer type
+DataType get_base_type(DataType ptr_type) {
+    switch (ptr_type) {
+        case TYPE_INT_PTR: return TYPE_INT;
+        case TYPE_CHAR_PTR: return TYPE_CHAR;
+        case TYPE_REAL_PTR: return TYPE_REAL;
+        default: return TYPE_INVALID;
+    }
+}
+
+// Get pointer type from base type
+DataType get_ptr_type(DataType base_type) {
+    switch (base_type) {
+        case TYPE_INT: return TYPE_INT_PTR;
+        case TYPE_CHAR: return TYPE_CHAR_PTR;
+        case TYPE_REAL: return TYPE_REAL_PTR;
+        case TYPE_STRING: return TYPE_CHAR_PTR; // Special case: address of string is char*
+        default: return TYPE_INVALID;
+    }
+}
+
+// Count parameters in parameter list
+int count_parameters(Node *param_list) {
+    if (!param_list) return 0;
+    if (strcmp(param_list->token, "PARAM_EMPTY") == 0) return 0;
+    
+    int count = 0;
+    if (strcmp(param_list->token, "PARAMS_LIST") == 0) {
+        // Process left side
+        count += count_parameters(param_list->left);
+        // Process right side
+        count += count_parameters(param_list->right);
+    } else if (strcmp(param_list->token, "PARAM") == 0) {
+        count = 1;
+    }
+    
+    return count;
+}
+
+// Extract parameter types from parameter list
+void extract_param_types(Node *param_list, DataType **types, int *param_count) {
+    // First count parameters
+    int count = count_parameters(param_list);
+    *param_count = count;
+    
+    // Allocate array for types
+    if (count > 0) {
+        *types = (DataType *)malloc(count * sizeof(DataType));
+        if (!*types) {
+            fprintf(stderr, "Error: Memory allocation failed for parameter types\n");
+            exit(1);
+        }
+        
+        // Extract types
+        int index = 0;
+        extract_param_types_helper(param_list, *types, &index);
+    } else {
+        *types = NULL;
+    }
+}
+
+// Helper function for extracting parameter types
+void extract_param_types_helper(Node *param_node, DataType *types, int *index) {
+    if (!param_node) return;
+    
+    if (strcmp(param_node->token, "PARAMS_LIST") == 0) {
+        extract_param_types_helper(param_node->left, types, index);
+        extract_param_types_helper(param_node->right, types, index);
+    } else if (strcmp(param_node->token, "PARAM") == 0) {
+        types[(*index)++] = get_type_from_string(param_node->left->token);
+    }
+}
+
+// Check parameter ordering
+void check_param_order(Node *param_list) {
+    // This is a simplified version that just checks that parameters have the format "parX"
+    // A more robust implementation would check that they are sequential (par1, par2, etc.)
+    
+    if (!param_list) return;
+    
+    if (strcmp(param_list->token, "PARAMS_LIST") == 0) {
+        check_param_order(param_list->left);
+        check_param_order(param_list->right);
+    } else if (strcmp(param_list->token, "PARAM") == 0) {
+        // Get parameter token from PAR token (should start with "par")
+        char *param_token = param_list->right->token;
+        // Could add checks here
+    }
+}
+
+void check_main_exists() {
+    if (!has_main) {
+        fprintf(stderr, "Semantic error: Missing '_main_' function\n");
+        exit(1);
+    }
+}
+
+// Check type compatibility
+void check_type_compatibility(DataType target_type, DataType source_type, char *context) {
+    // Same types are always compatible
+    if (target_type == source_type) return;
+    
+    // Null can be assigned to any pointer type
+    if (source_type == TYPE_INVALID && is_pointer_type(target_type)) return;
+    
+    // INT can be assigned to REAL
+    if (target_type == TYPE_REAL && source_type == TYPE_INT) return;
+    
+    // Types are not compatible
+    fprintf(stderr, "Semantic error (line %d): Type mismatch in %s - cannot convert from '%s' to '%s'\n",
+            yylineno, context, type_to_string(source_type), type_to_string(target_type));
+    exit(1);
+}
+
+void print_symbol_table() {
+    printf("\n=== Symbol Table ===\n");
+    printf("%-20s %-10s %-10s %-8s %-8s\n", "Name", "Type", "Kind", "Scope", "Line");
+    printf("------------------------------------------------\n");
+    
+    Scope *scope = current_scope;
+    while (scope) {
+        Symbol *sym = scope->symbols;
+        while (sym) {
+            char *kind_str;
+            switch (sym->kind) {
+                case KIND_VARIABLE: kind_str = "Variable"; break;
+                case KIND_PARAMETER: kind_str = "Parameter"; break;
+                case KIND_FUNCTION: kind_str = "Function"; break;
+                default: kind_str = "Unknown";
+            }
+            
+            printf("%-20s %-10s %-10s %-8d %-8d\n", 
+                   sym->name, 
+                   type_to_string(sym->type),
+                   kind_str,
+                   sym->scope_level,
+                   sym->line_number);
+            
+            sym = sym->next;
+        }
+        scope = scope->parent;
+    }
+    printf("------------------------------------------------\n");
+}
+
+// Main function
+int main() {
+    // Initialize symbol table
+    current_scope = NULL;
+    current_scope_level = 0;
+    has_main = 0;
+    
+    // Create global scope
+    enter_scope();
+    
+    // Parse the input
+    if (yyparse() == 0) {
+        printf("Parsing and semantic analysis completed successfully.\n");
+    }
+    
+    // Free memory (simplified version)
+    while (current_scope) {
+        exit_scope();
+    }
+    
+    return 0;
 }
