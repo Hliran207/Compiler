@@ -5,7 +5,7 @@ var
     type char:c;
     type int:x,z;
     type int:y;
-    type string:b[100]:"moshe";
+    type string:b[100]:"liran";
     type int:i;
     type int:n:15;
     type int:xx;
@@ -14,7 +14,7 @@ var
     type int:aj:10;
 begin
     a = 1;
-    b = "moshe";
+    b = "sapir";
     y = &x;
     y = &z;
     temp = t*t;
@@ -36,6 +36,5 @@ begin
         
         xx = 10;
     end
-
-    
+    return 2;
 end
