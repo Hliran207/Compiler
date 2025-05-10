@@ -1,12 +1,8 @@
-def sum(par1 int: a; par2 int: b) : returns int 
+def _main_() :
 var
-     type int: result;
+    type int:a,b,c;
 begin
-    result = a + b;
-    return result;
+    a = b+c*2;
+    return a;
 end
 
-def _main_() :
-begin
-    a= call sum(1,2);
-end

@@ -860,12 +860,12 @@ static const yytype_int16 yyrline[] =
      215,   216,   217,   218,   221,   224,   226,   227,   229,   231,
      232,   235,   242,   251,   260,   271,   272,   273,   274,   275,
      276,   277,   278,   281,   284,   285,   287,   288,   289,   290,
-     291,   292,   293,   295,   297,   301,   305,   309,   313,   314,
-     315,   316,   318,   320,   322,   323,   325,   331,   339,   343,
-     344,   349,   350,   351,   352,   356,   360,   365,   369,   370,
-     372,   373,   374,   375,   376,   377,   378,   379,   380,   381,
-     382,   383,   384,   385,   386,   387,   392,   393,   394,   395,
-     396,   400,   404
+     291,   292,   293,   295,   297,   305,   313,   320,   327,   328,
+     329,   330,   332,   334,   336,   337,   339,   345,   353,   357,
+     366,   374,   381,   392,   399,   407,   415,   424,   426,   427,
+     429,   430,   431,   432,   433,   434,   435,   436,   437,   438,
+     439,   440,   441,   442,   443,   450,   459,   466,   473,   474,
+     481,   489,   497
 };
 #endif
 
@@ -2028,326 +2028,413 @@ yyreduce:
   case 54: /* call_stat: ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON  */
 #line 298 "parser.y"
 {
+    if(!(find_function((yyvsp[-4].str)))){
+        semantic_error("Function called before it was defined or does not exist.",(yyvsp[-4].str));
+    }
+    
     (yyval.node) = mkNode("ASSIGNMENT", mkNode((yyvsp[-7].str), NULL, NULL), mkNode("CALL", mkNode((yyvsp[-4].str), NULL, NULL), (yyvsp[-2].node)));
 }
-#line 2034 "y.tab.c"
+#line 2038 "y.tab.c"
     break;
 
   case 55: /* call_stat: ID ASSIGNMENT CALL ID OPENPAREN CLOSEPAREN SEMICOLON  */
-#line 302 "parser.y"
-{
-    (yyval.node) = mkNode("ASSIGNMENT", mkNode((yyvsp[-6].str), NULL, NULL), mkNode("CALL", mkNode((yyvsp[-3].str), NULL, NULL), NULL));
-}
-#line 2042 "y.tab.c"
-    break;
-
-  case 56: /* call_stat: CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON  */
 #line 306 "parser.y"
 {
-    (yyval.node) = mkNode("PROC_CALL", mkNode((yyvsp[-4].str), NULL, NULL), (yyvsp[-2].node));
+    if(!(find_function((yyvsp[-3].str)))){
+        semantic_error("Function called before it was defined or does not exist.",(yyvsp[-3].str));
+    }
+
+    (yyval.node) = mkNode("ASSIGNMENT", mkNode((yyvsp[-6].str), NULL, NULL), mkNode("CALL", mkNode((yyvsp[-3].str), NULL, NULL), NULL));
 }
 #line 2050 "y.tab.c"
     break;
 
-  case 57: /* call_stat: CALL ID OPENPAREN CLOSEPAREN SEMICOLON  */
-#line 310 "parser.y"
+  case 56: /* call_stat: CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON  */
+#line 314 "parser.y"
 {
+    if(!(find_function((yyvsp[-4].str)))){
+        semantic_error("Function called before it was defined or does not exist.",(yyvsp[-4].str));
+    }
+    (yyval.node) = mkNode("PROC_CALL", mkNode((yyvsp[-4].str), NULL, NULL), (yyvsp[-2].node));
+}
+#line 2061 "y.tab.c"
+    break;
+
+  case 57: /* call_stat: CALL ID OPENPAREN CLOSEPAREN SEMICOLON  */
+#line 321 "parser.y"
+{
+    if(!(find_function((yyvsp[-3].str)))){
+        semantic_error("Function called before it was defined or does not exist.",(yyvsp[-3].str));
+    }
     (yyval.node) = mkNode("PROC_CALL", mkNode((yyvsp[-3].str), NULL, NULL), NULL);
 }
-#line 2058 "y.tab.c"
+#line 2072 "y.tab.c"
     break;
 
   case 58: /* if_stat: IF expression COLON block_stat  */
-#line 313 "parser.y"
+#line 327 "parser.y"
                                          { (yyval.node) = mkNode("if", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2064 "y.tab.c"
+#line 2078 "y.tab.c"
     break;
 
   case 59: /* if_stat: IF expression COLON block_stat ELSE COLON block_stat  */
-#line 314 "parser.y"
+#line 328 "parser.y"
                                                        { (yyval.node) = mkNode("if-else", (yyvsp[-5].node), mkNode("then", (yyvsp[-3].node), mkNode("else", (yyvsp[0].node), NULL))); }
-#line 2070 "y.tab.c"
+#line 2084 "y.tab.c"
     break;
 
   case 60: /* if_stat: IF expression COLON block_stat ELIF expression COLON block_stat  */
-#line 315 "parser.y"
+#line 329 "parser.y"
                                                                   { (yyval.node) = mkNode("if-elif", (yyvsp[-6].node), mkNode("then", (yyvsp[-4].node), mkNode("elif-cond", (yyvsp[-2].node), (yyvsp[0].node)))); }
-#line 2076 "y.tab.c"
+#line 2090 "y.tab.c"
     break;
 
   case 61: /* if_stat: IF expression COLON block_stat ELIF expression COLON block_stat ELSE COLON block_stat  */
-#line 316 "parser.y"
+#line 330 "parser.y"
                                                                                         { (yyval.node) = mkNode("if-elif-else", (yyvsp[-9].node), mkNode("then", (yyvsp[-7].node), mkNode("elif-cond", (yyvsp[-5].node), mkNode("elif-then", (yyvsp[-3].node), mkNode("else", (yyvsp[0].node), NULL))))); }
-#line 2082 "y.tab.c"
+#line 2096 "y.tab.c"
     break;
 
   case 62: /* while_stat: WHILE expression COLON block_stat  */
-#line 318 "parser.y"
+#line 332 "parser.y"
                                                { (yyval.node) = mkNode("while", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2088 "y.tab.c"
+#line 2102 "y.tab.c"
     break;
 
   case 63: /* do_while_stat: DO COLON block_stat WHILE expression SEMICOLON  */
-#line 320 "parser.y"
+#line 334 "parser.y"
                                                                { (yyval.node) = mkNode("do-while", (yyvsp[-3].node), mkNode("cond", (yyvsp[-1].node), NULL)); }
-#line 2094 "y.tab.c"
+#line 2108 "y.tab.c"
     break;
 
   case 64: /* for_stat: FOR for_header COLON block_stat  */
-#line 322 "parser.y"
+#line 336 "parser.y"
                                            { (yyval.node) = mkNode("for", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2100 "y.tab.c"
+#line 2114 "y.tab.c"
     break;
 
   case 65: /* for_stat: FOR for_header COLON opt_var block_stat  */
-#line 323 "parser.y"
+#line 337 "parser.y"
                                           { (yyval.node) = mkNode("for", (yyvsp[-3].node), mkNode("block", (yyvsp[0].node), (yyvsp[-1].node))); }
-#line 2106 "y.tab.c"
+#line 2120 "y.tab.c"
     break;
 
   case 66: /* for_header: OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN  */
-#line 326 "parser.y"
+#line 340 "parser.y"
 {
     (yyval.node) = mkNode("for-header", mkNode("init", mkNode((yyvsp[-7].str), NULL, NULL), (yyvsp[-5].node)),
                 mkNode("loop", (yyvsp[-3].node), (yyvsp[-1].node)));
 }
-#line 2115 "y.tab.c"
+#line 2129 "y.tab.c"
     break;
 
   case 67: /* update_exp: ID ASSIGNMENT expression  */
-#line 331 "parser.y"
+#line 345 "parser.y"
                                       { (yyval.node) = mkNode("update", mkNode((yyvsp[-2].str), NULL, NULL), (yyvsp[0].node)); }
-#line 2121 "y.tab.c"
+#line 2135 "y.tab.c"
     break;
 
   case 68: /* block_stat: BEGIN_T stat_list END  */
-#line 339 "parser.y"
+#line 353 "parser.y"
                                    { (yyval.node) = mkNode("block", (yyvsp[-1].node), NULL); }
-#line 2127 "y.tab.c"
+#line 2141 "y.tab.c"
     break;
 
   case 69: /* assignment_stat: ID ASSIGNMENT expression SEMICOLON  */
-#line 343 "parser.y"
-                                                     { (yyval.node) = mkNode("assign", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node)); }
-#line 2133 "y.tab.c"
-    break;
-
-  case 70: /* assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON  */
-#line 345 "parser.y"
+#line 358 "parser.y"
 {
+    Symbol *var=find_symbol((yyvsp[-3].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-3].str));
+    }
 
-    (yyval.node) = mkNode("array_assign", mkNode((yyvsp[-6].str), (yyvsp[-4].node), NULL), mkNode((yyvsp[-1].str), NULL, NULL));
+     (yyval.node) = mkNode("assign", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node)); 
 }
-#line 2142 "y.tab.c"
-    break;
-
-  case 71: /* assignment_stat: MULTI ID ASSIGNMENT expression SEMICOLON  */
-#line 349 "parser.y"
-                                           { (yyval.node) = mkNode("pointer_assign", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node)); }
-#line 2148 "y.tab.c"
-    break;
-
-  case 72: /* assignment_stat: ID ASSIGNMENT ADDRESS ID SEMICOLON  */
-#line 350 "parser.y"
-                                     { (yyval.node) = mkNode("ref_assign", mkNode((yyvsp[-4].str), NULL, NULL), mkNode((yyvsp[-1].str), NULL, NULL)); }
 #line 2154 "y.tab.c"
     break;
 
+  case 70: /* assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON  */
+#line 367 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[-6].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-6].str));
+    }
+    (yyval.node) = mkNode("array_assign", mkNode((yyvsp[-6].str), (yyvsp[-4].node), NULL), mkNode((yyvsp[-1].str), NULL, NULL));
+}
+#line 2166 "y.tab.c"
+    break;
+
+  case 71: /* assignment_stat: MULTI ID ASSIGNMENT expression SEMICOLON  */
+#line 375 "parser.y"
+{ 
+    Symbol *var=find_symbol((yyvsp[-3].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-3].str));
+    }
+    (yyval.node) = mkNode("pointer_assign", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node)); }
+#line 2177 "y.tab.c"
+    break;
+
+  case 72: /* assignment_stat: ID ASSIGNMENT ADDRESS ID SEMICOLON  */
+#line 382 "parser.y"
+{
+    Symbol *var1=find_symbol((yyvsp[-4].str));
+    Symbol *var4=find_symbol((yyvsp[-1].str));
+    if(!var1){
+        semantic_error("Variable used before it been declared.",(yyvsp[-4].str));
+    }
+    if(!var4){
+        semantic_error("Variable used before it been declared.",(yyvsp[-1].str));
+    }
+    (yyval.node) = mkNode("ref_assign", mkNode((yyvsp[-4].str), NULL, NULL), mkNode((yyvsp[-1].str), NULL, NULL)); }
+#line 2192 "y.tab.c"
+    break;
+
   case 73: /* assignment_stat: ID ASSIGNMENT NULLL SEMICOLON  */
-#line 351 "parser.y"
-                                { (yyval.node) = mkNode("null_assign", mkNode((yyvsp[-3].str), NULL, NULL), mkNode("null", NULL, NULL)); }
-#line 2160 "y.tab.c"
+#line 393 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[-2].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-2].str));
+    }
+    (yyval.node) = mkNode("null_assign", mkNode((yyvsp[-3].str), NULL, NULL), mkNode("null", NULL, NULL)); }
+#line 2203 "y.tab.c"
     break;
 
   case 74: /* assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT DEC_LIT SEMICOLON  */
-#line 353 "parser.y"
+#line 400 "parser.y"
 {
+    Symbol *var=find_symbol((yyvsp[-5].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-5].str));
+    }
     (yyval.node) = mkNode("array_assign", mkNode((yyvsp[-6].str), (yyvsp[-4].node), NULL), mkNode((yyvsp[-1].str), NULL, NULL));
 }
-#line 2168 "y.tab.c"
+#line 2215 "y.tab.c"
     break;
 
   case 75: /* assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT STRING_LIT SEMICOLON  */
-#line 357 "parser.y"
+#line 408 "parser.y"
 {
+    Symbol *var=find_symbol((yyvsp[-5].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-5].str));
+    }
     (yyval.node) = mkNode("array_assign", mkNode((yyvsp[-6].str), (yyvsp[-4].node), NULL), mkNode((yyvsp[-1].str), NULL, NULL));
 }
-#line 2176 "y.tab.c"
+#line 2227 "y.tab.c"
     break;
 
   case 76: /* assignment_stat: ID CLOSEBRACKET expression OPENBRACKET ASSIGNMENT expression SEMICOLON  */
-#line 361 "parser.y"
+#line 416 "parser.y"
 {
+    Symbol *var=find_symbol((yyvsp[-5].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-5].str));
+    }
     (yyval.node) = mkNode("array_assign", mkNode((yyvsp[-6].str), (yyvsp[-4].node), NULL), (yyvsp[-1].node));
 }
-#line 2184 "y.tab.c"
+#line 2239 "y.tab.c"
     break;
 
   case 77: /* return_stat: RETURN expression SEMICOLON  */
-#line 365 "parser.y"
+#line 424 "parser.y"
                                           { (yyval.node) = mkNode("RETURN", (yyvsp[-1].node), NULL); }
-#line 2190 "y.tab.c"
+#line 2245 "y.tab.c"
     break;
 
   case 78: /* expression_list: expression  */
-#line 369 "parser.y"
+#line 426 "parser.y"
                              { (yyval.node) = (yyvsp[0].node); }
-#line 2196 "y.tab.c"
+#line 2251 "y.tab.c"
     break;
 
   case 79: /* expression_list: expression COMMA expression_list  */
-#line 370 "parser.y"
+#line 427 "parser.y"
                                    { (yyval.node) = mkNode("expr_list", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2202 "y.tab.c"
+#line 2257 "y.tab.c"
     break;
 
   case 80: /* expression: expression PLUS expression  */
-#line 372 "parser.y"
+#line 429 "parser.y"
                                         { (yyval.node) = mkNode("+", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2208 "y.tab.c"
+#line 2263 "y.tab.c"
     break;
 
   case 81: /* expression: expression MINUS expression  */
-#line 373 "parser.y"
+#line 430 "parser.y"
                               { (yyval.node) = mkNode("-", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2214 "y.tab.c"
+#line 2269 "y.tab.c"
     break;
 
   case 82: /* expression: expression MULTI expression  */
-#line 374 "parser.y"
+#line 431 "parser.y"
                               { (yyval.node) = mkNode("*", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2220 "y.tab.c"
+#line 2275 "y.tab.c"
     break;
 
   case 83: /* expression: expression DIV expression  */
-#line 375 "parser.y"
+#line 432 "parser.y"
                             { (yyval.node) = mkNode("/", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2226 "y.tab.c"
+#line 2281 "y.tab.c"
     break;
 
   case 84: /* expression: expression AND expression  */
-#line 376 "parser.y"
+#line 433 "parser.y"
                             { (yyval.node) = mkNode("and", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2232 "y.tab.c"
+#line 2287 "y.tab.c"
     break;
 
   case 85: /* expression: expression OR expression  */
-#line 377 "parser.y"
+#line 434 "parser.y"
                            { (yyval.node) = mkNode("or", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2238 "y.tab.c"
+#line 2293 "y.tab.c"
     break;
 
   case 86: /* expression: expression EQL expression  */
-#line 378 "parser.y"
+#line 435 "parser.y"
                             { (yyval.node) = mkNode("==", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2244 "y.tab.c"
+#line 2299 "y.tab.c"
     break;
 
   case 87: /* expression: expression NOT_EQL expression  */
-#line 379 "parser.y"
+#line 436 "parser.y"
                                 { (yyval.node) = mkNode("!=", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2250 "y.tab.c"
+#line 2305 "y.tab.c"
     break;
 
   case 88: /* expression: expression GREATER expression  */
-#line 380 "parser.y"
+#line 437 "parser.y"
                                 { (yyval.node) = mkNode(">", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2256 "y.tab.c"
+#line 2311 "y.tab.c"
     break;
 
   case 89: /* expression: expression GREATER_EQL expression  */
-#line 381 "parser.y"
+#line 438 "parser.y"
                                     { (yyval.node) = mkNode(">=", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2262 "y.tab.c"
+#line 2317 "y.tab.c"
     break;
 
   case 90: /* expression: expression LESS expression  */
-#line 382 "parser.y"
+#line 439 "parser.y"
                              { (yyval.node) = mkNode("<", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2268 "y.tab.c"
+#line 2323 "y.tab.c"
     break;
 
   case 91: /* expression: expression LESS_EQL expression  */
-#line 383 "parser.y"
+#line 440 "parser.y"
                                  { (yyval.node) = mkNode("<=", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2274 "y.tab.c"
+#line 2329 "y.tab.c"
     break;
 
   case 92: /* expression: NOT expression  */
-#line 384 "parser.y"
+#line 441 "parser.y"
                  { (yyval.node) = mkNode("not", (yyvsp[0].node), NULL); }
-#line 2280 "y.tab.c"
+#line 2335 "y.tab.c"
     break;
 
   case 93: /* expression: MINUS expression  */
-#line 385 "parser.y"
+#line 442 "parser.y"
                              { (yyval.node) = mkNode("unary-", (yyvsp[0].node), NULL); }
-#line 2286 "y.tab.c"
-    break;
-
-  case 94: /* expression: ADDRESS ID  */
-#line 386 "parser.y"
-             { (yyval.node) = mkNode("address", mkNode((yyvsp[0].str), NULL, NULL), NULL); }
-#line 2292 "y.tab.c"
-    break;
-
-  case 95: /* expression: ADDRESS ID OPENBRACKET expression CLOSEBRACKET  */
-#line 388 "parser.y"
-{
-    Node *array_elem = mkNode("array_element", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
-    (yyval.node) = mkNode("address", array_elem, NULL);
-}
-#line 2301 "y.tab.c"
-    break;
-
-  case 96: /* expression: MULTI ID  */
-#line 392 "parser.y"
-                     { (yyval.node) = mkNode("dereference", mkNode((yyvsp[0].str), NULL, NULL), NULL); }
-#line 2307 "y.tab.c"
-    break;
-
-  case 97: /* expression: LENGTH ID LENGTH  */
-#line 393 "parser.y"
-                   { (yyval.node) = mkNode("length", mkNode((yyvsp[-1].str), NULL, NULL), NULL); }
-#line 2313 "y.tab.c"
-    break;
-
-  case 98: /* expression: OPENPAREN expression CLOSEPAREN  */
-#line 394 "parser.y"
-                                  { (yyval.node) = (yyvsp[-1].node); }
-#line 2319 "y.tab.c"
-    break;
-
-  case 99: /* expression: ID  */
-#line 395 "parser.y"
-     { (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
-#line 2325 "y.tab.c"
-    break;
-
-  case 100: /* expression: ID OPENBRACKET expression CLOSEBRACKET  */
-#line 397 "parser.y"
-{
-    (yyval.node) = mkNode("array_element", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
-}
-#line 2333 "y.tab.c"
-    break;
-
-  case 101: /* expression: CALL ID OPENPAREN parameter_list CLOSEPAREN  */
-#line 401 "parser.y"
-{
-    (yyval.node) = mkNode("function_call", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
-}
 #line 2341 "y.tab.c"
     break;
 
+  case 94: /* expression: ADDRESS ID  */
+#line 444 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[0].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[0].str));
+    }
+    (yyval.node) = mkNode("address", mkNode((yyvsp[0].str), NULL, NULL), NULL); }
+#line 2352 "y.tab.c"
+    break;
+
+  case 95: /* expression: ADDRESS ID OPENBRACKET expression CLOSEBRACKET  */
+#line 451 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[-3].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-3].str));
+    }
+    Node *array_elem = mkNode("array_element", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
+    (yyval.node) = mkNode("address", array_elem, NULL);
+}
+#line 2365 "y.tab.c"
+    break;
+
+  case 96: /* expression: MULTI ID  */
+#line 460 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[0].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[0].str));
+    }
+    (yyval.node) = mkNode("dereference", mkNode((yyvsp[0].str), NULL, NULL), NULL); }
+#line 2376 "y.tab.c"
+    break;
+
+  case 97: /* expression: LENGTH ID LENGTH  */
+#line 467 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[-1].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-1].str));
+    }
+    (yyval.node) = mkNode("length", mkNode((yyvsp[-1].str), NULL, NULL), NULL); }
+#line 2387 "y.tab.c"
+    break;
+
+  case 98: /* expression: OPENPAREN expression CLOSEPAREN  */
+#line 473 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 2393 "y.tab.c"
+    break;
+
+  case 99: /* expression: ID  */
+#line 475 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[0].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[0].str));
+    }
+    (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
+#line 2404 "y.tab.c"
+    break;
+
+  case 100: /* expression: ID OPENBRACKET expression CLOSEBRACKET  */
+#line 482 "parser.y"
+{
+    Symbol *var=find_symbol((yyvsp[-3].str));
+    if(!var){
+        semantic_error("Variable used before it been declared.",(yyvsp[-3].str));
+    }
+    (yyval.node) = mkNode("array_element", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
+}
+#line 2416 "y.tab.c"
+    break;
+
+  case 101: /* expression: CALL ID OPENPAREN parameter_list CLOSEPAREN  */
+#line 490 "parser.y"
+{
+    Symbol *func=find_function((yyvsp[-3].str));
+    if(!func){
+        semantic_error("Function called before it was defined or does not exist.",(yyvsp[-3].str));
+    }
+    (yyval.node) = mkNode("function_call", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
+}
+#line 2428 "y.tab.c"
+    break;
+
   case 102: /* expression: literal  */
-#line 404 "parser.y"
+#line 497 "parser.y"
           { (yyval.node) = (yyvsp[0].node); }
-#line 2347 "y.tab.c"
+#line 2434 "y.tab.c"
     break;
 
 
-#line 2351 "y.tab.c"
+#line 2438 "y.tab.c"
 
       default: break;
     }
@@ -2540,7 +2627,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 406 "parser.y"
+#line 499 "parser.y"
 
 
 Node *mkNode(char *token, Node *left, Node *right)

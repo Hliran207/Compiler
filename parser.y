@@ -296,18 +296,44 @@ stat : function { $$ = $1; }
 
 call_stat : ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
 {
+    Symbol *func=find_function($4);
+    Symbol *var=find_symbol($1);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$1);
+    }
+    if(!func){
+        semantic_error("Function called before it was defined or does not exist.",$4);
+    }
+    
     $$ = mkNode("ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4, NULL, NULL), $6));
 }
 | ID ASSIGNMENT CALL ID OPENPAREN CLOSEPAREN SEMICOLON
 {
+    Symbol *func=find_function($4);
+    Symbol *var=find_symbol($1);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$1);
+    }
+    if(!func){
+        semantic_error("Function called before it was defined or does not exist.",$4);
+    }
+
     $$ = mkNode("ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4, NULL, NULL), NULL));
 }
 | CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
 {
+    Symbol *func=find_function($2);
+    if(!func){
+        semantic_error("Function called before it was defined or does not exist.",$2);
+    }
     $$ = mkNode("PROC_CALL", mkNode($2, NULL, NULL), $4);
 }
 | CALL ID OPENPAREN CLOSEPAREN SEMICOLON
 {
+    Symbol *func=find_function($2);
+    if(!func){
+        semantic_error("Function called before it was defined or does not exist.",$2);
+    }
     $$ = mkNode("PROC_CALL", mkNode($2, NULL, NULL), NULL);
 };
 if_stat : IF expression COLON block_stat { $$ = mkNode("if", $2, $4); }
@@ -340,31 +366,74 @@ block_stat : BEGIN_T stat_list END { $$ = mkNode("block", $2, NULL); }
              /* | opt_var BEGIN_T stat_list END {$$ = mkNode("block", $3, $1);} */
              ;
 
-assignment_stat : ID ASSIGNMENT expression SEMICOLON { $$ = mkNode("assign", mkNode($1, NULL, NULL), $3); }
+assignment_stat : ID ASSIGNMENT expression SEMICOLON 
+{
+    Symbol *var=find_symbol($1);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$1);
+    }
+
+     $$ = mkNode("assign", mkNode($1, NULL, NULL), $3); 
+}
 | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
 {
-
+    Symbol *var=find_symbol($1);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$1);
+    }
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
 }
-| MULTI ID ASSIGNMENT expression SEMICOLON { $$ = mkNode("pointer_assign", mkNode($2, NULL, NULL), $4); }
-| ID ASSIGNMENT ADDRESS ID SEMICOLON { $$ = mkNode("ref_assign", mkNode($1, NULL, NULL), mkNode($4, NULL, NULL)); }
-| ID ASSIGNMENT NULLL SEMICOLON { $$ = mkNode("null_assign", mkNode($1, NULL, NULL), mkNode("null", NULL, NULL)); }
+| MULTI ID ASSIGNMENT expression SEMICOLON 
+{ 
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
+    $$ = mkNode("pointer_assign", mkNode($2, NULL, NULL), $4); }
+| ID ASSIGNMENT ADDRESS ID SEMICOLON 
+{
+    Symbol *var1=find_symbol($1);
+    Symbol *var4=find_symbol($4);
+    if(!var1){
+        semantic_error("Variable used before it been declared.",$1);
+    }
+    if(!var4){
+        semantic_error("Variable used before it been declared.",$4);
+    }
+    $$ = mkNode("ref_assign", mkNode($1, NULL, NULL), mkNode($4, NULL, NULL)); }
+| ID ASSIGNMENT NULLL SEMICOLON 
+{
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
+    $$ = mkNode("null_assign", mkNode($1, NULL, NULL), mkNode("null", NULL, NULL)); }
 | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT DEC_LIT SEMICOLON
 {
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
 }
 | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT STRING_LIT SEMICOLON
 {
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
 }
 | ID CLOSEBRACKET expression OPENBRACKET ASSIGNMENT expression SEMICOLON
 {
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), $6);
 };
 
-return_stat : RETURN expression SEMICOLON { $$ = mkNode("RETURN", $2, NULL); }
-
-              ;
+return_stat : RETURN expression SEMICOLON { $$ = mkNode("RETURN", $2, NULL); };
 
 expression_list : expression { $$ = $1; }
 | expression COMMA expression_list { $$ = mkNode("expr_list", $1, $3); };
@@ -383,22 +452,58 @@ expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
 | expression LESS_EQL expression { $$ = mkNode("<=", $1, $3); }
 | NOT expression { $$ = mkNode("not", $2, NULL); }
 | MINUS expression %prec NOT { $$ = mkNode("unary-", $2, NULL); }
-| ADDRESS ID { $$ = mkNode("address", mkNode($2, NULL, NULL), NULL); }
+| ADDRESS ID 
+{
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
+    $$ = mkNode("address", mkNode($2, NULL, NULL), NULL); }
 | ADDRESS ID OPENBRACKET expression CLOSEBRACKET
 {
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
     Node *array_elem = mkNode("array_element", mkNode($2, NULL, NULL), $4);
     $$ = mkNode("address", array_elem, NULL);
 }
-| MULTI ID %prec NOT { $$ = mkNode("dereference", mkNode($2, NULL, NULL), NULL); }
-| LENGTH ID LENGTH { $$ = mkNode("length", mkNode($2, NULL, NULL), NULL); }
+| MULTI ID %prec NOT 
+{
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
+    $$ = mkNode("dereference", mkNode($2, NULL, NULL), NULL); }
+| LENGTH ID LENGTH 
+{
+    Symbol *var=find_symbol($2);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$2);
+    }
+    $$ = mkNode("length", mkNode($2, NULL, NULL), NULL); }
 | OPENPAREN expression CLOSEPAREN { $$ = $2; }
-| ID { $$ = mkNode($1, NULL, NULL); }
+| ID 
+{
+    Symbol *var=find_symbol($1);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$1);
+    }
+    $$ = mkNode($1, NULL, NULL); }
 | ID OPENBRACKET expression CLOSEBRACKET
 {
+    Symbol *var=find_symbol($1);
+    if(!var){
+        semantic_error("Variable used before it been declared.",$1);
+    }
     $$ = mkNode("array_element", mkNode($1, NULL, NULL), $3);
 }
 | CALL ID OPENPAREN parameter_list CLOSEPAREN
 {
+    Symbol *func=find_function($2);
+    if(!func){
+        semantic_error("Function called before it was defined or does not exist.",$2);
+    }
     $$ = mkNode("function_call", mkNode($2, NULL, NULL), $4);
 }
 | literal { $$ = $1; };
