@@ -110,7 +110,8 @@ extern int yydebug;
     DEC_LIT = 311,                 /* DEC_LIT  */
     HEX_LIT = 312,                 /* HEX_LIT  */
     REAL_LIT = 313,                /* REAL_LIT  */
-    ID = 314                       /* ID  */
+    ID = 314,                      /* ID  */
+    MAIN_FUNC = 315                /* MAIN_FUNC  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -176,17 +177,18 @@ extern int yydebug;
 #define HEX_LIT 312
 #define REAL_LIT 313
 #define ID 314
+#define MAIN_FUNC 315
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 23 "parser.y"
+#line 110 "parser.y"
 
-    char *str;
-    struct Node *node;
+char *str;
+struct Node *node;
 
-#line 190 "y.tab.h"
+#line 192 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

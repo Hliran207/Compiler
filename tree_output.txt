@@ -1,0 +1,72 @@
+(Function_list
+	(FUNCTION
+		(sum)
+	(FUNC_PARTS
+		(PARAMETERS
+			(PARAMS_LIST
+				(PARAM
+					(INT)
+				(a)
+				)
+			(PARAM
+				(INT)
+			(b)
+			)
+			)
+		)
+	(DEF_BODY
+		(RETURNS
+			(INT)
+		)
+	(BODY
+		(VAR_DECL
+			(INT)
+		(VAR
+			(result)
+		)
+		)
+	(statements
+		(statements
+			(assign
+				(result)
+			(+
+				(a)
+			(b)
+			)
+			)
+		(empty_state_list)
+		)
+	(RETURN
+		(result)
+	)
+	)
+	)
+	)
+	)
+	)
+(PROCEDURE
+	(_main_)
+(PROC_PARTS
+	(PARAMETERS
+		(PARAM_EMPTY)
+	)
+(BODY
+	(VAR_EMPTY)
+(statements
+	(ASSIGNMENT
+		(a)
+	(CALL
+		(sum)
+	(expr_list
+		(1)
+	(2)
+	)
+	)
+	)
+(empty_state_list)
+)
+)
+)
+)
+)
+Parsing and semantic analysis completed successfully.

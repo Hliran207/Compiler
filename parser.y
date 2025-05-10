@@ -1,132 +1,177 @@
-%
-{
+%{
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-    int yyerror(char *s);
-    int yylex();
-    int yyparse();
-    extern int yylineno;
-    extern char *yytext;
+int yyerror(char *s);
+int yylex();
+int yyparse();
+extern int yylineno;
+extern char *yytext;
 
-    typedef enum
-    {
-        TYPE_INT,
-        TYPE_BOOL,
-        TYPE_CHAR,
-        TYPE_REAL,
-        TYPE_STRING,
-        TYPE_INT_PTR,
-        TYPE_CHAR_PTR,
-        TYPE_REAL_PTR,
-        TYPE_VOID,
-        TYPE_INVALID
-    } DataType;
-
-    typedef enum
-    {
-        KIND_VARIABLE,
-        KIND_PARAMETER,
-        KIND_FUNCTION
-    } SymbolKind
-
-        typedef struct Symbol Symbol;
-    typedef struct SymbolList SymbolList;
-    typedef struct Scope Scope;
-
-    struct Symbol
-    {
-        char *name;            // Symbol name
-        DataType type;         // Data type
-        SymbolKind kind;       // Kind of symbol
-        int scope_level;       // Scope level
-        int is_array;          // Is it an array?
-        int array_size;        // Array size
-        int line_number;       // Line where defined
-        int param_count;       // Number of parameters (for functions)
-        DataType *param_types; // Parameter types (for functions)
-        DataType return_type;  // Return type (for functions)
-        int is_defined;        // Is function defined?
-        struct Symbol *next;   // Next symbol in the same scope
-    };
-
-    struct SymbolList
-    {
-        Symbol *symbol;
-        struct SymbolList *next;
-    };
-
-    struct Scope
-    {
-        Symbol *symbols;      // Linked list of symbols in this scope
-        int scope_level;      // Scope nesting level
-        struct Scope *parent; // Parent scope
-    };
-
-    typedef struct Node
-    {
-        char *token;
-        struct Node *left;
-        struct Node *right;
-    } Node;
-
-    // Global var:
-    Scope *current_scope = NULL;
-    int has_main = 0; // Flag for _main_ function
-    int current_scope_level = 0;
-
-    Node *mkNode(char *token, Node *left, Node *right);
-    void printtree(Node * tree, int tab);
-    void printTabs(int numOfTabs);
-    void enter_scope();
-    void exit_scope();
-    Symbol *find_symbol(char *name);
-    Symbol *find_symbol_in_scope(char *name, Scope *scope);
-    Symbol *find_function(char *name);
-    Symbol *add_symbol(char *name, DataType type, SymbolKind kind);
-    Symbol *add_function(char *name, DataType return_type, int param_count, DataType *param_types);
-    DataType get_expression_type(Node * expr);
-    DataType get_type_from_string(char *type_str);
-    const char *type_to_string(DataType type);
-    int is_numeric_type(DataType type);
-    int is_pointer_type(DataType type);
-    DataType get_base_type(DataType ptr_type);
-    DataType get_ptr_type(DataType base_type);
-    int count_parameters(Node * param_list);
-    void extract_param_types(Node * param_list, DataType * *types, int *param_count);
-    void check_param_order(Node * param_list);
-    void check_main_exists();
-    void check_type_compatibility(DataType target_type, DataType source_type, char *context);
-    void semantic_error(const char *message, const char *token);
-    void print_symbol_table(); // For debugging
-    %
-}
-
-% union
+typedef enum
 {
-    char *str;
-    struct Node *node;
+    TYPE_INT,
+    TYPE_BOOL,
+    TYPE_CHAR,
+    TYPE_REAL,
+    TYPE_STRING,
+    TYPE_INT_PTR,
+    TYPE_CHAR_PTR,
+    TYPE_REAL_PTR,
+    TYPE_VOID,
+    TYPE_INVALID
+} DataType;
+
+typedef enum
+{
+    KIND_VARIABLE,
+    KIND_PARAMETER,
+    KIND_FUNCTION
+} SymbolKind;
+
+typedef struct Symbol Symbol;
+typedef struct SymbolList SymbolList;
+typedef struct Scope Scope;
+
+struct Symbol
+{
+    char *name;            // Symbol name
+    DataType type;         // Data type
+    SymbolKind kind;       // Kind of symbol
+    int scope_level;       // Scope level
+    int is_array;          // Is it an array?
+    int array_size;        // Array size
+    int line_number;       // Line where defined
+    int param_count;       // Number of parameters (for functions)
+    DataType *param_types; // Parameter types (for functions)
+    DataType return_type;  // Return type (for functions)
+    int is_defined;        // Is function defined?
+    struct Symbol *next;   // Next symbol in the same scope
+};
+
+struct SymbolList
+{
+    Symbol *symbol;
+    struct SymbolList *next;
+};
+
+struct Scope
+{
+    Symbol *symbols;      // Linked list of symbols in this scope
+    int scope_level;      // Scope nesting level
+    struct Scope *parent; // Parent scope
+};
+
+typedef struct Node
+{
+    char *token;
+    struct Node *left;
+    struct Node *right;
+} Node;
+
+// Global var:
+Node *ast_root=NULL;
+Scope *current_scope = NULL;
+int has_main = 0; // Flag for _main_ function
+int current_scope_level = 0;
+
+Node *mkNode(char *token, Node *left, Node *right);
+void printtree(Node * tree, int tab);
+void printTabs(int numOfTabs);
+void enter_scope();
+void exit_scope();
+Symbol *find_symbol(char *name);
+Symbol *find_symbol_in_scope(char *name, Scope *scope);
+Symbol *find_function(char *name);
+Symbol *add_symbol(char *name, DataType type, SymbolKind kind);
+Symbol *add_function(char *name, DataType return_type, int param_count, DataType *param_types);
+DataType get_expression_type(Node * expr);
+DataType get_type_from_string(char *type_str);
+const char *type_to_string(DataType type);
+int is_numeric_type(DataType type);
+int is_pointer_type(DataType type);
+DataType get_base_type(DataType ptr_type);
+DataType get_ptr_type(DataType base_type);
+int count_parameters(Node * param_list);
+void extract_param_types(Node * param_list, DataType * *types, int *param_count);
+void extract_param_types_helper(Node *param_node, DataType *types, int *index);
+void check_param_order(Node * param_list);
+void check_main_exists();
+void check_type_compatibility(DataType target_type, DataType source_type, char *context);
+void semantic_error(const char *message, const char *token);
+void print_symbol_table(); // For debugging
+void free_tree(Node* tree);
+void free_symbol_table(Scope* scope);
+%}
+
+%union
+{
+char *str;
+struct Node *node;
 }
 
-    % token<str> BOOL CHAR INT REAL STRING INTPTR CHARPTR REALPTR TYPE % token<str> IF ELIF ELSE WHILE FOR VAR PAR RETURN NULLL DO RETURNS BEGIN_T END DEF CALL AND NOT OR % token<str> DIV ASSIGNMENT EQL GREATER GREATER_EQL LESS LESS_EQL MINUS NOT_EQL PLUS MULTI ADDRESS % token<str> LENGTH SEMICOLON COLON COMMA OPENBRACE CLOSEBRACE OPENPAREN CLOSEPAREN OPENBRACKET CLOSEBRACKET % token<str> B_TRUE B_FALSE CHAR_LIT STRING_LIT DEC_LIT HEX_LIT REAL_LIT ID
+%token<str> BOOL CHAR INT REAL STRING INTPTR CHARPTR REALPTR TYPE 
+%token<str> IF ELIF ELSE WHILE FOR VAR PAR RETURN NULLL DO RETURNS BEGIN_T END DEF CALL AND NOT OR 
+%token<str> DIV ASSIGNMENT EQL GREATER GREATER_EQL LESS LESS_EQL MINUS NOT_EQL PLUS MULTI ADDRESS 
+%token<str> LENGTH SEMICOLON COLON COMMA OPENBRACE CLOSEBRACE OPENPAREN CLOSEPAREN OPENBRACKET CLOSEBRACKET 
+%token<str> B_TRUE B_FALSE CHAR_LIT STRING_LIT DEC_LIT HEX_LIT REAL_LIT ID MAIN_FUNC
 
-    % type<node> program function_list function returns_spec parameter_list param_decl_list % type<node> param_decl type opt_var var_decl_list var_decl var_item_list var_item % type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat % type<node> for_stat assignment_stat return_stat expression condition expression_list for_header update_exp
+%type<node> program function_list function main_function returns_spec parameter_list param_decl_list 
+%type<node> param_decl type opt_var var_decl_list var_decl var_item_list var_item 
+%type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat 
+%type<node> for_stat assignment_stat return_stat expression condition expression_list for_header update_exp
 
-    % left PLUS MINUS % left MULTI DIV % left OR AND % left EQL NOT_EQL GREATER GREATER_EQL LESS LESS_EQL % right NOT % right ADDRESS
+%left PLUS MINUS 
+%left MULTI DIV 
+%left OR AND 
+%left EQL NOT_EQL GREATER GREATER_EQL LESS LESS_EQL 
+%right NOT 
+%right ADDRESS
+%%
 
-    % %
-    program : function_list
+program : function_list
 {
     $$ = $1;
+    ast_root=$$;
     printtree($$, 0);
 };
 
 function_list : function_list function { $$ = mkNode("Function_list", $1, $2); }
-| function { $$ = $1; };
+| function { $$ = $1; }
+| function_list main_function { $$ = mkNode("Function_list", $1, $2); }
+| main_function {$$=$1;};
+
+main_function : DEF MAIN_FUNC OPENPAREN parameter_list CLOSEPAREN COLON opt_var BEGIN_T stat_list END
+{
+    if(has_main)
+    {
+        semantic_error("Multiply definitions of '_main_' function are not allowed",$2);
+    }
+    has_main=1;
+
+    if(count_parameters($4)!=0){
+        semantic_error("_main_ procedure must not accept any parameters",$2);
+    }
+    add_function("_main_",TYPE_VOID,0,NULL);
+
+    /* create nodes for readability */
+    Node *idnode = mkNode("_main_", NULL, NULL);
+    Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
+    Node *bodynode = mkNode("BODY", $7, $9);
+    $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
+};
 
 function : DEF ID OPENPAREN parameter_list CLOSEPAREN COLON returns_spec opt_var BEGIN_T stat_list return_stat END
 {
+    if(find_symbol_in_scope($2,current_scope)){
+        semantic_error("Function with the same name already exists in the current scope",$2);
+    }
+
+    DataType return_type=get_type_from_string($7->token);
+    add_function($2,return_type,count_parameters($4),NULL);
+
     /* create nodes for readability */
     Node *idnode = mkNode($2, NULL, NULL);
     Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
@@ -138,6 +183,11 @@ function : DEF ID OPENPAREN parameter_list CLOSEPAREN COLON returns_spec opt_var
 }
 | DEF ID OPENPAREN parameter_list CLOSEPAREN COLON opt_var BEGIN_T stat_list END
 {
+    if(find_symbol_in_scope($2,current_scope)){
+        semantic_error("Procedure with the same name already exists in the current scope",$2);
+    }
+    add_function($2,TYPE_VOID,count_parameters($4),NULL);
+
     /* create nodes for readability */
     Node *idnode = mkNode($2, NULL, NULL);
     Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
@@ -181,14 +231,39 @@ var_decl : TYPE type COLON var_item_list SEMICOLON { $$ = mkNode("VAR_DECL", $2,
 var_item_list : var_item { $$ = $1; }
 | var_item_list COMMA var_item { $$ = mkNode("VAR_ITEM_LIST", $1, $3); };
 
-var_item : ID { $$ = mkNode("VAR", mkNode($1, NULL, NULL), NULL); }
-| ID COLON literal { $$ = mkNode("VAR_ASSIGN", mkNode($1, NULL, NULL), $3); }
+var_item :
+ ID { 
+        if(find_symbol_in_scope($1,current_scope)){
+            semantic_error("Variable already defined in the current scope",$1);
+        }
+        add_symbol($1,TYPE_INVALID,KIND_VARIABLE);
+    
+        $$ = mkNode("VAR", mkNode($1, NULL, NULL), NULL); }
+| ID COLON literal 
+{   
+    if(find_symbol_in_scope($1,current_scope)){
+        semantic_error("Variable already defined in the current scope",$1);
+    }
+    DataType lit_type=get_expression_type($3);
+    add_symbol($1,lit_type,KIND_VARIABLE);
+
+    $$ = mkNode("VAR_ASSIGN", mkNode($1, NULL, NULL), $3); }
 | ID OPENBRACKET DEC_LIT CLOSEBRACKET
 {
+    if(find_symbol_in_scope($1,current_scope)){
+        semantic_error("Variable already defined in the current scope",$1);
+    }
+    add_symbol($1,TYPE_STRING,KIND_VARIABLE);
+
     $$ = mkNode("STRING_VAR", mkNode($1, NULL, NULL), mkNode($3, NULL, NULL));
 }
 | ID OPENBRACKET DEC_LIT CLOSEBRACKET COLON STRING_LIT
 {
+    if(find_symbol_in_scope($1,current_scope)){
+        semantic_error("Variable already defined in the current scope",$1);
+    }
+    add_symbol($1,TYPE_STRING,KIND_VARIABLE);
+
     $$ = mkNode("STRING_VAL_ASSIGN", mkNode("STRING_VAR", mkNode($1, NULL, NULL), mkNode($3, NULL, NULL)),
                 mkNode($6, NULL, NULL));
 };
@@ -307,14 +382,14 @@ expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
 | expression LESS expression { $$ = mkNode("<", $1, $3); }
 | expression LESS_EQL expression { $$ = mkNode("<=", $1, $3); }
 | NOT expression { $$ = mkNode("not", $2, NULL); }
-| MINUS expression % prec NOT { $$ = mkNode("unary-", $2, NULL); }
+| MINUS expression %prec NOT { $$ = mkNode("unary-", $2, NULL); }
 | ADDRESS ID { $$ = mkNode("address", mkNode($2, NULL, NULL), NULL); }
 | ADDRESS ID OPENBRACKET expression CLOSEBRACKET
 {
     Node *array_elem = mkNode("array_element", mkNode($2, NULL, NULL), $4);
     $$ = mkNode("address", array_elem, NULL);
 }
-| MULTI ID % prec NOT { $$ = mkNode("dereference", mkNode($2, NULL, NULL), NULL); }
+| MULTI ID %prec NOT { $$ = mkNode("dereference", mkNode($2, NULL, NULL), NULL); }
 | LENGTH ID LENGTH { $$ = mkNode("length", mkNode($2, NULL, NULL), NULL); }
 | OPENPAREN expression CLOSEPAREN { $$ = $2; }
 | ID { $$ = mkNode($1, NULL, NULL); }
@@ -328,9 +403,9 @@ expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
 }
 | literal { $$ = $1; };
 
-% %
+%%
 
-    Node *mkNode(char *token, Node *left, Node *right)
+Node *mkNode(char *token, Node *left, Node *right)
 {
     Node *newNode = (Node *)malloc(sizeof(Node));
     if (!newNode)
@@ -1132,6 +1207,30 @@ void print_symbol_table() {
     printf("------------------------------------------------\n");
 }
 
+void free_tree(Node* tree){
+    if(!tree) return;
+    free_tree(tree->left);
+    free_tree(tree->right);
+    if(tree->token) free(tree->token);
+    free(tree);
+}
+
+void free_symbol_table(Scope* scope){
+    while(scope){
+        Symbol *sym=scope->symbols;
+        while(sym){
+            Symbol *next_sym=sym->next;
+            if(sym->name) free(sym->name);
+            if(sym->param_types) free(sym->param_types);
+            free(sym);
+            sym=next_sym;
+        }
+        Scope *parent=scope->parent;
+        free(scope);
+        scope=parent;
+    }
+}
+
 // Main function
 int main() {
     // Initialize symbol table
@@ -1144,13 +1243,15 @@ int main() {
     
     // Parse the input
     if (yyparse() == 0) {
+        check_main_exists();
         printf("Parsing and semantic analysis completed successfully.\n");
+    } else{
+        printf("Parsing failed due to syntax or semantic erros.\n");
     }
     
     // Free memory (simplified version)
-    while (current_scope) {
-        exit_scope();
-    }
+    if(ast_root) free_tree(ast_root);
+    free_symbol_table(current_scope);
     
     return 0;
 }

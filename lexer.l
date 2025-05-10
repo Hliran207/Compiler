@@ -79,7 +79,7 @@ int yyerror(char *s);
 [-+]?([0-9]+\.[0-9]*|\.[0-9]+)([eE][-+]?[0-9]+)? { yylval.str = strdup(yytext); return REAL_LIT; }
 
 
-
+"_main_"              {yylval.str=strdup(yytext);    return MAIN_FUNC;}
 [a-zA-Z][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return ID; }
 
 
