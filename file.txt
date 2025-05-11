@@ -1,8 +1,9 @@
-def _main_() :
-var
-    type int:a,b,c;
+def foo(par1 int:a): returns int
 begin
-    a = b+c*2;
     return a;
 end
 
+def _main_():
+begin
+    call foo(1, 2);           /* ← פרמטר מיותר */
+end

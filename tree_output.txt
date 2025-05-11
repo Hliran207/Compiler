@@ -1,2 +1,14 @@
-syntax error: line 6 - unexpected return
-Parsing failed due to syntax or semantic erros.
+Semantic error (line 8): Function 'foo' expect 1 parameters, but 2 parameters provided 'foo'
+DEBUG: Entering function definition for 'foo'
+DEBUG: Visiting node with token: PARAM
+DEBUG: Extracting type from: INT
+param_count=1 
+DEBUG: Adding parameter 'a' of type 'INT' to scope level 2
+
+=== Symbol Table ===
+Name                 Type       Kind       Scope    Line    
+------------------------------------------------
+a                    INT        Parameter  2        1       
+foo                  VOID       Function   1        1       
+------------------------------------------------
+param_count=0 

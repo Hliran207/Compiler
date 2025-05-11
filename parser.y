@@ -76,6 +76,7 @@ Node *ast_root=NULL;
 Scope *current_scope = NULL;
 int has_main = 0; // Flag for _main_ function
 int current_scope_level = 0;
+static DataType current_var_type = TYPE_INVALID;
 
 Node *mkNode(char *token, Node *left, Node *right);
 void printtree(Node * tree, int tab);
@@ -101,6 +102,7 @@ void check_param_order(Node * param_list);
 void check_main_exists();
 void check_type_compatibility(DataType target_type, DataType source_type, char *context);
 void semantic_error(const char *message, const char *token);
+void add_parameters_to_scope(Node *param_list, DataType *param_types, int param_count);
 void print_symbol_table(); // For debugging
 void free_tree(Node* tree);
 void free_symbol_table(Scope* scope);
@@ -143,7 +145,7 @@ function_list : function_list function { $$ = mkNode("Function_list", $1, $2); }
 | function_list main_function { $$ = mkNode("Function_list", $1, $2); }
 | main_function {$$=$1;};
 
-main_function : DEF MAIN_FUNC OPENPAREN parameter_list CLOSEPAREN COLON opt_var BEGIN_T stat_list END
+main_function : DEF MAIN_FUNC OPENPAREN parameter_list CLOSEPAREN
 {
     if(has_main)
     {
@@ -156,43 +158,84 @@ main_function : DEF MAIN_FUNC OPENPAREN parameter_list CLOSEPAREN COLON opt_var 
     }
     add_function("_main_",TYPE_VOID,0,NULL);
 
+    enter_scope();
+}
+ COLON opt_var BEGIN_T stat_list END
+{
+    
+
     /* create nodes for readability */
     Node *idnode = mkNode("_main_", NULL, NULL);
     Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
-    Node *bodynode = mkNode("BODY", $7, $9);
+    Node *bodynode = mkNode("BODY", $8, $10);
     $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
+    print_symbol_table();
+    exit_scope();
 };
 
-function : DEF ID OPENPAREN parameter_list CLOSEPAREN COLON returns_spec opt_var BEGIN_T stat_list return_stat END
-{
-    if(find_symbol_in_scope($2,current_scope)){
-        semantic_error("Function with the same name already exists in the current scope",$2);
-    }
+function : DEF ID OPENPAREN parameter_list CLOSEPAREN 
+        {
+            if(find_symbol_in_scope($2,current_scope)){
+                semantic_error("Function with the same name already exists in the current scope",$2);
+            }
+            printf("DEBUG: Entering function definition for '%s'\n", $2);
 
-    DataType return_type=get_type_from_string($7->token);
-    add_function($2,return_type,count_parameters($4),NULL);
+            DataType *param_types=NULL;
+            int param_count=0;
 
-    /* create nodes for readability */
-    Node *idnode = mkNode($2, NULL, NULL);
-    Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
-    Node *returnsnode = mkNode("RETURNS", $7, NULL);
-    Node *body_statements = mkNode("statements", $10, $11);
-    Node *bodynode = mkNode("BODY", $8, body_statements);
-    Node *defbody = mkNode("DEF_BODY", returnsnode, bodynode);
-    $$ = mkNode("FUNCTION", idnode, mkNode("FUNC_PARTS", parametersnodes, defbody));
-}
-| DEF ID OPENPAREN parameter_list CLOSEPAREN COLON opt_var BEGIN_T stat_list END
+            extract_param_types($4,&param_types,&param_count);
+            
+            add_function($2,TYPE_INVALID,param_count,param_types);
+            
+
+            enter_scope();
+            add_parameters_to_scope($4,param_types,param_count);
+        }
+        COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+        {
+            Symbol *f=find_function($2);
+            if(f) f->return_type=get_type_from_string($8->token);
+            /* create nodes for readability */
+            Node *idnode = mkNode($2, NULL, NULL);
+            Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
+            Node *returnsnode = mkNode("RETURNS", $8, NULL);
+            Node *body_statements = mkNode("statements", $11, $12);
+            Node *bodynode = mkNode("BODY", $9, body_statements);
+            Node *defbody = mkNode("DEF_BODY", returnsnode, bodynode);
+            $$ = mkNode("FUNCTION", idnode, mkNode("FUNC_PARTS", parametersnodes, defbody));
+            print_symbol_table();
+            exit_scope();
+        }
+| DEF ID OPENPAREN parameter_list CLOSEPAREN
 {
     if(find_symbol_in_scope($2,current_scope)){
         semantic_error("Procedure with the same name already exists in the current scope",$2);
     }
-    add_function($2,TYPE_VOID,count_parameters($4),NULL);
+    printf("DEBUG: Entering function definition for '%s'\n", $2);
+
+    DataType *param_types=NULL;
+    int param_count=0;
+
+    extract_param_types($4,&param_types,&param_count);
+    add_function($2,TYPE_VOID,param_count,NULL);
+    printf("DEBUG: Added function '%s' with %d parameters, return type %s at scope %d\n", 
+       $2, param_count, type_to_string(TYPE_VOID), current_scope_level);
+
+
+    enter_scope();
+    add_parameters_to_scope($4,param_types,param_count);
+    
+}
+ COLON opt_var BEGIN_T stat_list END
+{
 
     /* create nodes for readability */
     Node *idnode = mkNode($2, NULL, NULL);
     Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
-    Node *bodynode = mkNode("BODY", $7, $9);
+    Node *bodynode = mkNode("BODY", $8, $10);
     $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
+    print_symbol_table();
+    exit_scope();
 };
 
 returns_spec : RETURNS type { $$ = $2; };
@@ -226,7 +269,14 @@ opt_var:
 var_decl_list : var_decl { $$ = $1; }
 | var_decl_list var_decl { $$ = mkNode("VAR_DECL", $1, $2); };
 
-var_decl : TYPE type COLON var_item_list SEMICOLON { $$ = mkNode("VAR_DECL", $2, $4); };
+var_decl : TYPE type COLON 
+        {
+            current_var_type=get_type_from_string($2->token);
+        }
+var_item_list SEMICOLON 
+{
+    current_var_type=TYPE_INVALID;
+     $$ = mkNode("VAR_DECL", $2, $5); };
 
 var_item_list : var_item { $$ = $1; }
 | var_item_list COMMA var_item { $$ = mkNode("VAR_ITEM_LIST", $1, $3); };
@@ -236,7 +286,7 @@ var_item :
         if(find_symbol_in_scope($1,current_scope)){
             semantic_error("Variable already defined in the current scope",$1);
         }
-        add_symbol($1,TYPE_INVALID,KIND_VARIABLE);
+        add_symbol($1,current_var_type,KIND_VARIABLE);
     
         $$ = mkNode("VAR", mkNode($1, NULL, NULL), NULL); }
 | ID COLON literal 
@@ -304,6 +354,12 @@ call_stat : ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
     if(!func){
         semantic_error("Function called before it was defined or does not exist.",$4);
     }
+    int actual_param_count=count_parameters($6);
+    if(func->param_count!=actual_param_count){
+        char msg[100];
+        sprintf(msg,"Function '%s' expect %d parameters, but %d parameters provided",$4,func->param_count,actual_param_count);
+        semantic_error(msg,$4);
+    }
     
     $$ = mkNode("ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4, NULL, NULL), $6));
 }
@@ -317,6 +373,12 @@ call_stat : ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
     if(!func){
         semantic_error("Function called before it was defined or does not exist.",$4);
     }
+    int actual_param_count=0;
+    if(func->param_count!=actual_param_count){
+        char msg[100];
+        sprintf(msg,"Function '%s' expect %d parameters, but %d parameters provided",$4,func->param_count,actual_param_count);
+        semantic_error(msg,$4);
+    }
 
     $$ = mkNode("ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4, NULL, NULL), NULL));
 }
@@ -326,13 +388,25 @@ call_stat : ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
     if(!func){
         semantic_error("Function called before it was defined or does not exist.",$2);
     }
-    $$ = mkNode("PROC_CALL", mkNode($2, NULL, NULL), $4);
+    int actual_param_count=count_parameters($4);
+    if(func->param_count!=actual_param_count){
+        char msg[100];
+        sprintf(msg,"Function '%s' expect %d parameters, but %d parameters provided",$2,func->param_count,actual_param_count);
+        semantic_error(msg,$2);
+    }
+    $$ = mkNode("FUNC_CALL", mkNode($2, NULL, NULL), $4);
 }
 | CALL ID OPENPAREN CLOSEPAREN SEMICOLON
 {
     Symbol *func=find_function($2);
     if(!func){
         semantic_error("Function called before it was defined or does not exist.",$2);
+    }
+    int actual_param_count=0;
+    if(func->param_count!=actual_param_count){
+        char msg[100];
+        sprintf(msg,"Function '%s' expect %d parameters, but %d parameters provided",$2,func->param_count,actual_param_count);
+        semantic_error(msg,$2);
     }
     $$ = mkNode("PROC_CALL", mkNode($2, NULL, NULL), NULL);
 };
@@ -403,32 +477,32 @@ assignment_stat : ID ASSIGNMENT expression SEMICOLON
     $$ = mkNode("ref_assign", mkNode($1, NULL, NULL), mkNode($4, NULL, NULL)); }
 | ID ASSIGNMENT NULLL SEMICOLON 
 {
-    Symbol *var=find_symbol($2);
+    Symbol *var=find_symbol($1);
     if(!var){
-        semantic_error("Variable used before it been declared.",$2);
+        semantic_error("Variable used before it been declared.",$1);
     }
     $$ = mkNode("null_assign", mkNode($1, NULL, NULL), mkNode("null", NULL, NULL)); }
 | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT DEC_LIT SEMICOLON
 {
-    Symbol *var=find_symbol($2);
+    Symbol *var=find_symbol($1);
     if(!var){
-        semantic_error("Variable used before it been declared.",$2);
+        semantic_error("Variable used before it been declared.",$1);
     }
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
 }
 | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT STRING_LIT SEMICOLON
 {
-    Symbol *var=find_symbol($2);
+    Symbol *var=find_symbol($1);
     if(!var){
-        semantic_error("Variable used before it been declared.",$2);
+        semantic_error("Variable used before it been declared.",$1);
     }
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
 }
 | ID CLOSEBRACKET expression OPENBRACKET ASSIGNMENT expression SEMICOLON
 {
-    Symbol *var=find_symbol($2);
+    Symbol *var=find_symbol($1);
     if(!var){
-        semantic_error("Variable used before it been declared.",$2);
+        semantic_error("Variable used before it been declared.",$1);
     }
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), $6);
 };
@@ -503,6 +577,12 @@ expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
     Symbol *func=find_function($2);
     if(!func){
         semantic_error("Function called before it was defined or does not exist.",$2);
+    }
+    int actual_param_count=count_parameters($4);
+    if(func->param_count!=actual_param_count){
+        char msg[100];
+        sprintf(msg,"Function '%s' expect %d parameters, but %d parameters provided",$2,func->param_count,actual_param_count);
+        semantic_error(msg,$2);
     }
     $$ = mkNode("function_call", mkNode($2, NULL, NULL), $4);
 }
@@ -732,6 +812,7 @@ Symbol *add_function(char *name, DataType return_type, int param_count, DataType
     sym->array_size = 0;
     sym->line_number = yylineno;
     sym->param_count = param_count;
+    printf("param_count=%d \n",param_count);
     sym->return_type = return_type;
     sym->is_defined = 1;
     sym->next = NULL;
@@ -1194,12 +1275,12 @@ int count_parameters(Node *param_list) {
     if (strcmp(param_list->token, "PARAM_EMPTY") == 0) return 0;
     
     int count = 0;
-    if (strcmp(param_list->token, "PARAMS_LIST") == 0) {
+    if (strcmp(param_list->token, "PARAMS_LIST") == 0 || strcmp(param_list->token, "expr_list") == 0) {
         // Process left side
         count += count_parameters(param_list->left);
         // Process right side
         count += count_parameters(param_list->right);
-    } else if (strcmp(param_list->token, "PARAM") == 0) {
+    } else if (strcmp(param_list->token, "PARAM") == 0 || param_list->token !=NULL) {
         count = 1;
     }
     
@@ -1231,14 +1312,18 @@ void extract_param_types(Node *param_list, DataType **types, int *param_count) {
 // Helper function for extracting parameter types
 void extract_param_types_helper(Node *param_node, DataType *types, int *index) {
     if (!param_node) return;
-    
+
+    printf("DEBUG: Visiting node with token: %s\n", param_node->token);
+
     if (strcmp(param_node->token, "PARAMS_LIST") == 0) {
         extract_param_types_helper(param_node->left, types, index);
         extract_param_types_helper(param_node->right, types, index);
     } else if (strcmp(param_node->token, "PARAM") == 0) {
+        printf("DEBUG: Extracting type from: %s\n", param_node->left->token);
         types[(*index)++] = get_type_from_string(param_node->left->token);
     }
 }
+
 
 // Check parameter ordering
 void check_param_order(Node *param_list) {
@@ -1280,6 +1365,25 @@ void check_type_compatibility(DataType target_type, DataType source_type, char *
             yylineno, context, type_to_string(source_type), type_to_string(target_type));
     exit(1);
 }
+
+void add_parameters_to_scope(Node *param_list, DataType *param_types, int param_count) {
+    if (!param_list) return;
+
+    if (strcmp(param_list->token, "PARAMS_LIST") == 0) {
+        add_parameters_to_scope(param_list->left, param_types, param_count);
+        add_parameters_to_scope(param_list->right, param_types, param_count);
+    } 
+    else if (strcmp(param_list->token, "PARAM") == 0) {
+        static int index = 0;  // 🟢 שמור על אינדקס גלובלי זמני
+        char *param_name = param_list->right->token;
+        printf("DEBUG: Adding parameter '%s' of type '%s' to scope level %d\n", 
+               param_name, type_to_string(param_types[index]), current_scope_level);
+        add_symbol(param_name, param_types[index], KIND_PARAMETER);
+        index++;
+    }
+}
+
+
 
 void print_symbol_table() {
     printf("\n=== Symbol Table ===\n");
