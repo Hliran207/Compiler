@@ -1,9 +1,10 @@
-def foo(par1 int:a): returns int
+def truth() : returns bool
 begin
-    return a;
+    return TRUE;
 end
 
-def _main_():
+def _main_() :
+var type bool : k;
 begin
-    call foo(1, 2);           /* ← פרמטר מיותר */
+    k = call truth();  
 end
