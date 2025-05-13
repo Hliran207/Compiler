@@ -28,7 +28,7 @@ int yyerror(char *s);
 "while"         {return WHILE; }
 "for"           {return FOR; }
 "var"           {return VAR; }
-"par"[1-9][0-9]* {return PAR; } 
+"par"[1-9][0-9]*   { yylval.str = strdup(yytext); return PAR; } 
 "return"        {return RETURN; }
 "null"          {return NULLL; }
 "do"            {return DO; }

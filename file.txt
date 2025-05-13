@@ -1,10 +1,62 @@
-def truth() : returns bool
+def add(par1 int : a; par2 real : b) : returns real
+    var type real : sum;
 begin
-    return TRUE;
+    sum = a + b;                
+    return sum;                 
 end
 
-def _main_() :
-var type bool : k;
+def negate(par1 bool : x) : returns bool
 begin
-    k = call truth();  
+    return not x;               
+end
+
+
+
+def _main_() :
+var type int     : i;
+ type real    : r;
+ type bool    : ok;
+ type char    : ch;
+ type string  : s[6] : "hello";
+ type int*    : pi;
+ type char*   : pc;
+begin
+    
+    i  = 3;
+    r  = call add(i, 2.5);      
+    ok = call negate(FALSE);
+
+    ok = (r > 4) and ok;         
+    ok = i == 3;                
+
+    
+    pi = &i;                    
+    pc = &s[1];                 
+
+    
+    *pi = i + 1;                
+    pc  = null;                 
+    
+    ch = 'Z';
+    
+
+   
+    if ok :
+        begin
+            r = |s|;            
+        end
+
+    while not ok :
+        begin
+            ok = TRUE;
+        end
+
+    for(i = 0 ; i < 3 ; i = i + 1) :
+            var type int : tmp;
+        begin
+            tmp = i;
+        end
+
+   
+
 end

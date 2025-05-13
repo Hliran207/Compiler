@@ -77,6 +77,7 @@ Scope *current_scope = NULL;
 int has_main = 0; // Flag for _main_ function
 int current_scope_level = 0;
 static DataType current_var_type = TYPE_INVALID;
+int expected_param_num = 1; //for check order parameter list
 
 Node *mkNode(char *token, Node *left, Node *right);
 void printtree(Node * tree, int tab);
@@ -112,6 +113,7 @@ void verify_argument_type(Node *arg_list, Symbol *func);
 void verify_bool(Node *cond_node, const char *context);
 void verify_string_index(Node *id_node, Node *index_expr);
 void verify_assignment(Node *left, Node *right);
+static void add_params_rec(Node *plist, DataType *types, int *idx);
 %}
 
 %union
@@ -151,7 +153,11 @@ function_list : function_list function { $$ = mkNode("Function_list", $1, $2); }
 | function_list main_function { $$ = mkNode("Function_list", $1, $2); }
 | main_function {$$=$1;};
 
-main_function : DEF MAIN_FUNC OPENPAREN parameter_list CLOSEPAREN
+main_function : DEF MAIN_FUNC OPENPAREN
+{
+    expected_param_num = 1;
+} 
+parameter_list CLOSEPAREN
 {
     if(has_main)
     {
@@ -159,7 +165,7 @@ main_function : DEF MAIN_FUNC OPENPAREN parameter_list CLOSEPAREN
     }
     has_main=1;
 
-    if(count_parameters($4)!=0){
+    if(count_parameters($5)!=0){
         semantic_error("_main_ procedure must not accept any parameters",$2);
     }
     add_function("_main_",TYPE_VOID,0,NULL);
@@ -172,14 +178,18 @@ main_function : DEF MAIN_FUNC OPENPAREN parameter_list CLOSEPAREN
 
     /* create nodes for readability */
     Node *idnode = mkNode("_main_", NULL, NULL);
-    Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
-    Node *bodynode = mkNode("BODY", $8, $10);
+    Node *parametersnodes = mkNode("PARAMETERS", $5, NULL);
+    Node *bodynode = mkNode("BODY", $9, $11);
     $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
     print_symbol_table();
     exit_scope();
 };
 
-function : DEF ID OPENPAREN parameter_list CLOSEPAREN 
+function : DEF ID OPENPAREN
+    {
+        expected_param_num = 1;
+    }
+    parameter_list CLOSEPAREN 
         {
             if(find_symbol_in_scope($2,current_scope)){
                 semantic_error("Function with the same name already exists in the current scope",$2);
@@ -189,37 +199,42 @@ function : DEF ID OPENPAREN parameter_list CLOSEPAREN
             DataType *param_types=NULL;
             int param_count=0;
 
-            extract_param_types($4,&param_types,&param_count);
+            extract_param_types($5,&param_types,&param_count);
             
             add_function($2,TYPE_INVALID,param_count,param_types);
             
 
             enter_scope();
-            add_parameters_to_scope($4,param_types,param_count);
+            add_parameters_to_scope($5,param_types,param_count);
         }
         COLON returns_spec opt_var BEGIN_T stat_list return_stat END
         {
             Symbol *f=find_function($2);
-            if(f) f->return_type=get_type_from_string($8->token);
+            if(f) f->return_type=get_type_from_string($9->token);
 
-            DataType declared = get_type_from_string($8->token);
-            DataType delivered = get_expression_type($12->left);
+            DataType declared = get_type_from_string($9->token);
+            DataType delivered = get_expression_type($13->left);
 
 
             check_type_compatibility(declared, delivered, "return statement");
 
             /* create nodes for readability */
             Node *idnode = mkNode($2, NULL, NULL);
-            Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
-            Node *returnsnode = mkNode("RETURNS", $8, NULL);
-            Node *body_statements = mkNode("statements", $11, $12);
-            Node *bodynode = mkNode("BODY", $9, body_statements);
+            Node *parametersnodes = mkNode("PARAMETERS", $5, NULL);
+            Node *returnsnode = mkNode("RETURNS", $9, NULL);
+            Node *body_statements = mkNode("statements", $12, $13);
+            Node *bodynode = mkNode("BODY", $10, body_statements);
             Node *defbody = mkNode("DEF_BODY", returnsnode, bodynode);
             $$ = mkNode("FUNCTION", idnode, mkNode("FUNC_PARTS", parametersnodes, defbody));
             print_symbol_table();
             exit_scope();
         }
-| DEF ID OPENPAREN parameter_list CLOSEPAREN
+| DEF ID OPENPAREN
+{
+    
+    expected_param_num = 1;  
+}
+ parameter_list CLOSEPAREN
 {
     if(find_symbol_in_scope($2,current_scope)){
         semantic_error("Procedure with the same name already exists in the current scope",$2);
@@ -229,14 +244,14 @@ function : DEF ID OPENPAREN parameter_list CLOSEPAREN
     DataType *param_types=NULL;
     int param_count=0;
 
-    extract_param_types($4,&param_types,&param_count);
+    extract_param_types($5,&param_types,&param_count);
     add_function($2,TYPE_VOID,param_count,NULL);
     printf("DEBUG: Added function '%s' with %d parameters, return type %s at scope %d\n", 
        $2, param_count, type_to_string(TYPE_VOID), current_scope_level);
 
 
     enter_scope();
-    add_parameters_to_scope($4,param_types,param_count);
+    add_parameters_to_scope($5,param_types,param_count);
     
 }
  COLON opt_var BEGIN_T stat_list END
@@ -244,8 +259,8 @@ function : DEF ID OPENPAREN parameter_list CLOSEPAREN
 
     /* create nodes for readability */
     Node *idnode = mkNode($2, NULL, NULL);
-    Node *parametersnodes = mkNode("PARAMETERS", $4, NULL);
-    Node *bodynode = mkNode("BODY", $8, $10);
+    Node *parametersnodes = mkNode("PARAMETERS", $5, NULL);
+    Node *bodynode = mkNode("BODY", $9, $11);
     $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
     print_symbol_table();
     exit_scope();
@@ -268,7 +283,21 @@ parameter_list:
 param_decl_list : param_decl { $$ = $1; }
 | param_decl_list SEMICOLON param_decl { $$ = mkNode("PARAMS_LIST", $1, $3); };
 
-param_decl : PAR type COLON ID { $$ = mkNode("PARAM", $2, mkNode($4, NULL, NULL)); };
+param_decl : PAR
+{
+    int param_num = 0;
+    sscanf($1,"par%d", &param_num);
+
+    
+    if (param_num != expected_param_num) {
+        char msg[120];
+        sprintf(msg, "Parameters must be ordered sequentially (par1, par2, ...). Expected par%d but found %s", expected_param_num, $1);
+        semantic_error(msg, $1);
+        }
+    expected_param_num = param_num+1;
+}
+
+type COLON ID { $$ = mkNode("PARAM", $3, mkNode($5, NULL, NULL)); };
 
 type : INT { $$ = mkNode("INT", NULL, NULL); }
 | BOOL { $$ = mkNode("BOOL", NULL, NULL); }
@@ -975,39 +1004,41 @@ DataType get_expression_type(Node *expr)
         
         return TYPE_BOOL;
     }
-        // Comparison operators (==, !=, >, >=, <, <=)
-    if (strcmp(expr->token, "==") == 0 || strcmp(expr->token, "!=") == 0 ||
-        strcmp(expr->token, ">") == 0 || strcmp(expr->token, ">=") == 0 ||
+        // Comparison operators (>, >=, <, <=)
+    if (strcmp(expr->token, ">") == 0 || strcmp(expr->token, ">=") == 0 ||
         strcmp(expr->token, "<") == 0 || strcmp(expr->token, "<=") == 0) {
         
         DataType left_type = get_expression_type(expr->left);
         DataType right_type = get_expression_type(expr->right);
         
-        // For equality operators (== and !=)
-        if (strcmp(expr->token, "==") == 0 || strcmp(expr->token, "!=") == 0) {
-            // Types must be compatible
-            if (left_type != right_type && 
-                !(is_pointer_type(left_type) && strcmp(expr->right->token, "null") == 0) &&
-                !(is_pointer_type(right_type) && strcmp(expr->left->token, "null") == 0)) {
-                
-                char error_msg[100];
-                sprintf(error_msg, "Operator '%s' requires compatible operands, got '%s' and '%s'", 
-                        expr->token, type_to_string(left_type), type_to_string(right_type));
-                semantic_error(error_msg, "");
-            }
+        if(!is_numeric_type(left_type)||!is_numeric_type(right_type)){
+             semantic_error("Relational operators require INT or REAL operands","");
         }
-        // For relational operators (>, <, >=, <=)
-        else {
-            // Both operands must be numeric
-            if (!is_numeric_type(left_type) || !is_numeric_type(right_type)) {
-                char error_msg[100];
-                sprintf(error_msg, "Operator '%s' requires numeric operands, got '%s' and '%s'", 
-                        expr->token, type_to_string(left_type), type_to_string(right_type));
-                semantic_error(error_msg, "");
-            }
-        }
-        
-        return TYPE_BOOL;
+            return TYPE_BOOL;
+       
+    }
+
+    if (strcmp(expr->token,"==")==0 || strcmp(expr->token,"!=")==0) {
+
+        DataType left_type = get_expression_type(expr->left);
+        DataType right_type = get_expression_type(expr->right);
+
+        /* primitive exact match */
+        if (left_type == right_type &&
+            (left_type==TYPE_INT || left_type==TYPE_BOOL || left_type==TYPE_REAL || left_type==TYPE_CHAR))
+            return TYPE_BOOL;
+
+        /* pointer-to-same-base */
+        if (is_pointer_type(left_type) && left_type == right_type)
+            return TYPE_BOOL;
+
+        /* pointer vs null */
+        if ((is_pointer_type(left_type) && strcmp(expr->right->token,"null")==0) ||
+            (is_pointer_type(right_type) && strcmp(expr->left->token,"null")==0))
+            return TYPE_BOOL;
+
+        semantic_error("Operands of ==/!= must be two INT, BOOL, REAL, CHAR, "
+                    "or matching pointers","");
     }
 
     // Logical not
@@ -1133,35 +1164,15 @@ DataType get_expression_type(Node *expr)
     }
 
     // Length operator
-    if (strcmp(expr->token, "length") == 0) {
-        Node* operand_node = expr->left;
-        if (!operand_node)
-            return TYPE_INVALID;
-            
-        // Check if it's a variable
-        Symbol* var_sym = find_symbol(operand_node->token);
-        if (!var_sym) {
-            // If it's not a variable name directly, check if it's an expression
-            DataType operand_type = get_expression_type(operand_node);
-            
-            // Only strings can have length
-            if (operand_type != TYPE_STRING) {
-                char error_msg[100];
-                sprintf(error_msg, "Length operator can only be applied to strings, got '%s'", 
-                        type_to_string(operand_type));
-                semantic_error(error_msg, "");
-            }
-        } else {
-            // It's a variable - check its type
-            if (var_sym->type != TYPE_STRING) {
-                char error_msg[100];
-                sprintf(error_msg, "Length operator can only be applied to strings, got '%s'", 
-                        type_to_string(var_sym->type));
-                semantic_error(error_msg, var_sym->name);
-            }
-        }
+    if (strcmp(expr->token, "length") == 0)            
+    {
         
-        return TYPE_INT;
+        DataType op_type = get_expression_type(expr->left);
+
+        if (op_type != TYPE_STRING) {
+            semantic_error("| | operator can only be applied to STRING values", "");
+        }
+        return TYPE_INT;                               
     }
 
         // Array element
@@ -1440,31 +1451,49 @@ void verify_string_index(Node *id_node, Node *index_expr){
     }
 }
 
-void verify_assignment(Node *left, Node *right){
+void verify_assignment(Node *left, Node *right)
+{
     DataType left_type = TYPE_INVALID;
 
-
-    if(strcmp(left->token, "array_element")==0){
-        Node *id = left->left;
+    /* 1. array element  s[i] = … */
+    if (strcmp(left->token, "array_element") == 0) {
+        Node *id    = left->left;
         Node *index = left->right;
-
         verify_string_index(id, index);
         left_type = TYPE_CHAR;
     }
-    else{
-        Symbol *sym = find_symbol(left->token);
-         if (!sym) semantic_error("Variable used before it was declared",
-                                 left->token);
 
+    /* 2. pointer dereference  *p = … */
+    else if (strcmp(left->token, "dereference") == 0) {
+        Node *id = left->left;                 /* pointer variable node */
+        if (!id)
+            semantic_error("Invalid dereference node", "");
+
+        Symbol *sym = find_symbol(id->token);
+        if (!sym)
+            semantic_error("Variable used before it was declared", id->token);
+
+        if (!is_pointer_type(sym->type))
+            semantic_error("Can only dereference a pointer variable", sym->name);
+
+        left_type = get_base_type(sym->type);  /* INT_PTR → INT, etc. */
+    }
+
+    /* 3. plain identifier  x = … */
+    else {
+        Symbol *sym = find_symbol(left->token);
+        if (!sym)
+            semantic_error("Variable used before it was declared", left->token);
         left_type = sym->type;
     }
 
+    /* -------- right-hand side checks stay the same -------- */
     DataType right_type = get_expression_type(right);
+
     if (strcmp(right->token, "null") == 0) {
-        if (!is_pointer_type(left_type)) {
-            semantic_error("null may be assigned only to pointer variables","");
-        }
-        return;                        
+        if (!is_pointer_type(left_type))
+            semantic_error("null may be assigned only to pointer variables", "");
+        return;
     }
 
     check_type_compatibility(left_type, right_type, "Assignment");
@@ -1511,23 +1540,29 @@ void check_type_compatibility(DataType target_type, DataType source_type, char *
 }
 
 void add_parameters_to_scope(Node *param_list, DataType *param_types, int param_count) {
-    if (!param_list) return;
-
-    if (strcmp(param_list->token, "PARAMS_LIST") == 0) {
-        add_parameters_to_scope(param_list->left, param_types, param_count);
-        add_parameters_to_scope(param_list->right, param_types, param_count);
-    } 
-    else if (strcmp(param_list->token, "PARAM") == 0) {
-        static int index = 0;  // 🟢 שמור על אינדקס גלובלי זמני
-        char *param_name = param_list->right->token;
-        printf("DEBUG: Adding parameter '%s' of type '%s' to scope level %d\n", 
-               param_name, type_to_string(param_types[index]), current_scope_level);
-        add_symbol(param_name, param_types[index], KIND_PARAMETER);
-        index++;
-    }
+    (void)param_count;              /* not needed here */
+    int idx = 0;                    /* fresh counter for this function */
+    add_params_rec(param_list, param_types, &idx);
 }
 
+static void add_params_rec(Node *plist,
+                           DataType *types,
+                           int *idx)
+{
+    if (!plist) return;
 
+    if (strcmp(plist->token, "PARAMS_LIST") == 0) {
+        add_params_rec(plist->left,  types, idx);
+        add_params_rec(plist->right, types, idx);
+    } else if (strcmp(plist->token, "PARAM") == 0) {
+        const char *name = plist->right->token;
+        DataType    tp   = types[*idx];          /* take current slot   */
+        printf("DEBUG: Adding parameter '%s' of type '%s' to scope %d\n",
+               name, type_to_string(tp), current_scope_level);
+        add_symbol((char *)name, tp, KIND_PARAMETER);
+        (*idx)++;                                /* advance for next one */
+    }
+}
 
 void print_symbol_table() {
     printf("\n=== Symbol Table ===\n");

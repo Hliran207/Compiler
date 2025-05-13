@@ -955,7 +955,7 @@ YY_RULE_SETUP
 case 16:
 YY_RULE_SETUP
 #line 31 "lexer.l"
-{return PAR; } 
+{ yylval.str = strdup(yytext); return PAR; } 
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
