@@ -267,12 +267,12 @@ function : DEF ID OPENPAREN
 };
 
 returns_spec : RETURNS type {
-    if(strcmp($2->token, "STRING") == 0){
-        semantic_error("Return type of a function cannot be STRING", $2->token);
-    }
-     $$ = $2;
-     
-      };
+                if(strcmp($2->token, "STRING") == 0){
+                    semantic_error("Return type of a function cannot be STRING", $2->token);
+                }
+                $$ = $2;}
+                | {$$=mkNode("RETURN VOID",NULL,NULL);};
+
 
 parameter_list:
 {
@@ -556,7 +556,8 @@ assignment_stat : ID ASSIGNMENT expression SEMICOLON
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), $6);
 };
 
-return_stat : RETURN expression SEMICOLON { $$ = mkNode("RETURN", $2, NULL); };
+return_stat : RETURN expression SEMICOLON { $$ = mkNode("RETURN", $2, NULL);}
+                | {$$=mkNode("RETURN VOID",NULL,NULL);}; 
 
 expression_list : expression { $$ = $1; }
 | expression COMMA expression_list { $$ = mkNode("expr_list", $1, $3); };

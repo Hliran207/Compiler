@@ -1,8 +1,7 @@
-def add(par1 int : a; par2 real : b) : returns real
+def add(par1 int : a; par2 real : b) :  
     var type real : sum;
 begin
     sum = a + b;                
-    return sum;                 
 end
 
 def negate(par1 bool : x) : returns bool
@@ -23,7 +22,7 @@ var type int     : i;
 begin
     
     i  = 3;
-    r  = call add(i, 2.5);      
+    call add(i, 2.5);      
     ok = call negate(FALSE);
 
     ok = (r > 4) and ok;         

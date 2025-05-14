@@ -1,14 +1,347 @@
-Semantic error (line 8): Function 'foo' expect 1 parameters, but 2 parameters provided 'foo'
-DEBUG: Entering function definition for 'foo'
+DEBUG: Entering function definition for 'add'
+DEBUG: Visiting node with token: PARAMS_LIST
 DEBUG: Visiting node with token: PARAM
 DEBUG: Extracting type from: INT
-param_count=1 
-DEBUG: Adding parameter 'a' of type 'INT' to scope level 2
+DEBUG: Visiting node with token: PARAM
+DEBUG: Extracting type from: REAL
+param_count=2 
+DEBUG: Adding parameter 'a' of type 'INT' to scope 2
+DEBUG: Adding parameter 'b' of type 'REAL' to scope 2
 
 === Symbol Table ===
 Name                 Type       Kind       Scope    Line    
 ------------------------------------------------
+sum                  REAL       Variable   2        2       
+b                    REAL       Parameter  2        1       
 a                    INT        Parameter  2        1       
-foo                  VOID       Function   1        1       
+add                  VOID       Function   1        1       
+------------------------------------------------
+DEBUG: Entering function definition for 'negate'
+DEBUG: Visiting node with token: PARAM
+DEBUG: Extracting type from: BOOL
+param_count=1 
+DEBUG: Adding parameter 'x' of type 'BOOL' to scope 2
+
+=== Symbol Table ===
+Name                 Type       Kind       Scope    Line    
+------------------------------------------------
+x                    BOOL       Parameter  2        7       
+negate               VOID       Function   1        7       
+add                  VOID       Function   1        1       
 ------------------------------------------------
 param_count=0 
+
+=== Symbol Table ===
+Name                 Type       Kind       Scope    Line    
+------------------------------------------------
+tmp                  INT        Variable   2        54      
+pc                   CHARPTR    Variable   2        21      
+pi                   INTPTR     Variable   2        20      
+s                    STRING     Variable   2        19      
+ch                   CHAR       Variable   2        18      
+ok                   BOOL       Variable   2        17      
+r                    REAL       Variable   2        16      
+i                    INT        Variable   2        15      
+_main_               VOID       Function   1        14      
+negate               VOID       Function   1        7       
+add                  VOID       Function   1        1       
+------------------------------------------------
+(Function_list
+	(Function_list
+		(FUNCTION
+			(add)
+		(FUNC_PARTS
+			(PARAMETERS
+				(PARAMS_LIST
+					(PARAM
+						(INT)
+					(a)
+					)
+				(PARAM
+					(REAL)
+				(b)
+				)
+				)
+			)
+		(DEF_BODY
+			(RETURNS
+				(RETURN VOID)
+			)
+		(BODY
+			(VAR_DECL
+				(REAL)
+			(VAR
+				(sum)
+			)
+			)
+		(statements
+			(statements
+				(assign
+					(sum)
+				(+
+					(a)
+				(b)
+				)
+				)
+			(empty_state_list)
+			)
+		(RETURN VOID)
+		)
+		)
+		)
+		)
+		)
+	(FUNCTION
+		(negate)
+	(FUNC_PARTS
+		(PARAMETERS
+			(PARAM
+				(BOOL)
+			(x)
+			)
+		)
+	(DEF_BODY
+		(RETURNS
+			(BOOL)
+		)
+	(BODY
+		(VAR_EMPTY)
+	(statements
+		(empty_state_list)
+	(RETURN
+		(not
+			(x)
+		)
+	)
+	)
+	)
+	)
+	)
+	)
+	)
+(PROCEDURE
+	(_main_)
+(PROC_PARTS
+	(PARAMETERS
+		(PARAM_EMPTY)
+	)
+(BODY
+	(VAR_DECL
+		(VAR_DECL
+			(VAR_DECL
+				(VAR_DECL
+					(VAR_DECL
+						(VAR_DECL
+							(VAR_DECL
+								(INT)
+							(VAR
+								(i)
+							)
+							)
+						(VAR_DECL
+							(REAL)
+						(VAR
+							(r)
+						)
+						)
+						)
+					(VAR_DECL
+						(BOOL)
+					(VAR
+						(ok)
+					)
+					)
+					)
+				(VAR_DECL
+					(CHAR)
+				(VAR
+					(ch)
+				)
+				)
+				)
+			(VAR_DECL
+				(STRING)
+			(STRING_VAL_ASSIGN
+				(STRING_VAR
+					(s)
+				(6)
+				)
+			("hello")
+			)
+			)
+			)
+		(VAR_DECL
+			(INTPTR)
+		(VAR
+			(pi)
+		)
+		)
+		)
+	(VAR_DECL
+		(CHARPTR)
+	(VAR
+		(pc)
+	)
+	)
+	)
+(statements
+	(assign
+		(i)
+	(3)
+	)
+(statements
+	(FUNC_CALL
+		(add)
+	(expr_list
+		(i)
+	(2.5)
+	)
+	)
+(statements
+	(ASSIGNMENT
+		(ok)
+	(CALL
+		(negate)
+	(FALSE)
+	)
+	)
+(statements
+	(assign
+		(ok)
+	(and
+		(>
+			(r)
+		(4)
+		)
+	(ok)
+	)
+	)
+(statements
+	(assign
+		(ok)
+	(==
+		(i)
+	(3)
+	)
+	)
+(statements
+	(ref_assign
+		(pi)
+	(i)
+	)
+(statements
+	(assign
+		(pc)
+	(address
+		(array_element
+			(s)
+		(1)
+		)
+	)
+	)
+(statements
+	(pointer_assign
+		(pi)
+	(+
+		(i)
+	(1)
+	)
+	)
+(statements
+	(null_assign
+		(pc)
+	(null)
+	)
+(statements
+	(assign
+		(ch)
+	('Z')
+	)
+(statements
+	(if
+		(ok)
+	(block
+		(statements
+			(assign
+				(r)
+			(length
+				(s)
+			)
+			)
+		(empty_state_list)
+		)
+	)
+	)
+(statements
+	(while
+		(not
+			(ok)
+		)
+	(block
+		(statements
+			(assign
+				(ok)
+			(TRUE)
+			)
+		(empty_state_list)
+		)
+	)
+	)
+(statements
+	(for
+		(for-header
+			(init
+				(i)
+			(0)
+			)
+		(loop
+			(<
+				(i)
+			(3)
+			)
+		(update
+			(i)
+		(+
+			(i)
+		(1)
+		)
+		)
+		)
+		)
+	(block
+		(block
+			(statements
+				(assign
+					(tmp)
+				(i)
+				)
+			(empty_state_list)
+			)
+		)
+	(VAR_DECL
+		(INT)
+	(VAR
+		(tmp)
+	)
+	)
+	)
+	)
+(empty_state_list)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+Parsing and semantic analysis completed successfully.
