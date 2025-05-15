@@ -128,7 +128,7 @@ struct Node *node;
 %token<str> LENGTH SEMICOLON COLON COMMA OPENBRACE CLOSEBRACE OPENPAREN CLOSEPAREN OPENBRACKET CLOSEBRACKET 
 %token<str> B_TRUE B_FALSE CHAR_LIT STRING_LIT DEC_LIT HEX_LIT REAL_LIT ID MAIN_FUNC
 
-%type<node> program function_list function main_function returns_spec parameter_list param_decl_list 
+%type<node> program function_list function main_function function_item returns_spec parameter_list param_decl_list 
 %type<node> param_decl type opt_var var_decl_list var_decl var_item_list var_item 
 %type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat 
 %type<node> for_stat assignment_stat return_stat expression condition expression_list for_header update_exp
@@ -148,10 +148,11 @@ program : function_list
     printtree($$, 0);
 };
 
-function_list : function_list function { $$ = mkNode("Function_list", $1, $2); }
-| function { $$ = $1; }
-| function_list main_function { $$ = mkNode("Function_list", $1, $2); }
-| main_function {$$=$1;};
+function_list : function_list function_item { $$ = mkNode("Function_list", $1, $2); }
+| function_item { $$ = $1; };
+
+function_item : function {$$=$1;}
+                | main_function {$$=$1;};
 
 main_function : DEF MAIN_FUNC OPENPAREN
 {
