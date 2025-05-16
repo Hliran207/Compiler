@@ -78,6 +78,7 @@ int has_main = 0; // Flag for _main_ function
 int current_scope_level = 0;
 static DataType current_var_type = TYPE_INVALID;
 int expected_param_num = 1; //for check order parameter list
+static DataType current_function_return_type=TYPE_VOID;
 
 Node *mkNode(char *token, Node *left, Node *right);
 void printtree(Node * tree, int tab);
@@ -114,6 +115,7 @@ void verify_bool(Node *cond_node, const char *context);
 void verify_string_index(Node *id_node, Node *index_expr);
 void verify_assignment(Node *left, Node *right);
 static void add_params_rec(Node *plist, DataType *types, int *idx);
+
 %}
 
 %union
@@ -130,8 +132,8 @@ struct Node *node;
 
 %type<node> program function_list function main_function function_item returns_spec parameter_list param_decl_list 
 %type<node> param_decl type opt_var var_decl_list var_decl var_item_list var_item 
-%type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat 
-%type<node> for_stat assignment_stat return_stat expression condition expression_list for_header update_exp
+%type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat optional_return
+%type<node> for_stat assignment_stat return_stat expression  expression_list for_header update_exp
 
 %left PLUS MINUS 
 %left MULTI DIV 
@@ -215,7 +217,7 @@ function : DEF ID OPENPAREN
 
             DataType declared = get_type_from_string($9->token);
             DataType delivered = get_expression_type($13->left);
-
+            current_function_return_type=declared;
 
             check_type_compatibility(declared, delivered, "return statement");
 
@@ -244,7 +246,7 @@ function : DEF ID OPENPAREN
 
     DataType *param_types=NULL;
     int param_count=0;
-
+    current_function_return_type=TYPE_VOID;
     extract_param_types($5,&param_types,&param_count);
     add_function($2,TYPE_VOID,param_count,NULL);
     printf("DEBUG: Added function '%s' with %d parameters, return type %s at scope %d\n", 
@@ -257,6 +259,8 @@ function : DEF ID OPENPAREN
 }
  COLON opt_var BEGIN_T stat_list END
 {
+    DataType ret_type=TYPE_VOID;
+
 
     /* create nodes for readability */
     Node *idnode = mkNode($2, NULL, NULL);
@@ -380,8 +384,8 @@ stat_list:
 {
     $$ = mkNode("empty_state_list", NULL, NULL);
 }
-| stat { $$ = $1; }
-| stat stat_list { $$ = mkNode("statements", $1, $2); };
+| stat stat_list { $$ = mkNode("statements", $1, $2); }
+;
 
 stat : function { $$ = $1; }
 | assignment_stat { $$ = $1; }
@@ -488,15 +492,19 @@ update_exp : ID ASSIGNMENT expression {
     verify_assignment(mkNode($1,NULL,NULL), $3);
     $$ = mkNode("update", mkNode($1, NULL, NULL), $3); };
 
-condition : expression { $$ = $1; }
+/*condition : expression { $$ = $1; }
 | NOT condition { $$ = mkNode("not", $2, NULL); }
 | OPENPAREN condition CLOSEPAREN { $$ = $2; }
 | B_TRUE { $$ = mkNode("true", NULL, NULL); }
 | B_FALSE { $$ = mkNode("false", NULL, NULL); };
+*/
+block_stat : opt_var BEGIN_T stat_list optional_return END {$$ = mkNode("block", $1, mkNode("BLOCK_BODY",$3,$4));}
+            | assignment_stat {$$=$1;}
+            ;
 
-block_stat : BEGIN_T stat_list END { $$ = mkNode("block", $2, NULL); }
-             /* | opt_var BEGIN_T stat_list END {$$ = mkNode("block", $3, $1);} */
-             ;
+optional_return : return_stat {$$=$1;}
+                  | {$$=mkNode("NO RETURN IN BLOCK",NULL,NULL);}
+                  ;
 
 assignment_stat : ID ASSIGNMENT expression SEMICOLON 
 {
@@ -1565,6 +1573,11 @@ static void add_params_rec(Node *plist,
         (*idx)++;                                /* advance for next one */
     }
 }
+
+
+
+
+
 
 void print_symbol_table() {
     printf("\n=== Symbol Table ===\n");

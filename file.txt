@@ -1,61 +1,43 @@
-def add(par1 int : a; par2 real : b) :  
-    var type real : sum;
+def foo(): returns int begin return 0; end
+def foo_2(): returns int
+var
+    type int:a;
 begin
-    sum = a + b;                
+    a = 2;
+    return a;
 end
-
-def negate(par1 bool : x) : returns bool
+def foo_3(): returns int
 begin
-    return not x;               
+    if TRUE:
+    begin
+        return call foo();
+    end
+    return 0;
+end
+def foo_4():
+var
+    type int:a;
+begin
+    a = 2;
 end
 
 
 
 def _main_() :
-var type int     : i;
- type real    : r;
- type bool    : ok;
- type char    : ch;
- type string  : s[6] : "hello";
- type int*    : pi;
- type char*   : pc;
+var 
+ type string:a[30],b[100]:"moshe",s[11];
+ type char:c;
+ type int:i;
 begin
-    
-    i  = 3;
-    call add(i, 2.5);      
-    ok = call negate(FALSE);
-
-    ok = (r > 4) and ok;         
-    ok = i == 3;                
-
-    
-    pi = &i;                    
-    pc = &s[1];                 
-
-    
-    *pi = i + 1;                
-    pc  = null;                 
-    
-    ch = 'Z';
-    
-
-   
-    if ok :
-        begin
-            r = |s|;            
-        end
-
-    while not ok :
-        begin
-            ok = TRUE;
-        end
-
-    for(i = 0 ; i < 3 ; i = i + 1) :
-            var type int : tmp;
-        begin
-            tmp = i;
-        end
-
-   
+    if(TRUE):
+        
+        i=5;
+    c = 'e';
+    a[19] = 'f';
+    a[4+2] = 'g';
+    b = a;
+    b[3] = c;
+    a = "test";
+    i = |b|;   
 
 end

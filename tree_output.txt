@@ -1,118 +1,185 @@
-DEBUG: Entering function definition for 'add'
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: REAL
-param_count=2 
-DEBUG: Adding parameter 'a' of type 'INT' to scope 2
-DEBUG: Adding parameter 'b' of type 'REAL' to scope 2
+DEBUG: Entering function definition for 'foo'
+param_count=0 
 
 === Symbol Table ===
 Name                 Type       Kind       Scope    Line    
 ------------------------------------------------
-sum                  REAL       Variable   2        2       
-b                    REAL       Parameter  2        1       
-a                    INT        Parameter  2        1       
-add                  VOID       Function   1        1       
+foo                  VOID       Function   1        1       
 ------------------------------------------------
-DEBUG: Entering function definition for 'negate'
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: BOOL
-param_count=1 
-DEBUG: Adding parameter 'x' of type 'BOOL' to scope 2
+DEBUG: Entering function definition for 'foo_2'
+param_count=0 
 
 === Symbol Table ===
 Name                 Type       Kind       Scope    Line    
 ------------------------------------------------
-x                    BOOL       Parameter  2        7       
-negate               VOID       Function   1        7       
-add                  VOID       Function   1        1       
+a                    INT        Variable   2        4       
+foo_2                VOID       Function   1        2       
+foo                  VOID       Function   1        1       
+------------------------------------------------
+DEBUG: Entering function definition for 'foo_3'
+param_count=0 
+
+=== Symbol Table ===
+Name                 Type       Kind       Scope    Line    
+------------------------------------------------
+foo_3                VOID       Function   1        9       
+foo_2                VOID       Function   1        2       
+foo                  VOID       Function   1        1       
+------------------------------------------------
+DEBUG: Entering function definition for 'foo_4'
+param_count=0 
+
+=== Symbol Table ===
+Name                 Type       Kind       Scope    Line    
+------------------------------------------------
+a                    INT        Variable   2        19      
+foo_4                VOID       Function   1        17      
+foo_3                VOID       Function   1        9       
+foo_2                VOID       Function   1        2       
+foo                  VOID       Function   1        1       
 ------------------------------------------------
 param_count=0 
 
 === Symbol Table ===
 Name                 Type       Kind       Scope    Line    
 ------------------------------------------------
-tmp                  INT        Variable   2        54      
-pc                   CHARPTR    Variable   2        21      
-pi                   INTPTR     Variable   2        20      
-s                    STRING     Variable   2        19      
-ch                   CHAR       Variable   2        18      
-ok                   BOOL       Variable   2        17      
-r                    REAL       Variable   2        16      
-i                    INT        Variable   2        15      
-_main_               VOID       Function   1        14      
-negate               VOID       Function   1        7       
-add                  VOID       Function   1        1       
+i                    INT        Variable   2        30      
+c                    CHAR       Variable   2        29      
+s                    STRING     Variable   2        28      
+b                    STRING     Variable   2        28      
+a                    STRING     Variable   2        28      
+_main_               VOID       Function   1        26      
+foo_4                VOID       Function   1        17      
+foo_3                VOID       Function   1        9       
+foo_2                VOID       Function   1        2       
+foo                  VOID       Function   1        1       
 ------------------------------------------------
 (Function_list
 	(Function_list
+		(Function_list
+			(Function_list
+				(FUNCTION
+					(foo)
+				(FUNC_PARTS
+					(PARAMETERS
+						(PARAM_EMPTY)
+					)
+				(DEF_BODY
+					(RETURNS
+						(INT)
+					)
+				(BODY
+					(VAR_EMPTY)
+				(statements
+					(empty_state_list)
+				(RETURN
+					(0)
+				)
+				)
+				)
+				)
+				)
+				)
+			(FUNCTION
+				(foo_2)
+			(FUNC_PARTS
+				(PARAMETERS
+					(PARAM_EMPTY)
+				)
+			(DEF_BODY
+				(RETURNS
+					(INT)
+				)
+			(BODY
+				(VAR_DECL
+					(INT)
+				(VAR
+					(a)
+				)
+				)
+			(statements
+				(statements
+					(assign
+						(a)
+					(2)
+					)
+				(empty_state_list)
+				)
+			(RETURN
+				(a)
+			)
+			)
+			)
+			)
+			)
+			)
+			)
 		(FUNCTION
-			(add)
+			(foo_3)
 		(FUNC_PARTS
 			(PARAMETERS
-				(PARAMS_LIST
-					(PARAM
-						(INT)
-					(a)
-					)
-				(PARAM
-					(REAL)
-				(b)
-				)
-				)
+				(PARAM_EMPTY)
 			)
 		(DEF_BODY
 			(RETURNS
-				(RETURN VOID)
+				(INT)
 			)
 		(BODY
-			(VAR_DECL
-				(REAL)
-			(VAR
-				(sum)
-			)
-			)
+			(VAR_EMPTY)
 		(statements
 			(statements
-				(assign
-					(sum)
-				(+
-					(a)
-				(b)
+				(if
+					(TRUE)
+				(block
+					(VAR_EMPTY)
+				(BLOCK_BODY
+					(empty_state_list)
+				(RETURN
+					(function_call
+						(foo)
+					(PARAM_EMPTY)
+					)
+				)
+				)
 				)
 				)
 			(empty_state_list)
 			)
-		(RETURN VOID)
+		(RETURN
+			(0)
+		)
+		)
 		)
 		)
 		)
 		)
 		)
 	(FUNCTION
-		(negate)
+		(foo_4)
 	(FUNC_PARTS
 		(PARAMETERS
-			(PARAM
-				(BOOL)
-			(x)
-			)
+			(PARAM_EMPTY)
 		)
 	(DEF_BODY
 		(RETURNS
-			(BOOL)
+			(RETURN VOID)
 		)
 	(BODY
-		(VAR_EMPTY)
-	(statements
-		(empty_state_list)
-	(RETURN
-		(not
-			(x)
+		(VAR_DECL
+			(INT)
+		(VAR
+			(a)
 		)
-	)
+		)
+	(statements
+		(statements
+			(assign
+				(a)
+			(2)
+			)
+		(empty_state_list)
+		)
+	(RETURN VOID)
 	)
 	)
 	)
@@ -129,209 +196,96 @@ add                  VOID       Function   1        1
 	(VAR_DECL
 		(VAR_DECL
 			(VAR_DECL
-				(VAR_DECL
-					(VAR_DECL
-						(VAR_DECL
-							(VAR_DECL
-								(INT)
-							(VAR
-								(i)
-							)
-							)
-						(VAR_DECL
-							(REAL)
-						(VAR
-							(r)
-						)
-						)
-						)
-					(VAR_DECL
-						(BOOL)
-					(VAR
-						(ok)
-					)
-					)
-					)
-				(VAR_DECL
-					(CHAR)
-				(VAR
-					(ch)
-				)
-				)
-				)
-			(VAR_DECL
 				(STRING)
-			(STRING_VAL_ASSIGN
-				(STRING_VAR
-					(s)
-				(6)
+			(VAR_ITEM_LIST
+				(VAR_ITEM_LIST
+					(STRING_VAR
+						(a)
+					(30)
+					)
+				(STRING_VAL_ASSIGN
+					(STRING_VAR
+						(b)
+					(100)
+					)
+				("moshe")
 				)
-			("hello")
+				)
+			(STRING_VAR
+				(s)
+			(11)
 			)
 			)
 			)
 		(VAR_DECL
-			(INTPTR)
+			(CHAR)
 		(VAR
-			(pi)
+			(c)
 		)
 		)
-		)
-	(VAR_DECL
-		(CHARPTR)
-	(VAR
-		(pc)
-	)
-	)
-	)
-(statements
-	(assign
-		(i)
-	(3)
-	)
-(statements
-	(FUNC_CALL
-		(add)
-	(expr_list
-		(i)
-	(2.5)
-	)
-	)
-(statements
-	(ASSIGNMENT
-		(ok)
-	(CALL
-		(negate)
-	(FALSE)
-	)
-	)
-(statements
-	(assign
-		(ok)
-	(and
-		(>
-			(r)
-		(4)
-		)
-	(ok)
-	)
-	)
-(statements
-	(assign
-		(ok)
-	(==
-		(i)
-	(3)
-	)
-	)
-(statements
-	(ref_assign
-		(pi)
-	(i)
-	)
-(statements
-	(assign
-		(pc)
-	(address
-		(array_element
-			(s)
-		(1)
-		)
-	)
-	)
-(statements
-	(pointer_assign
-		(pi)
-	(+
-		(i)
-	(1)
-	)
-	)
-(statements
-	(null_assign
-		(pc)
-	(null)
-	)
-(statements
-	(assign
-		(ch)
-	('Z')
-	)
-(statements
-	(if
-		(ok)
-	(block
-		(statements
-			(assign
-				(r)
-			(length
-				(s)
-			)
-			)
-		(empty_state_list)
-		)
-	)
-	)
-(statements
-	(while
-		(not
-			(ok)
-		)
-	(block
-		(statements
-			(assign
-				(ok)
-			(TRUE)
-			)
-		(empty_state_list)
-		)
-	)
-	)
-(statements
-	(for
-		(for-header
-			(init
-				(i)
-			(0)
-			)
-		(loop
-			(<
-				(i)
-			(3)
-			)
-		(update
-			(i)
-		(+
-			(i)
-		(1)
-		)
-		)
-		)
-		)
-	(block
-		(block
-			(statements
-				(assign
-					(tmp)
-				(i)
-				)
-			(empty_state_list)
-			)
 		)
 	(VAR_DECL
 		(INT)
 	(VAR
-		(tmp)
+		(i)
 	)
 	)
+	)
+(statements
+	(if
+		(TRUE)
+	(assign
+		(i)
+	(5)
+	)
+	)
+(statements
+	(assign
+		(c)
+	('e')
+	)
+(statements
+	(array_assign
+		(a
+			(19)
+		)
+	('f')
+	)
+(statements
+	(array_assign
+		(a
+			(+
+				(4)
+			(2)
+			)
+		)
+	('g')
+	)
+(statements
+	(assign
+		(b)
+	(a)
+	)
+(statements
+	(array_assign
+		(b
+			(3)
+		)
+	(c)
+	)
+(statements
+	(assign
+		(a)
+	("test")
+	)
+(statements
+	(assign
+		(i)
+	(length
+		(b)
 	)
 	)
 (empty_state_list)
-)
-)
-)
-)
-)
 )
 )
 )
