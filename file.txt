@@ -1,4 +1,4 @@
-def foo(): returns int begin return 0; end
+def foo(): returns int begin return 3; end
 def foo_2(): returns int
 var
     type int:a;
@@ -21,6 +21,12 @@ begin
     a = 2;
 end
 
+def foo_5():
+var
+    type int:a;
+begin
+    a = 2;
+end
 
 
 def _main_() :

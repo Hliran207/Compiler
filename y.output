@@ -1,37 +1,22 @@
-Nonterminals useless in grammar
-
-    condition
-
-
 Terminals unused in grammar
 
     OPENBRACE
     CLOSEBRACE
 
 
-Rules useless in grammar
-
-  110 condition: expression
-  111          | NOT condition
-  112          | OPENPAREN condition CLOSEPAREN
-  113          | B_TRUE
-  114          | B_FALSE
-
-
 Rules useless in parser due to conflicts
 
    12 $@5: ε
 
-   52 stat_list: stat
-
 
 State 11 conflicts: 2 reduce/reduce
-State 71 conflicts: 2 reduce/reduce
-State 138 conflicts: 1 shift/reduce
-State 143 conflicts: 1 shift/reduce
-State 182 conflicts: 1 shift/reduce
-State 202 conflicts: 1 shift/reduce
-State 218 conflicts: 1 shift/reduce
+State 79 conflicts: 12 reduce/reduce
+State 141 conflicts: 3 shift/reduce
+State 148 conflicts: 1 shift/reduce
+State 177 conflicts: 1 shift/reduce
+State 187 conflicts: 1 shift/reduce
+State 207 conflicts: 1 shift/reduce
+State 223 conflicts: 1 shift/reduce
 
 
 Grammar
@@ -56,7 +41,7 @@ Grammar
 
    10 $@4: ε
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END
 
    12 $@5: ε
 
@@ -114,16 +99,16 @@ Grammar
    50        | NULLL
 
    51 stat_list: ε
-   52          | stat
-   53          | stat stat_list
+   52          | stat stat_list
 
-   54 stat: function
-   55     | assignment_stat
-   56     | if_stat
-   57     | while_stat
-   58     | for_stat
-   59     | do_while_stat
-   60     | block_stat
+   53 stat: function
+   54     | assignment_stat
+   55     | if_stat
+   56     | while_stat
+   57     | for_stat
+   58     | do_while_stat
+   59     | block_stat
+   60     | return_stat
    61     | call_stat
 
    62 call_stat: ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
@@ -147,44 +132,45 @@ Grammar
 
    75 update_exp: ID ASSIGNMENT expression
 
-   76 block_stat: BEGIN_T stat_list END
+   76 block_stat: opt_var BEGIN_T stat_list END
+   77           | assignment_stat
 
-   77 assignment_stat: ID ASSIGNMENT expression SEMICOLON
-   78                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
-   79                | MULTI ID ASSIGNMENT expression SEMICOLON
-   80                | ID ASSIGNMENT ADDRESS ID SEMICOLON
-   81                | ID ASSIGNMENT NULLL SEMICOLON
-   82                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
+   78 assignment_stat: ID ASSIGNMENT expression SEMICOLON
+   79                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
+   80                | MULTI ID ASSIGNMENT expression SEMICOLON
+   81                | ID ASSIGNMENT ADDRESS ID SEMICOLON
+   82                | ID ASSIGNMENT NULLL SEMICOLON
+   83                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
 
-   83 return_stat: RETURN expression SEMICOLON
-   84            | ε
+   84 return_stat: RETURN expression SEMICOLON
+   85            | RETURN SEMICOLON
 
-   85 expression_list: expression
-   86                | expression COMMA expression_list
+   86 expression_list: expression
+   87                | expression COMMA expression_list
 
-   87 expression: expression PLUS expression
-   88           | expression MINUS expression
-   89           | expression MULTI expression
-   90           | expression DIV expression
-   91           | expression AND expression
-   92           | expression OR expression
-   93           | expression EQL expression
-   94           | expression NOT_EQL expression
-   95           | expression GREATER expression
-   96           | expression GREATER_EQL expression
-   97           | expression LESS expression
-   98           | expression LESS_EQL expression
-   99           | NOT expression
-  100           | MINUS expression
-  101           | ADDRESS ID
-  102           | ADDRESS ID OPENBRACKET expression CLOSEBRACKET
-  103           | MULTI ID
-  104           | LENGTH ID LENGTH
-  105           | OPENPAREN expression CLOSEPAREN
-  106           | ID
-  107           | ID OPENBRACKET expression CLOSEBRACKET
-  108           | CALL ID OPENPAREN parameter_list CLOSEPAREN
-  109           | literal
+   88 expression: expression PLUS expression
+   89           | expression MINUS expression
+   90           | expression MULTI expression
+   91           | expression DIV expression
+   92           | expression AND expression
+   93           | expression OR expression
+   94           | expression EQL expression
+   95           | expression NOT_EQL expression
+   96           | expression GREATER expression
+   97           | expression GREATER_EQL expression
+   98           | expression LESS expression
+   99           | expression LESS_EQL expression
+  100           | NOT expression
+  101           | MINUS expression
+  102           | ADDRESS ID
+  103           | ADDRESS ID OPENBRACKET expression CLOSEBRACKET
+  104           | MULTI ID
+  105           | LENGTH ID LENGTH
+  106           | OPENPAREN expression CLOSEPAREN
+  107           | ID
+  108           | ID OPENBRACKET expression CLOSEBRACKET
+  109           | CALL ID OPENPAREN parameter_list CLOSEPAREN
+  110           | literal
 
 
 Terminals, with rules where they appear
@@ -207,47 +193,47 @@ Terminals, with rules where they appear
     FOR <str> (271) 72 73
     VAR <str> (272) 32
     PAR <str> (273) 22
-    RETURN <str> (274) 83
-    NULLL <str> (275) 50 81
+    RETURN <str> (274) 84 85
+    NULLL <str> (275) 50 82
     DO <str> (276) 71
     RETURNS <str> (277) 15
     BEGIN_T <str> (278) 8 11 14 76
     END <str> (279) 8 11 14 76
     DEF <str> (280) 8 11 14
-    CALL <str> (281) 62 63 64 65 108
-    AND <str> (282) 91
-    NOT <str> (283) 99
-    OR <str> (284) 92
-    DIV <str> (285) 90
-    ASSIGNMENT <str> (286) 62 63 74 75 77 78 79 80 81 82
-    EQL <str> (287) 93
-    GREATER <str> (288) 95
-    GREATER_EQL <str> (289) 96
-    LESS <str> (290) 97
-    LESS_EQL <str> (291) 98
-    MINUS <str> (292) 88 100
-    NOT_EQL <str> (293) 94
-    PLUS <str> (294) 87
-    MULTI <str> (295) 79 89 103
-    ADDRESS <str> (296) 80 101 102
-    LENGTH <str> (297) 104
-    SEMICOLON <str> (298) 20 36 62 63 64 65 71 74 77 78 79 80 81 82 83
+    CALL <str> (281) 62 63 64 65 109
+    AND <str> (282) 92
+    NOT <str> (283) 100
+    OR <str> (284) 93
+    DIV <str> (285) 91
+    ASSIGNMENT <str> (286) 62 63 74 75 78 79 80 81 82 83
+    EQL <str> (287) 94
+    GREATER <str> (288) 96
+    GREATER_EQL <str> (289) 97
+    LESS <str> (290) 98
+    LESS_EQL <str> (291) 99
+    MINUS <str> (292) 89 101
+    NOT_EQL <str> (293) 95
+    PLUS <str> (294) 88
+    MULTI <str> (295) 80 90 104
+    ADDRESS <str> (296) 81 102 103
+    LENGTH <str> (297) 105
+    SEMICOLON <str> (298) 20 36 62 63 64 65 71 74 78 79 80 81 82 83 84 85
     COLON <str> (299) 8 11 14 22 36 40 42 66 67 68 69 70 71 72 73
-    COMMA <str> (300) 38 86
+    COMMA <str> (300) 38 87
     OPENBRACE <str> (301)
     CLOSEBRACE <str> (302)
-    OPENPAREN <str> (303) 8 11 14 62 63 64 65 74 105 108
-    CLOSEPAREN <str> (304) 8 11 14 62 63 64 65 74 105 108
-    OPENBRACKET <str> (305) 41 42 78 82 102 107
-    CLOSEBRACKET <str> (306) 41 42 78 82 102 107
+    OPENPAREN <str> (303) 8 11 14 62 63 64 65 74 106 109
+    CLOSEPAREN <str> (304) 8 11 14 62 63 64 65 74 106 109
+    OPENBRACKET <str> (305) 41 42 79 83 103 108
+    CLOSEBRACKET <str> (306) 41 42 79 83 103 108
     B_TRUE <str> (307) 44
     B_FALSE <str> (308) 45
-    CHAR_LIT <str> (309) 46 78
+    CHAR_LIT <str> (309) 46 79
     STRING_LIT <str> (310) 42 47
     DEC_LIT <str> (311) 41 42 43
     HEX_LIT <str> (312) 48
     REAL_LIT <str> (313) 49
-    ID <str> (314) 11 14 22 39 40 41 42 62 63 64 65 74 75 77 78 79 80 81 82 101 102 103 104 106 107 108
+    ID <str> (314) 11 14 22 39 40 41 42 62 63 64 65 74 75 78 79 80 81 82 83 102 103 104 105 107 108 109
     MAIN_FUNC <str> (315) 8
 
 
@@ -275,7 +261,7 @@ Nonterminals, with rules where they appear
         on right: 8
     function <node> (68)
         on left: 11 14
-        on right: 4 54
+        on right: 4 53
     $@3 (69)
         on left: 9
         on right: 11
@@ -293,7 +279,7 @@ Nonterminals, with rules where they appear
         on right: 11
     parameter_list <node> (74)
         on left: 17 18
-        on right: 8 11 14 108
+        on right: 8 11 14 109
     param_decl_list <node> (75)
         on left: 19 20
         on right: 18 20
@@ -308,7 +294,7 @@ Nonterminals, with rules where they appear
         on right: 15 22 36
     opt_var <node> (79)
         on left: 31 32
-        on right: 8 11 14 73
+        on right: 8 11 14 73 76
     var_decl_list <node> (80)
         on left: 33 34
         on right: 32 34
@@ -326,28 +312,28 @@ Nonterminals, with rules where they appear
         on right: 37 38
     literal <node> (85)
         on left: 43 44 45 46 47 48 49 50
-        on right: 40 109
+        on right: 40 110
     stat_list <node> (86)
-        on left: 51 52 53
-        on right: 8 11 14 53 76
+        on left: 51 52
+        on right: 8 11 14 52 76
     stat <node> (87)
-        on left: 54 55 56 57 58 59 60 61
-        on right: 52 53
+        on left: 53 54 55 56 57 58 59 60 61
+        on right: 52
     call_stat <node> (88)
         on left: 62 63 64 65
         on right: 61
     if_stat <node> (89)
         on left: 66 67 68 69
-        on right: 56
+        on right: 55
     while_stat <node> (90)
         on left: 70
-        on right: 57
+        on right: 56
     do_while_stat <node> (91)
         on left: 71
-        on right: 59
+        on right: 58
     for_stat <node> (92)
         on left: 72 73
-        on right: 58
+        on right: 57
     for_header <node> (93)
         on left: 74
         on right: 72 73
@@ -355,20 +341,20 @@ Nonterminals, with rules where they appear
         on left: 75
         on right: 74
     block_stat <node> (95)
-        on left: 76
-        on right: 60 66 67 68 69 70 71 72 73
+        on left: 76 77
+        on right: 59 66 67 68 69 70 71 72 73
     assignment_stat <node> (96)
-        on left: 77 78 79 80 81 82
-        on right: 55
+        on left: 78 79 80 81 82 83
+        on right: 54 77
     return_stat <node> (97)
-        on left: 83 84
-        on right: 11
+        on left: 84 85
+        on right: 60
     expression_list <node> (98)
-        on left: 85 86
-        on right: 62 64 86
+        on left: 86 87
+        on right: 62 64 87
     expression <node> (99)
-        on left: 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109
-        on right: 66 67 68 69 70 71 74 75 77 78 79 82 83 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 102 105 107
+        on left: 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110
+        on right: 66 67 68 69 70 71 74 75 78 79 80 83 84 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 103 106 108
 
 
 State 0
@@ -387,7 +373,7 @@ State 0
 State 1
 
     8 main_function: DEF • MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list END
-   11 function: DEF • ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF • ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END
    14         | DEF • ID OPENPAREN $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T stat_list END
 
     ID         shift, and go to state 7
@@ -438,7 +424,7 @@ State 6
 
 State 7
 
-   11 function: DEF ID • OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID • OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END
    14         | DEF ID • OPENPAREN $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T stat_list END
 
     OPENPAREN  shift, and go to state 11
@@ -467,7 +453,7 @@ State 10
 
 State 11
 
-   11 function: DEF ID OPENPAREN • $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN • $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END
    14         | DEF ID OPENPAREN • $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T stat_list END
 
     PAR         reduce using rule 9 ($@3)
@@ -491,7 +477,7 @@ State 12
 
 State 13
 
-   11 function: DEF ID OPENPAREN $@3 • parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 • parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END
 
     PAR  shift, and go to state 16
 
@@ -539,7 +525,7 @@ State 16
 
 State 17
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list • CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list • CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END
 
     CLOSEPAREN  shift, and go to state 23
 
@@ -593,7 +579,7 @@ State 22
 
 State 23
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN • $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN • $@4 COLON returns_spec opt_var BEGIN_T stat_list END
 
     $default  reduce using rule 10 ($@4)
 
@@ -692,7 +678,7 @@ State 35
 
 State 36
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 • COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 • COLON returns_spec opt_var BEGIN_T stat_list END
 
     COLON  shift, and go to state 41
 
@@ -727,7 +713,7 @@ State 40
 
 State 41
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON • returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON • returns_spec opt_var BEGIN_T stat_list END
 
     RETURNS  shift, and go to state 45
 
@@ -783,7 +769,7 @@ State 45
 
 State 46
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec • opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec • opt_var BEGIN_T stat_list END
 
     VAR  shift, and go to state 47
 
@@ -825,7 +811,7 @@ State 50
 
 State 51
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var • BEGIN_T stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var • BEGIN_T stat_list END
 
     BEGIN_T  shift, and go to state 57
 
@@ -869,91 +855,103 @@ State 55
 
    14 function: DEF ID OPENPAREN $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T • stat_list END
 
-    IF       shift, and go to state 60
-    WHILE    shift, and go to state 61
-    FOR      shift, and go to state 62
-    DO       shift, and go to state 63
-    BEGIN_T  shift, and go to state 64
-    DEF      shift, and go to state 65
-    CALL     shift, and go to state 66
-    MULTI    shift, and go to state 67
-    ID       shift, and go to state 68
+    IF      shift, and go to state 60
+    WHILE   shift, and go to state 61
+    FOR     shift, and go to state 62
+    VAR     shift, and go to state 47
+    RETURN  shift, and go to state 63
+    DO      shift, and go to state 64
+    DEF     shift, and go to state 65
+    CALL    shift, and go to state 66
+    MULTI   shift, and go to state 67
+    ID      shift, and go to state 68
 
-    $default  reduce using rule 51 (stat_list)
+    END       reduce using rule 51 (stat_list)
+    $default  reduce using rule 31 (opt_var)
 
     function         go to state 69
-    stat_list        go to state 70
-    stat             go to state 71
-    call_stat        go to state 72
-    if_stat          go to state 73
-    while_stat       go to state 74
-    do_while_stat    go to state 75
-    for_stat         go to state 76
-    block_stat       go to state 77
-    assignment_stat  go to state 78
+    opt_var          go to state 70
+    stat_list        go to state 71
+    stat             go to state 72
+    call_stat        go to state 73
+    if_stat          go to state 74
+    while_stat       go to state 75
+    do_while_stat    go to state 76
+    for_stat         go to state 77
+    block_stat       go to state 78
+    assignment_stat  go to state 79
+    return_stat      go to state 80
 
 
 State 56
 
     8 main_function: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T • stat_list END
 
-    IF       shift, and go to state 60
-    WHILE    shift, and go to state 61
-    FOR      shift, and go to state 62
-    DO       shift, and go to state 63
-    BEGIN_T  shift, and go to state 64
-    DEF      shift, and go to state 65
-    CALL     shift, and go to state 66
-    MULTI    shift, and go to state 67
-    ID       shift, and go to state 68
+    IF      shift, and go to state 60
+    WHILE   shift, and go to state 61
+    FOR     shift, and go to state 62
+    VAR     shift, and go to state 47
+    RETURN  shift, and go to state 63
+    DO      shift, and go to state 64
+    DEF     shift, and go to state 65
+    CALL    shift, and go to state 66
+    MULTI   shift, and go to state 67
+    ID      shift, and go to state 68
 
-    $default  reduce using rule 51 (stat_list)
+    END       reduce using rule 51 (stat_list)
+    $default  reduce using rule 31 (opt_var)
 
     function         go to state 69
-    stat_list        go to state 79
-    stat             go to state 71
-    call_stat        go to state 72
-    if_stat          go to state 73
-    while_stat       go to state 74
-    do_while_stat    go to state 75
-    for_stat         go to state 76
-    block_stat       go to state 77
-    assignment_stat  go to state 78
+    opt_var          go to state 70
+    stat_list        go to state 81
+    stat             go to state 72
+    call_stat        go to state 73
+    if_stat          go to state 74
+    while_stat       go to state 75
+    do_while_stat    go to state 76
+    for_stat         go to state 77
+    block_stat       go to state 78
+    assignment_stat  go to state 79
+    return_stat      go to state 80
 
 
 State 57
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T • stat_list return_stat END
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T • stat_list END
 
-    IF       shift, and go to state 60
-    WHILE    shift, and go to state 61
-    FOR      shift, and go to state 62
-    DO       shift, and go to state 63
-    BEGIN_T  shift, and go to state 64
-    DEF      shift, and go to state 65
-    CALL     shift, and go to state 66
-    MULTI    shift, and go to state 67
-    ID       shift, and go to state 68
+    IF      shift, and go to state 60
+    WHILE   shift, and go to state 61
+    FOR     shift, and go to state 62
+    VAR     shift, and go to state 47
+    RETURN  shift, and go to state 63
+    DO      shift, and go to state 64
+    DEF     shift, and go to state 65
+    CALL    shift, and go to state 66
+    MULTI   shift, and go to state 67
+    ID      shift, and go to state 68
 
-    $default  reduce using rule 51 (stat_list)
+    END       reduce using rule 51 (stat_list)
+    $default  reduce using rule 31 (opt_var)
 
     function         go to state 69
-    stat_list        go to state 80
-    stat             go to state 71
-    call_stat        go to state 72
-    if_stat          go to state 73
-    while_stat       go to state 74
-    do_while_stat    go to state 75
-    for_stat         go to state 76
-    block_stat       go to state 77
-    assignment_stat  go to state 78
+    opt_var          go to state 70
+    stat_list        go to state 82
+    stat             go to state 72
+    call_stat        go to state 73
+    if_stat          go to state 74
+    while_stat       go to state 75
+    do_while_stat    go to state 76
+    for_stat         go to state 77
+    block_stat       go to state 78
+    assignment_stat  go to state 79
+    return_stat      go to state 80
 
 
 State 58
 
    36 var_decl: TYPE type • COLON $@8 var_item_list SEMICOLON
 
-    COLON  shift, and go to state 81
+    COLON  shift, and go to state 83
 
 
 State 59
@@ -970,50 +968,50 @@ State 60
    68        | IF • expression COLON block_stat ELIF expression COLON block_stat
    69        | IF • expression COLON block_stat ELIF expression COLON block_stat ELSE COLON block_stat
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 99
+    literal     go to state 100
+    expression  go to state 101
 
 
 State 61
 
    70 while_stat: WHILE • expression COLON block_stat
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 100
+    literal     go to state 100
+    expression  go to state 102
 
 
 State 62
@@ -1021,49 +1019,48 @@ State 62
    72 for_stat: FOR • for_header COLON block_stat
    73         | FOR • for_header COLON opt_var block_stat
 
-    OPENPAREN  shift, and go to state 101
+    OPENPAREN  shift, and go to state 103
 
-    for_header  go to state 102
+    for_header  go to state 104
 
 
 State 63
 
-   71 do_while_stat: DO • COLON block_stat WHILE expression SEMICOLON
+   84 return_stat: RETURN • expression SEMICOLON
+   85            | RETURN • SEMICOLON
 
-    COLON  shift, and go to state 103
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    SEMICOLON   shift, and go to state 105
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 106
 
 
 State 64
 
-   76 block_stat: BEGIN_T • stat_list END
+   71 do_while_stat: DO • COLON block_stat WHILE expression SEMICOLON
 
-    IF       shift, and go to state 60
-    WHILE    shift, and go to state 61
-    FOR      shift, and go to state 62
-    DO       shift, and go to state 63
-    BEGIN_T  shift, and go to state 64
-    DEF      shift, and go to state 65
-    CALL     shift, and go to state 66
-    MULTI    shift, and go to state 67
-    ID       shift, and go to state 68
-
-    $default  reduce using rule 51 (stat_list)
-
-    function         go to state 69
-    stat_list        go to state 104
-    stat             go to state 71
-    call_stat        go to state 72
-    if_stat          go to state 73
-    while_stat       go to state 74
-    do_while_stat    go to state 75
-    for_stat         go to state 76
-    block_stat       go to state 77
-    assignment_stat  go to state 78
+    COLON  shift, and go to state 107
 
 
 State 65
 
-   11 function: DEF • ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+   11 function: DEF • ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END
    14         | DEF • ID OPENPAREN $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T stat_list END
 
     ID  shift, and go to state 7
@@ -1074,2536 +1071,2672 @@ State 66
    64 call_stat: CALL • ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
    65          | CALL • ID OPENPAREN CLOSEPAREN SEMICOLON
 
-    ID  shift, and go to state 105
+    ID  shift, and go to state 108
 
 
 State 67
 
-   79 assignment_stat: MULTI • ID ASSIGNMENT expression SEMICOLON
+   80 assignment_stat: MULTI • ID ASSIGNMENT expression SEMICOLON
 
-    ID  shift, and go to state 106
+    ID  shift, and go to state 109
 
 
 State 68
 
    62 call_stat: ID • ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
    63          | ID • ASSIGNMENT CALL ID OPENPAREN CLOSEPAREN SEMICOLON
-   77 assignment_stat: ID • ASSIGNMENT expression SEMICOLON
-   78                | ID • OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
-   80                | ID • ASSIGNMENT ADDRESS ID SEMICOLON
-   81                | ID • ASSIGNMENT NULLL SEMICOLON
-   82                | ID • OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
+   78 assignment_stat: ID • ASSIGNMENT expression SEMICOLON
+   79                | ID • OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
+   81                | ID • ASSIGNMENT ADDRESS ID SEMICOLON
+   82                | ID • ASSIGNMENT NULLL SEMICOLON
+   83                | ID • OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
 
-    ASSIGNMENT   shift, and go to state 107
-    OPENBRACKET  shift, and go to state 108
+    ASSIGNMENT   shift, and go to state 110
+    OPENBRACKET  shift, and go to state 111
 
 
 State 69
 
-   54 stat: function •
+   53 stat: function •
 
-    $default  reduce using rule 54 (stat)
+    $default  reduce using rule 53 (stat)
 
 
 State 70
 
-   14 function: DEF ID OPENPAREN $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T stat_list • END
+   76 block_stat: opt_var • BEGIN_T stat_list END
 
-    END  shift, and go to state 109
+    BEGIN_T  shift, and go to state 112
 
 
 State 71
 
-   52 stat_list: stat •
-   53          | stat • stat_list
+   14 function: DEF ID OPENPAREN $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T stat_list • END
 
-    IF       shift, and go to state 60
-    WHILE    shift, and go to state 61
-    FOR      shift, and go to state 62
-    DO       shift, and go to state 63
-    BEGIN_T  shift, and go to state 64
-    DEF      shift, and go to state 65
-    CALL     shift, and go to state 66
-    MULTI    shift, and go to state 67
-    ID       shift, and go to state 68
-
-    RETURN    reduce using rule 51 (stat_list)
-    RETURN    [reduce using rule 52 (stat_list)]
-    END       reduce using rule 51 (stat_list)
-    END       [reduce using rule 52 (stat_list)]
-    $default  reduce using rule 51 (stat_list)
-
-    function         go to state 69
-    stat_list        go to state 110
-    stat             go to state 71
-    call_stat        go to state 72
-    if_stat          go to state 73
-    while_stat       go to state 74
-    do_while_stat    go to state 75
-    for_stat         go to state 76
-    block_stat       go to state 77
-    assignment_stat  go to state 78
+    END  shift, and go to state 113
 
 
 State 72
+
+   52 stat_list: stat • stat_list
+
+    IF      shift, and go to state 60
+    WHILE   shift, and go to state 61
+    FOR     shift, and go to state 62
+    VAR     shift, and go to state 47
+    RETURN  shift, and go to state 63
+    DO      shift, and go to state 64
+    DEF     shift, and go to state 65
+    CALL    shift, and go to state 66
+    MULTI   shift, and go to state 67
+    ID      shift, and go to state 68
+
+    END       reduce using rule 51 (stat_list)
+    $default  reduce using rule 31 (opt_var)
+
+    function         go to state 69
+    opt_var          go to state 70
+    stat_list        go to state 114
+    stat             go to state 72
+    call_stat        go to state 73
+    if_stat          go to state 74
+    while_stat       go to state 75
+    do_while_stat    go to state 76
+    for_stat         go to state 77
+    block_stat       go to state 78
+    assignment_stat  go to state 79
+    return_stat      go to state 80
+
+
+State 73
 
    61 stat: call_stat •
 
     $default  reduce using rule 61 (stat)
 
 
-State 73
-
-   56 stat: if_stat •
-
-    $default  reduce using rule 56 (stat)
-
-
 State 74
 
-   57 stat: while_stat •
+   55 stat: if_stat •
 
-    $default  reduce using rule 57 (stat)
+    $default  reduce using rule 55 (stat)
 
 
 State 75
 
-   59 stat: do_while_stat •
+   56 stat: while_stat •
 
-    $default  reduce using rule 59 (stat)
+    $default  reduce using rule 56 (stat)
 
 
 State 76
 
-   58 stat: for_stat •
+   58 stat: do_while_stat •
 
     $default  reduce using rule 58 (stat)
 
 
 State 77
 
-   60 stat: block_stat •
+   57 stat: for_stat •
 
-    $default  reduce using rule 60 (stat)
+    $default  reduce using rule 57 (stat)
 
 
 State 78
 
-   55 stat: assignment_stat •
+   59 stat: block_stat •
 
-    $default  reduce using rule 55 (stat)
+    $default  reduce using rule 59 (stat)
 
 
 State 79
 
-    8 main_function: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list • END
+   54 stat: assignment_stat •
+   77 block_stat: assignment_stat •
 
-    END  shift, and go to state 111
+    IF        reduce using rule 54 (stat)
+    IF        [reduce using rule 77 (block_stat)]
+    WHILE     reduce using rule 54 (stat)
+    WHILE     [reduce using rule 77 (block_stat)]
+    FOR       reduce using rule 54 (stat)
+    FOR       [reduce using rule 77 (block_stat)]
+    VAR       reduce using rule 54 (stat)
+    VAR       [reduce using rule 77 (block_stat)]
+    RETURN    reduce using rule 54 (stat)
+    RETURN    [reduce using rule 77 (block_stat)]
+    DO        reduce using rule 54 (stat)
+    DO        [reduce using rule 77 (block_stat)]
+    BEGIN_T   reduce using rule 54 (stat)
+    BEGIN_T   [reduce using rule 77 (block_stat)]
+    END       reduce using rule 54 (stat)
+    END       [reduce using rule 77 (block_stat)]
+    DEF       reduce using rule 54 (stat)
+    DEF       [reduce using rule 77 (block_stat)]
+    CALL      reduce using rule 54 (stat)
+    CALL      [reduce using rule 77 (block_stat)]
+    MULTI     reduce using rule 54 (stat)
+    MULTI     [reduce using rule 77 (block_stat)]
+    ID        reduce using rule 54 (stat)
+    ID        [reduce using rule 77 (block_stat)]
+    $default  reduce using rule 54 (stat)
 
 
 State 80
 
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list • return_stat END
+   60 stat: return_stat •
 
-    RETURN  shift, and go to state 112
-
-    $default  reduce using rule 84 (return_stat)
-
-    return_stat  go to state 113
+    $default  reduce using rule 60 (stat)
 
 
 State 81
+
+    8 main_function: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list • END
+
+    END  shift, and go to state 115
+
+
+State 82
+
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list • END
+
+    END  shift, and go to state 116
+
+
+State 83
 
    36 var_decl: TYPE type COLON • $@8 var_item_list SEMICOLON
 
     $default  reduce using rule 35 ($@8)
 
-    $@8  go to state 114
+    $@8  go to state 117
 
 
-State 82
+State 84
 
    50 literal: NULLL •
 
     $default  reduce using rule 50 (literal)
 
 
-State 83
-
-  108 expression: CALL • ID OPENPAREN parameter_list CLOSEPAREN
-
-    ID  shift, and go to state 115
-
-
-State 84
-
-   99 expression: NOT • expression
-
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 116
-
-
 State 85
 
-  100 expression: MINUS • expression
-
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 117
-
-
-State 86
-
-  103 expression: MULTI • ID
+  109 expression: CALL • ID OPENPAREN parameter_list CLOSEPAREN
 
     ID  shift, and go to state 118
 
 
+State 86
+
+  100 expression: NOT • expression
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 119
+
+
 State 87
 
-  101 expression: ADDRESS • ID
-  102           | ADDRESS • ID OPENBRACKET expression CLOSEBRACKET
+  101 expression: MINUS • expression
 
-    ID  shift, and go to state 119
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 120
 
 
 State 88
 
-  104 expression: LENGTH • ID LENGTH
+  104 expression: MULTI • ID
 
-    ID  shift, and go to state 120
+    ID  shift, and go to state 121
 
 
 State 89
 
-  105 expression: OPENPAREN • expression CLOSEPAREN
+  102 expression: ADDRESS • ID
+  103           | ADDRESS • ID OPENBRACKET expression CLOSEBRACKET
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 121
+    ID  shift, and go to state 122
 
 
 State 90
+
+  105 expression: LENGTH • ID LENGTH
+
+    ID  shift, and go to state 123
+
+
+State 91
+
+  106 expression: OPENPAREN • expression CLOSEPAREN
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 124
+
+
+State 92
 
    44 literal: B_TRUE •
 
     $default  reduce using rule 44 (literal)
 
 
-State 91
+State 93
 
    45 literal: B_FALSE •
 
     $default  reduce using rule 45 (literal)
 
 
-State 92
+State 94
 
    46 literal: CHAR_LIT •
 
     $default  reduce using rule 46 (literal)
 
 
-State 93
+State 95
 
    47 literal: STRING_LIT •
 
     $default  reduce using rule 47 (literal)
 
 
-State 94
+State 96
 
    43 literal: DEC_LIT •
 
     $default  reduce using rule 43 (literal)
 
 
-State 95
+State 97
 
    48 literal: HEX_LIT •
 
     $default  reduce using rule 48 (literal)
 
 
-State 96
+State 98
 
    49 literal: REAL_LIT •
 
     $default  reduce using rule 49 (literal)
 
 
-State 97
-
-  106 expression: ID •
-  107           | ID • OPENBRACKET expression CLOSEBRACKET
-
-    OPENBRACKET  shift, and go to state 122
-
-    $default  reduce using rule 106 (expression)
-
-
-State 98
-
-  109 expression: literal •
-
-    $default  reduce using rule 109 (expression)
-
-
 State 99
+
+  107 expression: ID •
+  108           | ID • OPENBRACKET expression CLOSEBRACKET
+
+    OPENBRACKET  shift, and go to state 125
+
+    $default  reduce using rule 107 (expression)
+
+
+State 100
+
+  110 expression: literal •
+
+    $default  reduce using rule 110 (expression)
+
+
+State 101
 
    66 if_stat: IF expression • COLON block_stat
    67        | IF expression • COLON block_stat ELSE COLON block_stat
    68        | IF expression • COLON block_stat ELIF expression COLON block_stat
    69        | IF expression • COLON block_stat ELIF expression COLON block_stat ELSE COLON block_stat
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    COLON        shift, and go to state 135
-
-
-State 100
-
-   70 while_stat: WHILE expression • COLON block_stat
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    COLON        shift, and go to state 136
-
-
-State 101
-
-   74 for_header: OPENPAREN • ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
-
-    ID  shift, and go to state 137
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    COLON        shift, and go to state 138
 
 
 State 102
 
-   72 for_stat: FOR for_header • COLON block_stat
-   73         | FOR for_header • COLON opt_var block_stat
+   70 while_stat: WHILE expression • COLON block_stat
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    COLON  shift, and go to state 138
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    COLON        shift, and go to state 139
 
 
 State 103
 
-   71 do_while_stat: DO COLON • block_stat WHILE expression SEMICOLON
+   74 for_header: OPENPAREN • ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
 
-    BEGIN_T  shift, and go to state 64
-
-    block_stat  go to state 139
+    ID  shift, and go to state 140
 
 
 State 104
 
-   76 block_stat: BEGIN_T stat_list • END
+   72 for_stat: FOR for_header • COLON block_stat
+   73         | FOR for_header • COLON opt_var block_stat
 
-    END  shift, and go to state 140
+    COLON  shift, and go to state 141
 
 
 State 105
 
-   64 call_stat: CALL ID • OPENPAREN expression_list CLOSEPAREN SEMICOLON
-   65          | CALL ID • OPENPAREN CLOSEPAREN SEMICOLON
+   85 return_stat: RETURN SEMICOLON •
 
-    OPENPAREN  shift, and go to state 141
+    $default  reduce using rule 85 (return_stat)
 
 
 State 106
 
-   79 assignment_stat: MULTI ID • ASSIGNMENT expression SEMICOLON
+   84 return_stat: RETURN expression • SEMICOLON
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    ASSIGNMENT  shift, and go to state 142
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    SEMICOLON    shift, and go to state 142
 
 
 State 107
 
-   62 call_stat: ID ASSIGNMENT • CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
-   63          | ID ASSIGNMENT • CALL ID OPENPAREN CLOSEPAREN SEMICOLON
-   77 assignment_stat: ID ASSIGNMENT • expression SEMICOLON
-   80                | ID ASSIGNMENT • ADDRESS ID SEMICOLON
-   81                | ID ASSIGNMENT • NULLL SEMICOLON
+   71 do_while_stat: DO COLON • block_stat WHILE expression SEMICOLON
 
-    NULLL       shift, and go to state 143
-    CALL        shift, and go to state 144
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 145
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    VAR    shift, and go to state 47
+    MULTI  shift, and go to state 67
+    ID     shift, and go to state 143
 
-    literal     go to state 98
-    expression  go to state 146
+    $default  reduce using rule 31 (opt_var)
+
+    opt_var          go to state 70
+    block_stat       go to state 144
+    assignment_stat  go to state 145
 
 
 State 108
 
-   78 assignment_stat: ID OPENBRACKET • expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
-   82                | ID OPENBRACKET • expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
+   64 call_stat: CALL ID • OPENPAREN expression_list CLOSEPAREN SEMICOLON
+   65          | CALL ID • OPENPAREN CLOSEPAREN SEMICOLON
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 147
+    OPENPAREN  shift, and go to state 146
 
 
 State 109
+
+   80 assignment_stat: MULTI ID • ASSIGNMENT expression SEMICOLON
+
+    ASSIGNMENT  shift, and go to state 147
+
+
+State 110
+
+   62 call_stat: ID ASSIGNMENT • CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
+   63          | ID ASSIGNMENT • CALL ID OPENPAREN CLOSEPAREN SEMICOLON
+   78 assignment_stat: ID ASSIGNMENT • expression SEMICOLON
+   81                | ID ASSIGNMENT • ADDRESS ID SEMICOLON
+   82                | ID ASSIGNMENT • NULLL SEMICOLON
+
+    NULLL       shift, and go to state 148
+    CALL        shift, and go to state 149
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 150
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 151
+
+
+State 111
+
+   79 assignment_stat: ID OPENBRACKET • expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
+   83                | ID OPENBRACKET • expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 152
+
+
+State 112
+
+   76 block_stat: opt_var BEGIN_T • stat_list END
+
+    IF      shift, and go to state 60
+    WHILE   shift, and go to state 61
+    FOR     shift, and go to state 62
+    VAR     shift, and go to state 47
+    RETURN  shift, and go to state 63
+    DO      shift, and go to state 64
+    DEF     shift, and go to state 65
+    CALL    shift, and go to state 66
+    MULTI   shift, and go to state 67
+    ID      shift, and go to state 68
+
+    END       reduce using rule 51 (stat_list)
+    $default  reduce using rule 31 (opt_var)
+
+    function         go to state 69
+    opt_var          go to state 70
+    stat_list        go to state 153
+    stat             go to state 72
+    call_stat        go to state 73
+    if_stat          go to state 74
+    while_stat       go to state 75
+    do_while_stat    go to state 76
+    for_stat         go to state 77
+    block_stat       go to state 78
+    assignment_stat  go to state 79
+    return_stat      go to state 80
+
+
+State 113
 
    14 function: DEF ID OPENPAREN $@5 parameter_list CLOSEPAREN $@6 COLON opt_var BEGIN_T stat_list END •
 
     $default  reduce using rule 14 (function)
 
 
-State 110
+State 114
 
-   53 stat_list: stat stat_list •
+   52 stat_list: stat stat_list •
 
-    $default  reduce using rule 53 (stat_list)
+    $default  reduce using rule 52 (stat_list)
 
 
-State 111
+State 115
 
     8 main_function: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list END •
 
     $default  reduce using rule 8 (main_function)
 
 
-State 112
-
-   83 return_stat: RETURN • expression SEMICOLON
-
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 148
-
-
-State 113
-
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat • END
-
-    END  shift, and go to state 149
-
-
-State 114
-
-   36 var_decl: TYPE type COLON $@8 • var_item_list SEMICOLON
-
-    ID  shift, and go to state 150
-
-    var_item_list  go to state 151
-    var_item       go to state 152
-
-
-State 115
-
-  108 expression: CALL ID • OPENPAREN parameter_list CLOSEPAREN
-
-    OPENPAREN  shift, and go to state 153
-
-
 State 116
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-   99           | NOT expression •
+   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list END •
 
-    $default  reduce using rule 99 (expression)
+    $default  reduce using rule 11 (function)
 
 
 State 117
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-  100           | MINUS expression •
+   36 var_decl: TYPE type COLON $@8 • var_item_list SEMICOLON
 
-    $default  reduce using rule 100 (expression)
+    ID  shift, and go to state 154
+
+    var_item_list  go to state 155
+    var_item       go to state 156
 
 
 State 118
 
-  103 expression: MULTI ID •
+  109 expression: CALL ID • OPENPAREN parameter_list CLOSEPAREN
 
-    $default  reduce using rule 103 (expression)
+    OPENPAREN  shift, and go to state 157
 
 
 State 119
 
-  101 expression: ADDRESS ID •
-  102           | ADDRESS ID • OPENBRACKET expression CLOSEBRACKET
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+  100           | NOT expression •
 
-    OPENBRACKET  shift, and go to state 154
-
-    $default  reduce using rule 101 (expression)
+    $default  reduce using rule 100 (expression)
 
 
 State 120
 
-  104 expression: LENGTH ID • LENGTH
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+  101           | MINUS expression •
 
-    LENGTH  shift, and go to state 155
+    $default  reduce using rule 101 (expression)
 
 
 State 121
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-  105           | OPENPAREN expression • CLOSEPAREN
+  104 expression: MULTI ID •
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    CLOSEPAREN   shift, and go to state 156
+    $default  reduce using rule 104 (expression)
 
 
 State 122
 
-  107 expression: ID OPENBRACKET • expression CLOSEBRACKET
+  102 expression: ADDRESS ID •
+  103           | ADDRESS ID • OPENBRACKET expression CLOSEBRACKET
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    OPENBRACKET  shift, and go to state 158
 
-    literal     go to state 98
-    expression  go to state 157
+    $default  reduce using rule 102 (expression)
 
 
 State 123
 
-   91 expression: expression AND • expression
+  105 expression: LENGTH ID • LENGTH
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 158
+    LENGTH  shift, and go to state 159
 
 
 State 124
 
-   92 expression: expression OR • expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+  106           | OPENPAREN expression • CLOSEPAREN
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 159
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    CLOSEPAREN   shift, and go to state 160
 
 
 State 125
 
-   90 expression: expression DIV • expression
+  108 expression: ID OPENBRACKET • expression CLOSEBRACKET
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 160
+    literal     go to state 100
+    expression  go to state 161
 
 
 State 126
 
-   93 expression: expression EQL • expression
+   92 expression: expression AND • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 161
+    literal     go to state 100
+    expression  go to state 162
 
 
 State 127
 
-   95 expression: expression GREATER • expression
+   93 expression: expression OR • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 162
+    literal     go to state 100
+    expression  go to state 163
 
 
 State 128
 
-   96 expression: expression GREATER_EQL • expression
+   91 expression: expression DIV • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 163
+    literal     go to state 100
+    expression  go to state 164
 
 
 State 129
 
-   97 expression: expression LESS • expression
+   94 expression: expression EQL • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 164
+    literal     go to state 100
+    expression  go to state 165
 
 
 State 130
 
-   98 expression: expression LESS_EQL • expression
+   96 expression: expression GREATER • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 165
+    literal     go to state 100
+    expression  go to state 166
 
 
 State 131
 
-   88 expression: expression MINUS • expression
+   97 expression: expression GREATER_EQL • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 166
+    literal     go to state 100
+    expression  go to state 167
 
 
 State 132
 
-   94 expression: expression NOT_EQL • expression
+   98 expression: expression LESS • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 167
+    literal     go to state 100
+    expression  go to state 168
 
 
 State 133
 
-   87 expression: expression PLUS • expression
+   99 expression: expression LESS_EQL • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 168
+    literal     go to state 100
+    expression  go to state 169
 
 
 State 134
 
-   89 expression: expression MULTI • expression
+   89 expression: expression MINUS • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 169
+    literal     go to state 100
+    expression  go to state 170
 
 
 State 135
+
+   95 expression: expression NOT_EQL • expression
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 171
+
+
+State 136
+
+   88 expression: expression PLUS • expression
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 172
+
+
+State 137
+
+   90 expression: expression MULTI • expression
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 173
+
+
+State 138
 
    66 if_stat: IF expression COLON • block_stat
    67        | IF expression COLON • block_stat ELSE COLON block_stat
    68        | IF expression COLON • block_stat ELIF expression COLON block_stat
    69        | IF expression COLON • block_stat ELIF expression COLON block_stat ELSE COLON block_stat
 
-    BEGIN_T  shift, and go to state 64
+    VAR    shift, and go to state 47
+    MULTI  shift, and go to state 67
+    ID     shift, and go to state 143
 
-    block_stat  go to state 170
+    $default  reduce using rule 31 (opt_var)
 
-
-State 136
-
-   70 while_stat: WHILE expression COLON • block_stat
-
-    BEGIN_T  shift, and go to state 64
-
-    block_stat  go to state 171
-
-
-State 137
-
-   74 for_header: OPENPAREN ID • ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
-
-    ASSIGNMENT  shift, and go to state 172
-
-
-State 138
-
-   72 for_stat: FOR for_header COLON • block_stat
-   73         | FOR for_header COLON • opt_var block_stat
-
-    VAR      shift, and go to state 47
-    BEGIN_T  shift, and go to state 64
-
-    BEGIN_T  [reduce using rule 31 (opt_var)]
-
-    opt_var     go to state 173
-    block_stat  go to state 174
+    opt_var          go to state 70
+    block_stat       go to state 174
+    assignment_stat  go to state 145
 
 
 State 139
 
-   71 do_while_stat: DO COLON block_stat • WHILE expression SEMICOLON
+   70 while_stat: WHILE expression COLON • block_stat
 
-    WHILE  shift, and go to state 175
+    VAR    shift, and go to state 47
+    MULTI  shift, and go to state 67
+    ID     shift, and go to state 143
+
+    $default  reduce using rule 31 (opt_var)
+
+    opt_var          go to state 70
+    block_stat       go to state 175
+    assignment_stat  go to state 145
 
 
 State 140
 
-   76 block_stat: BEGIN_T stat_list END •
+   74 for_header: OPENPAREN ID • ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
 
-    $default  reduce using rule 76 (block_stat)
+    ASSIGNMENT  shift, and go to state 176
 
 
 State 141
 
-   64 call_stat: CALL ID OPENPAREN • expression_list CLOSEPAREN SEMICOLON
-   65          | CALL ID OPENPAREN • CLOSEPAREN SEMICOLON
+   72 for_stat: FOR for_header COLON • block_stat
+   73         | FOR for_header COLON • opt_var block_stat
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    CLOSEPAREN  shift, and go to state 176
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    VAR    shift, and go to state 47
+    MULTI  shift, and go to state 67
+    ID     shift, and go to state 143
 
-    literal          go to state 98
-    expression_list  go to state 177
-    expression       go to state 178
+    VAR       [reduce using rule 31 (opt_var)]
+    MULTI     [reduce using rule 31 (opt_var)]
+    ID        [reduce using rule 31 (opt_var)]
+    $default  reduce using rule 31 (opt_var)
+
+    opt_var          go to state 177
+    block_stat       go to state 178
+    assignment_stat  go to state 145
 
 
 State 142
 
-   79 assignment_stat: MULTI ID ASSIGNMENT • expression SEMICOLON
+   84 return_stat: RETURN expression SEMICOLON •
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 179
+    $default  reduce using rule 84 (return_stat)
 
 
 State 143
 
-   50 literal: NULLL •
-   81 assignment_stat: ID ASSIGNMENT NULLL • SEMICOLON
+   78 assignment_stat: ID • ASSIGNMENT expression SEMICOLON
+   79                | ID • OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
+   81                | ID • ASSIGNMENT ADDRESS ID SEMICOLON
+   82                | ID • ASSIGNMENT NULLL SEMICOLON
+   83                | ID • OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
 
-    SEMICOLON  shift, and go to state 180
+    ASSIGNMENT   shift, and go to state 179
+    OPENBRACKET  shift, and go to state 111
+
+
+State 144
+
+   71 do_while_stat: DO COLON block_stat • WHILE expression SEMICOLON
+
+    WHILE  shift, and go to state 180
+
+
+State 145
+
+   77 block_stat: assignment_stat •
+
+    $default  reduce using rule 77 (block_stat)
+
+
+State 146
+
+   64 call_stat: CALL ID OPENPAREN • expression_list CLOSEPAREN SEMICOLON
+   65          | CALL ID OPENPAREN • CLOSEPAREN SEMICOLON
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    CLOSEPAREN  shift, and go to state 181
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal          go to state 100
+    expression_list  go to state 182
+    expression       go to state 183
+
+
+State 147
+
+   80 assignment_stat: MULTI ID ASSIGNMENT • expression SEMICOLON
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 184
+
+
+State 148
+
+   50 literal: NULLL •
+   82 assignment_stat: ID ASSIGNMENT NULLL • SEMICOLON
+
+    SEMICOLON  shift, and go to state 185
 
     SEMICOLON  [reduce using rule 50 (literal)]
     $default   reduce using rule 50 (literal)
 
 
-State 144
+State 149
 
    62 call_stat: ID ASSIGNMENT CALL • ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
    63          | ID ASSIGNMENT CALL • ID OPENPAREN CLOSEPAREN SEMICOLON
-  108 expression: CALL • ID OPENPAREN parameter_list CLOSEPAREN
+  109 expression: CALL • ID OPENPAREN parameter_list CLOSEPAREN
 
-    ID  shift, and go to state 181
-
-
-State 145
-
-   80 assignment_stat: ID ASSIGNMENT ADDRESS • ID SEMICOLON
-  101 expression: ADDRESS • ID
-  102           | ADDRESS • ID OPENBRACKET expression CLOSEBRACKET
-
-    ID  shift, and go to state 182
-
-
-State 146
-
-   77 assignment_stat: ID ASSIGNMENT expression • SEMICOLON
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    SEMICOLON    shift, and go to state 183
-
-
-State 147
-
-   78 assignment_stat: ID OPENBRACKET expression • CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
-   82                | ID OPENBRACKET expression • CLOSEBRACKET ASSIGNMENT expression SEMICOLON
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-
-    AND           shift, and go to state 123
-    OR            shift, and go to state 124
-    DIV           shift, and go to state 125
-    EQL           shift, and go to state 126
-    GREATER       shift, and go to state 127
-    GREATER_EQL   shift, and go to state 128
-    LESS          shift, and go to state 129
-    LESS_EQL      shift, and go to state 130
-    MINUS         shift, and go to state 131
-    NOT_EQL       shift, and go to state 132
-    PLUS          shift, and go to state 133
-    MULTI         shift, and go to state 134
-    CLOSEBRACKET  shift, and go to state 184
-
-
-State 148
-
-   83 return_stat: RETURN expression • SEMICOLON
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    SEMICOLON    shift, and go to state 185
-
-
-State 149
-
-   11 function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec opt_var BEGIN_T stat_list return_stat END •
-
-    $default  reduce using rule 11 (function)
+    ID  shift, and go to state 186
 
 
 State 150
+
+   81 assignment_stat: ID ASSIGNMENT ADDRESS • ID SEMICOLON
+  102 expression: ADDRESS • ID
+  103           | ADDRESS • ID OPENBRACKET expression CLOSEBRACKET
+
+    ID  shift, and go to state 187
+
+
+State 151
+
+   78 assignment_stat: ID ASSIGNMENT expression • SEMICOLON
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    SEMICOLON    shift, and go to state 188
+
+
+State 152
+
+   79 assignment_stat: ID OPENBRACKET expression • CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
+   83                | ID OPENBRACKET expression • CLOSEBRACKET ASSIGNMENT expression SEMICOLON
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    AND           shift, and go to state 126
+    OR            shift, and go to state 127
+    DIV           shift, and go to state 128
+    EQL           shift, and go to state 129
+    GREATER       shift, and go to state 130
+    GREATER_EQL   shift, and go to state 131
+    LESS          shift, and go to state 132
+    LESS_EQL      shift, and go to state 133
+    MINUS         shift, and go to state 134
+    NOT_EQL       shift, and go to state 135
+    PLUS          shift, and go to state 136
+    MULTI         shift, and go to state 137
+    CLOSEBRACKET  shift, and go to state 189
+
+
+State 153
+
+   76 block_stat: opt_var BEGIN_T stat_list • END
+
+    END  shift, and go to state 190
+
+
+State 154
 
    39 var_item: ID •
    40         | ID • COLON literal
    41         | ID • OPENBRACKET DEC_LIT CLOSEBRACKET
    42         | ID • OPENBRACKET DEC_LIT CLOSEBRACKET COLON STRING_LIT
 
-    COLON        shift, and go to state 186
-    OPENBRACKET  shift, and go to state 187
+    COLON        shift, and go to state 191
+    OPENBRACKET  shift, and go to state 192
 
     $default  reduce using rule 39 (var_item)
 
 
-State 151
+State 155
 
    36 var_decl: TYPE type COLON $@8 var_item_list • SEMICOLON
    38 var_item_list: var_item_list • COMMA var_item
 
-    SEMICOLON  shift, and go to state 188
-    COMMA      shift, and go to state 189
+    SEMICOLON  shift, and go to state 193
+    COMMA      shift, and go to state 194
 
 
-State 152
+State 156
 
    37 var_item_list: var_item •
 
     $default  reduce using rule 37 (var_item_list)
 
 
-State 153
+State 157
 
-  108 expression: CALL ID OPENPAREN • parameter_list CLOSEPAREN
+  109 expression: CALL ID OPENPAREN • parameter_list CLOSEPAREN
 
     PAR  shift, and go to state 16
 
     $default  reduce using rule 17 (parameter_list)
 
-    parameter_list   go to state 190
+    parameter_list   go to state 195
     param_decl_list  go to state 18
     param_decl       go to state 19
 
 
-State 154
-
-  102 expression: ADDRESS ID OPENBRACKET • expression CLOSEBRACKET
-
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 191
-
-
-State 155
-
-  104 expression: LENGTH ID LENGTH •
-
-    $default  reduce using rule 104 (expression)
-
-
-State 156
-
-  105 expression: OPENPAREN expression CLOSEPAREN •
-
-    $default  reduce using rule 105 (expression)
-
-
-State 157
-
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-  107           | ID OPENBRACKET expression • CLOSEBRACKET
-
-    AND           shift, and go to state 123
-    OR            shift, and go to state 124
-    DIV           shift, and go to state 125
-    EQL           shift, and go to state 126
-    GREATER       shift, and go to state 127
-    GREATER_EQL   shift, and go to state 128
-    LESS          shift, and go to state 129
-    LESS_EQL      shift, and go to state 130
-    MINUS         shift, and go to state 131
-    NOT_EQL       shift, and go to state 132
-    PLUS          shift, and go to state 133
-    MULTI         shift, and go to state 134
-    CLOSEBRACKET  shift, and go to state 192
-
-
 State 158
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   91           | expression AND expression •
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+  103 expression: ADDRESS ID OPENBRACKET • expression CLOSEBRACKET
 
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    NOT_EQL      shift, and go to state 132
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    $default  reduce using rule 91 (expression)
+    literal     go to state 100
+    expression  go to state 196
 
 
 State 159
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   92           | expression OR expression •
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+  105 expression: LENGTH ID LENGTH •
 
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    NOT_EQL      shift, and go to state 132
-
-    $default  reduce using rule 92 (expression)
+    $default  reduce using rule 105 (expression)
 
 
 State 160
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   90           | expression DIV expression •
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+  106 expression: OPENPAREN expression CLOSEPAREN •
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    NOT_EQL      shift, and go to state 132
-
-    $default  reduce using rule 90 (expression)
+    $default  reduce using rule 106 (expression)
 
 
 State 161
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   93           | expression EQL expression •
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+  108           | ID OPENBRACKET expression • CLOSEBRACKET
 
-    $default  reduce using rule 93 (expression)
+    AND           shift, and go to state 126
+    OR            shift, and go to state 127
+    DIV           shift, and go to state 128
+    EQL           shift, and go to state 129
+    GREATER       shift, and go to state 130
+    GREATER_EQL   shift, and go to state 131
+    LESS          shift, and go to state 132
+    LESS_EQL      shift, and go to state 133
+    MINUS         shift, and go to state 134
+    NOT_EQL       shift, and go to state 135
+    PLUS          shift, and go to state 136
+    MULTI         shift, and go to state 137
+    CLOSEBRACKET  shift, and go to state 197
 
 
 State 162
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   95           | expression GREATER expression •
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   92           | expression AND expression •
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    $default  reduce using rule 95 (expression)
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    NOT_EQL      shift, and go to state 135
+
+    $default  reduce using rule 92 (expression)
 
 
 State 163
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   96           | expression GREATER_EQL expression •
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   93           | expression OR expression •
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    $default  reduce using rule 96 (expression)
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    NOT_EQL      shift, and go to state 135
+
+    $default  reduce using rule 93 (expression)
 
 
 State 164
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   97           | expression LESS expression •
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   91           | expression DIV expression •
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    $default  reduce using rule 97 (expression)
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    NOT_EQL      shift, and go to state 135
+
+    $default  reduce using rule 91 (expression)
 
 
 State 165
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-   98           | expression LESS_EQL expression •
-
-    $default  reduce using rule 98 (expression)
-
-
-State 166
-
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   88           | expression MINUS expression •
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    NOT_EQL      shift, and go to state 132
-    MULTI        shift, and go to state 134
-
-    $default  reduce using rule 88 (expression)
-
-
-State 167
-
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   94           | expression NOT_EQL expression •
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   94           | expression EQL expression •
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
     $default  reduce using rule 94 (expression)
 
 
+State 166
+
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   96           | expression GREATER expression •
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    $default  reduce using rule 96 (expression)
+
+
+State 167
+
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   97           | expression GREATER_EQL expression •
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    $default  reduce using rule 97 (expression)
+
+
 State 168
 
-   87 expression: expression • PLUS expression
-   87           | expression PLUS expression •
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   98           | expression LESS expression •
+   99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    NOT_EQL      shift, and go to state 132
-    MULTI        shift, and go to state 134
-
-    $default  reduce using rule 87 (expression)
+    $default  reduce using rule 98 (expression)
 
 
 State 169
 
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   89           | expression MULTI expression •
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+   99           | expression LESS_EQL expression •
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    NOT_EQL      shift, and go to state 132
+    $default  reduce using rule 99 (expression)
+
+
+State 170
+
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   89           | expression MINUS expression •
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    NOT_EQL      shift, and go to state 135
+    MULTI        shift, and go to state 137
 
     $default  reduce using rule 89 (expression)
 
 
-State 170
+State 171
+
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   95           | expression NOT_EQL expression •
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    $default  reduce using rule 95 (expression)
+
+
+State 172
+
+   88 expression: expression • PLUS expression
+   88           | expression PLUS expression •
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    NOT_EQL      shift, and go to state 135
+    MULTI        shift, and go to state 137
+
+    $default  reduce using rule 88 (expression)
+
+
+State 173
+
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   90           | expression MULTI expression •
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    NOT_EQL      shift, and go to state 135
+
+    $default  reduce using rule 90 (expression)
+
+
+State 174
 
    66 if_stat: IF expression COLON block_stat •
    67        | IF expression COLON block_stat • ELSE COLON block_stat
    68        | IF expression COLON block_stat • ELIF expression COLON block_stat
    69        | IF expression COLON block_stat • ELIF expression COLON block_stat ELSE COLON block_stat
 
-    ELIF  shift, and go to state 193
-    ELSE  shift, and go to state 194
+    ELIF  shift, and go to state 198
+    ELSE  shift, and go to state 199
 
     $default  reduce using rule 66 (if_stat)
 
 
-State 171
+State 175
 
    70 while_stat: WHILE expression COLON block_stat •
 
     $default  reduce using rule 70 (while_stat)
 
 
-State 172
+State 176
 
    74 for_header: OPENPAREN ID ASSIGNMENT • expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 195
+    literal     go to state 100
+    expression  go to state 200
 
 
-State 173
+State 177
 
    73 for_stat: FOR for_header COLON opt_var • block_stat
+   76 block_stat: opt_var • BEGIN_T stat_list END
 
-    BEGIN_T  shift, and go to state 64
+    VAR      shift, and go to state 47
+    BEGIN_T  shift, and go to state 112
+    MULTI    shift, and go to state 67
+    ID       shift, and go to state 143
 
-    block_stat  go to state 196
+    BEGIN_T  [reduce using rule 31 (opt_var)]
+
+    opt_var          go to state 70
+    block_stat       go to state 201
+    assignment_stat  go to state 145
 
 
-State 174
+State 178
 
    72 for_stat: FOR for_header COLON block_stat •
 
     $default  reduce using rule 72 (for_stat)
 
 
-State 175
-
-   71 do_while_stat: DO COLON block_stat WHILE • expression SEMICOLON
-
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 197
-
-
-State 176
-
-   65 call_stat: CALL ID OPENPAREN CLOSEPAREN • SEMICOLON
-
-    SEMICOLON  shift, and go to state 198
-
-
-State 177
-
-   64 call_stat: CALL ID OPENPAREN expression_list • CLOSEPAREN SEMICOLON
-
-    CLOSEPAREN  shift, and go to state 199
-
-
-State 178
-
-   85 expression_list: expression •
-   86                | expression • COMMA expression_list
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    COMMA        shift, and go to state 200
-
-    $default  reduce using rule 85 (expression_list)
-
-
 State 179
 
-   79 assignment_stat: MULTI ID ASSIGNMENT expression • SEMICOLON
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   78 assignment_stat: ID ASSIGNMENT • expression SEMICOLON
+   81                | ID ASSIGNMENT • ADDRESS ID SEMICOLON
+   82                | ID ASSIGNMENT • NULLL SEMICOLON
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    SEMICOLON    shift, and go to state 201
+    NULLL       shift, and go to state 148
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 150
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 151
 
 
 State 180
 
-   81 assignment_stat: ID ASSIGNMENT NULLL SEMICOLON •
+   71 do_while_stat: DO COLON block_stat WHILE • expression SEMICOLON
 
-    $default  reduce using rule 81 (assignment_stat)
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 202
 
 
 State 181
 
-   62 call_stat: ID ASSIGNMENT CALL ID • OPENPAREN expression_list CLOSEPAREN SEMICOLON
-   63          | ID ASSIGNMENT CALL ID • OPENPAREN CLOSEPAREN SEMICOLON
-  108 expression: CALL ID • OPENPAREN parameter_list CLOSEPAREN
+   65 call_stat: CALL ID OPENPAREN CLOSEPAREN • SEMICOLON
 
-    OPENPAREN  shift, and go to state 202
+    SEMICOLON  shift, and go to state 203
 
 
 State 182
 
-   80 assignment_stat: ID ASSIGNMENT ADDRESS ID • SEMICOLON
-  101 expression: ADDRESS ID •
-  102           | ADDRESS ID • OPENBRACKET expression CLOSEBRACKET
+   64 call_stat: CALL ID OPENPAREN expression_list • CLOSEPAREN SEMICOLON
 
-    SEMICOLON    shift, and go to state 203
-    OPENBRACKET  shift, and go to state 154
-
-    SEMICOLON  [reduce using rule 101 (expression)]
-    $default   reduce using rule 101 (expression)
+    CLOSEPAREN  shift, and go to state 204
 
 
 State 183
 
-   77 assignment_stat: ID ASSIGNMENT expression SEMICOLON •
+   86 expression_list: expression •
+   87                | expression • COMMA expression_list
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    $default  reduce using rule 77 (assignment_stat)
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    COMMA        shift, and go to state 205
+
+    $default  reduce using rule 86 (expression_list)
 
 
 State 184
 
-   78 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET • ASSIGNMENT CHAR_LIT SEMICOLON
-   82                | ID OPENBRACKET expression CLOSEBRACKET • ASSIGNMENT expression SEMICOLON
+   80 assignment_stat: MULTI ID ASSIGNMENT expression • SEMICOLON
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    ASSIGNMENT  shift, and go to state 204
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    SEMICOLON    shift, and go to state 206
 
 
 State 185
 
-   83 return_stat: RETURN expression SEMICOLON •
+   82 assignment_stat: ID ASSIGNMENT NULLL SEMICOLON •
 
-    $default  reduce using rule 83 (return_stat)
+    $default  reduce using rule 82 (assignment_stat)
 
 
 State 186
 
-   40 var_item: ID COLON • literal
+   62 call_stat: ID ASSIGNMENT CALL ID • OPENPAREN expression_list CLOSEPAREN SEMICOLON
+   63          | ID ASSIGNMENT CALL ID • OPENPAREN CLOSEPAREN SEMICOLON
+  109 expression: CALL ID • OPENPAREN parameter_list CLOSEPAREN
 
-    NULLL       shift, and go to state 82
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-
-    literal  go to state 205
+    OPENPAREN  shift, and go to state 207
 
 
 State 187
 
-   41 var_item: ID OPENBRACKET • DEC_LIT CLOSEBRACKET
-   42         | ID OPENBRACKET • DEC_LIT CLOSEBRACKET COLON STRING_LIT
+   81 assignment_stat: ID ASSIGNMENT ADDRESS ID • SEMICOLON
+  102 expression: ADDRESS ID •
+  103           | ADDRESS ID • OPENBRACKET expression CLOSEBRACKET
 
-    DEC_LIT  shift, and go to state 206
+    SEMICOLON    shift, and go to state 208
+    OPENBRACKET  shift, and go to state 158
+
+    SEMICOLON  [reduce using rule 102 (expression)]
+    $default   reduce using rule 102 (expression)
 
 
 State 188
+
+   78 assignment_stat: ID ASSIGNMENT expression SEMICOLON •
+
+    $default  reduce using rule 78 (assignment_stat)
+
+
+State 189
+
+   79 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET • ASSIGNMENT CHAR_LIT SEMICOLON
+   83                | ID OPENBRACKET expression CLOSEBRACKET • ASSIGNMENT expression SEMICOLON
+
+    ASSIGNMENT  shift, and go to state 209
+
+
+State 190
+
+   76 block_stat: opt_var BEGIN_T stat_list END •
+
+    $default  reduce using rule 76 (block_stat)
+
+
+State 191
+
+   40 var_item: ID COLON • literal
+
+    NULLL       shift, and go to state 84
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+
+    literal  go to state 210
+
+
+State 192
+
+   41 var_item: ID OPENBRACKET • DEC_LIT CLOSEBRACKET
+   42         | ID OPENBRACKET • DEC_LIT CLOSEBRACKET COLON STRING_LIT
+
+    DEC_LIT  shift, and go to state 211
+
+
+State 193
 
    36 var_decl: TYPE type COLON $@8 var_item_list SEMICOLON •
 
     $default  reduce using rule 36 (var_decl)
 
 
-State 189
+State 194
 
    38 var_item_list: var_item_list COMMA • var_item
 
-    ID  shift, and go to state 150
+    ID  shift, and go to state 154
 
-    var_item  go to state 207
-
-
-State 190
-
-  108 expression: CALL ID OPENPAREN parameter_list • CLOSEPAREN
-
-    CLOSEPAREN  shift, and go to state 208
-
-
-State 191
-
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
-  102           | ADDRESS ID OPENBRACKET expression • CLOSEBRACKET
-
-    AND           shift, and go to state 123
-    OR            shift, and go to state 124
-    DIV           shift, and go to state 125
-    EQL           shift, and go to state 126
-    GREATER       shift, and go to state 127
-    GREATER_EQL   shift, and go to state 128
-    LESS          shift, and go to state 129
-    LESS_EQL      shift, and go to state 130
-    MINUS         shift, and go to state 131
-    NOT_EQL       shift, and go to state 132
-    PLUS          shift, and go to state 133
-    MULTI         shift, and go to state 134
-    CLOSEBRACKET  shift, and go to state 209
-
-
-State 192
-
-  107 expression: ID OPENBRACKET expression CLOSEBRACKET •
-
-    $default  reduce using rule 107 (expression)
-
-
-State 193
-
-   68 if_stat: IF expression COLON block_stat ELIF • expression COLON block_stat
-   69        | IF expression COLON block_stat ELIF • expression COLON block_stat ELSE COLON block_stat
-
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    literal     go to state 98
-    expression  go to state 210
-
-
-State 194
-
-   67 if_stat: IF expression COLON block_stat ELSE • COLON block_stat
-
-    COLON  shift, and go to state 211
+    var_item  go to state 212
 
 
 State 195
 
-   74 for_header: OPENPAREN ID ASSIGNMENT expression • SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+  109 expression: CALL ID OPENPAREN parameter_list • CLOSEPAREN
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    SEMICOLON    shift, and go to state 212
+    CLOSEPAREN  shift, and go to state 213
 
 
 State 196
+
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+  103           | ADDRESS ID OPENBRACKET expression • CLOSEBRACKET
+
+    AND           shift, and go to state 126
+    OR            shift, and go to state 127
+    DIV           shift, and go to state 128
+    EQL           shift, and go to state 129
+    GREATER       shift, and go to state 130
+    GREATER_EQL   shift, and go to state 131
+    LESS          shift, and go to state 132
+    LESS_EQL      shift, and go to state 133
+    MINUS         shift, and go to state 134
+    NOT_EQL       shift, and go to state 135
+    PLUS          shift, and go to state 136
+    MULTI         shift, and go to state 137
+    CLOSEBRACKET  shift, and go to state 214
+
+
+State 197
+
+  108 expression: ID OPENBRACKET expression CLOSEBRACKET •
+
+    $default  reduce using rule 108 (expression)
+
+
+State 198
+
+   68 if_stat: IF expression COLON block_stat ELIF • expression COLON block_stat
+   69        | IF expression COLON block_stat ELIF • expression COLON block_stat ELSE COLON block_stat
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 215
+
+
+State 199
+
+   67 if_stat: IF expression COLON block_stat ELSE • COLON block_stat
+
+    COLON  shift, and go to state 216
+
+
+State 200
+
+   74 for_header: OPENPAREN ID ASSIGNMENT expression • SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    SEMICOLON    shift, and go to state 217
+
+
+State 201
 
    73 for_stat: FOR for_header COLON opt_var block_stat •
 
     $default  reduce using rule 73 (for_stat)
 
 
-State 197
+State 202
 
    71 do_while_stat: DO COLON block_stat WHILE expression • SEMICOLON
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    SEMICOLON    shift, and go to state 213
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    SEMICOLON    shift, and go to state 218
 
 
-State 198
+State 203
 
    65 call_stat: CALL ID OPENPAREN CLOSEPAREN SEMICOLON •
 
     $default  reduce using rule 65 (call_stat)
 
 
-State 199
+State 204
 
    64 call_stat: CALL ID OPENPAREN expression_list CLOSEPAREN • SEMICOLON
 
-    SEMICOLON  shift, and go to state 214
+    SEMICOLON  shift, and go to state 219
 
 
-State 200
+State 205
 
-   86 expression_list: expression COMMA • expression_list
+   87 expression_list: expression COMMA • expression_list
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal          go to state 98
-    expression_list  go to state 215
-    expression       go to state 178
-
-
-State 201
-
-   79 assignment_stat: MULTI ID ASSIGNMENT expression SEMICOLON •
-
-    $default  reduce using rule 79 (assignment_stat)
+    literal          go to state 100
+    expression_list  go to state 220
+    expression       go to state 183
 
 
-State 202
+State 206
 
-   62 call_stat: ID ASSIGNMENT CALL ID OPENPAREN • expression_list CLOSEPAREN SEMICOLON
-   63          | ID ASSIGNMENT CALL ID OPENPAREN • CLOSEPAREN SEMICOLON
-  108 expression: CALL ID OPENPAREN • parameter_list CLOSEPAREN
-
-    PAR         shift, and go to state 16
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    CLOSEPAREN  shift, and go to state 216
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
-
-    CLOSEPAREN  [reduce using rule 17 (parameter_list)]
-
-    parameter_list   go to state 190
-    param_decl_list  go to state 18
-    param_decl       go to state 19
-    literal          go to state 98
-    expression_list  go to state 217
-    expression       go to state 178
-
-
-State 203
-
-   80 assignment_stat: ID ASSIGNMENT ADDRESS ID SEMICOLON •
+   80 assignment_stat: MULTI ID ASSIGNMENT expression SEMICOLON •
 
     $default  reduce using rule 80 (assignment_stat)
 
 
-State 204
+State 207
 
-   78 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT • CHAR_LIT SEMICOLON
-   82                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT • expression SEMICOLON
+   62 call_stat: ID ASSIGNMENT CALL ID OPENPAREN • expression_list CLOSEPAREN SEMICOLON
+   63          | ID ASSIGNMENT CALL ID OPENPAREN • CLOSEPAREN SEMICOLON
+  109 expression: CALL ID OPENPAREN • parameter_list CLOSEPAREN
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 218
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    PAR         shift, and go to state 16
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    CLOSEPAREN  shift, and go to state 221
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 219
+    CLOSEPAREN  [reduce using rule 17 (parameter_list)]
+
+    parameter_list   go to state 195
+    param_decl_list  go to state 18
+    param_decl       go to state 19
+    literal          go to state 100
+    expression_list  go to state 222
+    expression       go to state 183
 
 
-State 205
+State 208
+
+   81 assignment_stat: ID ASSIGNMENT ADDRESS ID SEMICOLON •
+
+    $default  reduce using rule 81 (assignment_stat)
+
+
+State 209
+
+   79 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT • CHAR_LIT SEMICOLON
+   83                | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT • expression SEMICOLON
+
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 223
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
+
+    literal     go to state 100
+    expression  go to state 224
+
+
+State 210
 
    40 var_item: ID COLON literal •
 
     $default  reduce using rule 40 (var_item)
 
 
-State 206
+State 211
 
    41 var_item: ID OPENBRACKET DEC_LIT • CLOSEBRACKET
    42         | ID OPENBRACKET DEC_LIT • CLOSEBRACKET COLON STRING_LIT
 
-    CLOSEBRACKET  shift, and go to state 220
+    CLOSEBRACKET  shift, and go to state 225
 
 
-State 207
+State 212
 
    38 var_item_list: var_item_list COMMA var_item •
 
     $default  reduce using rule 38 (var_item_list)
 
 
-State 208
+State 213
 
-  108 expression: CALL ID OPENPAREN parameter_list CLOSEPAREN •
+  109 expression: CALL ID OPENPAREN parameter_list CLOSEPAREN •
 
-    $default  reduce using rule 108 (expression)
-
-
-State 209
-
-  102 expression: ADDRESS ID OPENBRACKET expression CLOSEBRACKET •
-
-    $default  reduce using rule 102 (expression)
+    $default  reduce using rule 109 (expression)
 
 
-State 210
+State 214
+
+  103 expression: ADDRESS ID OPENBRACKET expression CLOSEBRACKET •
+
+    $default  reduce using rule 103 (expression)
+
+
+State 215
 
    68 if_stat: IF expression COLON block_stat ELIF expression • COLON block_stat
    69        | IF expression COLON block_stat ELIF expression • COLON block_stat ELSE COLON block_stat
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    COLON        shift, and go to state 221
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    COLON        shift, and go to state 226
 
 
-State 211
+State 216
 
    67 if_stat: IF expression COLON block_stat ELSE COLON • block_stat
 
-    BEGIN_T  shift, and go to state 64
+    VAR    shift, and go to state 47
+    MULTI  shift, and go to state 67
+    ID     shift, and go to state 143
 
-    block_stat  go to state 222
+    $default  reduce using rule 31 (opt_var)
+
+    opt_var          go to state 70
+    block_stat       go to state 227
+    assignment_stat  go to state 145
 
 
-State 212
+State 217
 
    74 for_header: OPENPAREN ID ASSIGNMENT expression SEMICOLON • expression SEMICOLON update_exp CLOSEPAREN
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 223
+    literal     go to state 100
+    expression  go to state 228
 
 
-State 213
+State 218
 
    71 do_while_stat: DO COLON block_stat WHILE expression SEMICOLON •
 
     $default  reduce using rule 71 (do_while_stat)
 
 
-State 214
+State 219
 
    64 call_stat: CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON •
 
     $default  reduce using rule 64 (call_stat)
 
 
-State 215
+State 220
 
-   86 expression_list: expression COMMA expression_list •
+   87 expression_list: expression COMMA expression_list •
 
-    $default  reduce using rule 86 (expression_list)
+    $default  reduce using rule 87 (expression_list)
 
 
-State 216
+State 221
 
    63 call_stat: ID ASSIGNMENT CALL ID OPENPAREN CLOSEPAREN • SEMICOLON
 
-    SEMICOLON  shift, and go to state 224
+    SEMICOLON  shift, and go to state 229
 
 
-State 217
+State 222
 
    62 call_stat: ID ASSIGNMENT CALL ID OPENPAREN expression_list • CLOSEPAREN SEMICOLON
 
-    CLOSEPAREN  shift, and go to state 225
+    CLOSEPAREN  shift, and go to state 230
 
 
-State 218
+State 223
 
    46 literal: CHAR_LIT •
-   78 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT • SEMICOLON
+   79 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT • SEMICOLON
 
-    SEMICOLON  shift, and go to state 226
+    SEMICOLON  shift, and go to state 231
 
     SEMICOLON  [reduce using rule 46 (literal)]
     $default   reduce using rule 46 (literal)
 
 
-State 219
+State 224
 
-   82 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression • SEMICOLON
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   83 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression • SEMICOLON
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    SEMICOLON    shift, and go to state 227
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    SEMICOLON    shift, and go to state 232
 
 
-State 220
+State 225
 
    41 var_item: ID OPENBRACKET DEC_LIT CLOSEBRACKET •
    42         | ID OPENBRACKET DEC_LIT CLOSEBRACKET • COLON STRING_LIT
 
-    COLON  shift, and go to state 228
+    COLON  shift, and go to state 233
 
     $default  reduce using rule 41 (var_item)
 
 
-State 221
+State 226
 
    68 if_stat: IF expression COLON block_stat ELIF expression COLON • block_stat
    69        | IF expression COLON block_stat ELIF expression COLON • block_stat ELSE COLON block_stat
 
-    BEGIN_T  shift, and go to state 64
+    VAR    shift, and go to state 47
+    MULTI  shift, and go to state 67
+    ID     shift, and go to state 143
 
-    block_stat  go to state 229
+    $default  reduce using rule 31 (opt_var)
+
+    opt_var          go to state 70
+    block_stat       go to state 234
+    assignment_stat  go to state 145
 
 
-State 222
+State 227
 
    67 if_stat: IF expression COLON block_stat ELSE COLON block_stat •
 
     $default  reduce using rule 67 (if_stat)
 
 
-State 223
+State 228
 
    74 for_header: OPENPAREN ID ASSIGNMENT expression SEMICOLON expression • SEMICOLON update_exp CLOSEPAREN
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
-    SEMICOLON    shift, and go to state 230
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
+    SEMICOLON    shift, and go to state 235
 
 
-State 224
+State 229
 
    63 call_stat: ID ASSIGNMENT CALL ID OPENPAREN CLOSEPAREN SEMICOLON •
 
     $default  reduce using rule 63 (call_stat)
 
 
-State 225
+State 230
 
    62 call_stat: ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN • SEMICOLON
 
-    SEMICOLON  shift, and go to state 231
+    SEMICOLON  shift, and go to state 236
 
 
-State 226
+State 231
 
-   78 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON •
+   79 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON •
 
-    $default  reduce using rule 78 (assignment_stat)
-
-
-State 227
-
-   82 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON •
-
-    $default  reduce using rule 82 (assignment_stat)
+    $default  reduce using rule 79 (assignment_stat)
 
 
-State 228
+State 232
+
+   83 assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON •
+
+    $default  reduce using rule 83 (assignment_stat)
+
+
+State 233
 
    42 var_item: ID OPENBRACKET DEC_LIT CLOSEBRACKET COLON • STRING_LIT
 
-    STRING_LIT  shift, and go to state 232
+    STRING_LIT  shift, and go to state 237
 
 
-State 229
+State 234
 
    68 if_stat: IF expression COLON block_stat ELIF expression COLON block_stat •
    69        | IF expression COLON block_stat ELIF expression COLON block_stat • ELSE COLON block_stat
 
-    ELSE  shift, and go to state 233
+    ELSE  shift, and go to state 238
 
     $default  reduce using rule 68 (if_stat)
 
 
-State 230
+State 235
 
    74 for_header: OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON • update_exp CLOSEPAREN
 
-    ID  shift, and go to state 234
+    ID  shift, and go to state 239
 
-    update_exp  go to state 235
+    update_exp  go to state 240
 
 
-State 231
+State 236
 
    62 call_stat: ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON •
 
     $default  reduce using rule 62 (call_stat)
 
 
-State 232
+State 237
 
    42 var_item: ID OPENBRACKET DEC_LIT CLOSEBRACKET COLON STRING_LIT •
 
     $default  reduce using rule 42 (var_item)
 
 
-State 233
+State 238
 
    69 if_stat: IF expression COLON block_stat ELIF expression COLON block_stat ELSE • COLON block_stat
 
-    COLON  shift, and go to state 236
+    COLON  shift, and go to state 241
 
 
-State 234
+State 239
 
    75 update_exp: ID • ASSIGNMENT expression
 
-    ASSIGNMENT  shift, and go to state 237
+    ASSIGNMENT  shift, and go to state 242
 
 
-State 235
+State 240
 
    74 for_header: OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp • CLOSEPAREN
 
-    CLOSEPAREN  shift, and go to state 238
+    CLOSEPAREN  shift, and go to state 243
 
 
-State 236
+State 241
 
    69 if_stat: IF expression COLON block_stat ELIF expression COLON block_stat ELSE COLON • block_stat
 
-    BEGIN_T  shift, and go to state 64
+    VAR    shift, and go to state 47
+    MULTI  shift, and go to state 67
+    ID     shift, and go to state 143
 
-    block_stat  go to state 239
+    $default  reduce using rule 31 (opt_var)
+
+    opt_var          go to state 70
+    block_stat       go to state 244
+    assignment_stat  go to state 145
 
 
-State 237
+State 242
 
    75 update_exp: ID ASSIGNMENT • expression
 
-    NULLL       shift, and go to state 82
-    CALL        shift, and go to state 83
-    NOT         shift, and go to state 84
-    MINUS       shift, and go to state 85
-    MULTI       shift, and go to state 86
-    ADDRESS     shift, and go to state 87
-    LENGTH      shift, and go to state 88
-    OPENPAREN   shift, and go to state 89
-    B_TRUE      shift, and go to state 90
-    B_FALSE     shift, and go to state 91
-    CHAR_LIT    shift, and go to state 92
-    STRING_LIT  shift, and go to state 93
-    DEC_LIT     shift, and go to state 94
-    HEX_LIT     shift, and go to state 95
-    REAL_LIT    shift, and go to state 96
-    ID          shift, and go to state 97
+    NULLL       shift, and go to state 84
+    CALL        shift, and go to state 85
+    NOT         shift, and go to state 86
+    MINUS       shift, and go to state 87
+    MULTI       shift, and go to state 88
+    ADDRESS     shift, and go to state 89
+    LENGTH      shift, and go to state 90
+    OPENPAREN   shift, and go to state 91
+    B_TRUE      shift, and go to state 92
+    B_FALSE     shift, and go to state 93
+    CHAR_LIT    shift, and go to state 94
+    STRING_LIT  shift, and go to state 95
+    DEC_LIT     shift, and go to state 96
+    HEX_LIT     shift, and go to state 97
+    REAL_LIT    shift, and go to state 98
+    ID          shift, and go to state 99
 
-    literal     go to state 98
-    expression  go to state 240
+    literal     go to state 100
+    expression  go to state 245
 
 
-State 238
+State 243
 
    74 for_header: OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN •
 
     $default  reduce using rule 74 (for_header)
 
 
-State 239
+State 244
 
    69 if_stat: IF expression COLON block_stat ELIF expression COLON block_stat ELSE COLON block_stat •
 
     $default  reduce using rule 69 (if_stat)
 
 
-State 240
+State 245
 
    75 update_exp: ID ASSIGNMENT expression •
-   87 expression: expression • PLUS expression
-   88           | expression • MINUS expression
-   89           | expression • MULTI expression
-   90           | expression • DIV expression
-   91           | expression • AND expression
-   92           | expression • OR expression
-   93           | expression • EQL expression
-   94           | expression • NOT_EQL expression
-   95           | expression • GREATER expression
-   96           | expression • GREATER_EQL expression
-   97           | expression • LESS expression
-   98           | expression • LESS_EQL expression
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 123
-    OR           shift, and go to state 124
-    DIV          shift, and go to state 125
-    EQL          shift, and go to state 126
-    GREATER      shift, and go to state 127
-    GREATER_EQL  shift, and go to state 128
-    LESS         shift, and go to state 129
-    LESS_EQL     shift, and go to state 130
-    MINUS        shift, and go to state 131
-    NOT_EQL      shift, and go to state 132
-    PLUS         shift, and go to state 133
-    MULTI        shift, and go to state 134
+    AND          shift, and go to state 126
+    OR           shift, and go to state 127
+    DIV          shift, and go to state 128
+    EQL          shift, and go to state 129
+    GREATER      shift, and go to state 130
+    GREATER_EQL  shift, and go to state 131
+    LESS         shift, and go to state 132
+    LESS_EQL     shift, and go to state 133
+    MINUS        shift, and go to state 134
+    NOT_EQL      shift, and go to state 135
+    PLUS         shift, and go to state 136
+    MULTI        shift, and go to state 137
 
     $default  reduce using rule 75 (update_exp)

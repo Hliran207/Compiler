@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#define MAX_NESTING 32
 
 int yyerror(char *s);
 int yylex();
 int yyparse();
 extern int yylineno;
 extern char *yytext;
+
 
 typedef enum
 {
@@ -71,6 +73,13 @@ typedef struct Node
     struct Node *right;
 } Node;
 
+
+static DataType ret_stack[MAX_NESTING];
+static int      ret_flag_stack[MAX_NESTING];  
+static int      ret_sp = 0; 
+
+
+
 // Global var:
 Node *ast_root=NULL;
 Scope *current_scope = NULL;
@@ -78,7 +87,6 @@ int has_main = 0; // Flag for _main_ function
 int current_scope_level = 0;
 static DataType current_var_type = TYPE_INVALID;
 int expected_param_num = 1; //for check order parameter list
-static DataType current_function_return_type=TYPE_VOID;
 
 Node *mkNode(char *token, Node *left, Node *right);
 void printtree(Node * tree, int tab);
@@ -115,6 +123,41 @@ void verify_bool(Node *cond_node, const char *context);
 void verify_string_index(Node *id_node, Node *index_expr);
 void verify_assignment(Node *left, Node *right);
 static void add_params_rec(Node *plist, DataType *types, int *idx);
+void verify_return(Node *expr_node);
+
+
+static inline void push_return(DataType t)
+{
+    if (ret_sp == MAX_NESTING)
+        semantic_error("Function nesting too deep", "");
+    ret_stack[ret_sp]       = t;
+    ret_flag_stack[ret_sp]  = 0;
+    ++ret_sp;
+}
+
+/* pop, check “all paths return” */
+static inline void pop_return(void)
+{
+    if (ret_sp == 0)
+        semantic_error("Internal error: return-stack underflow", "");
+    --ret_sp;
+    if (ret_stack[ret_sp] != TYPE_VOID && ret_flag_stack[ret_sp] == 0)
+        semantic_error("Non-void function may reach end without return", "");
+}
+
+/* current function’s expected type */
+static inline DataType current_return(void)
+{
+    return ret_sp ? ret_stack[ret_sp-1] : TYPE_VOID;
+}
+
+/* mark that we have executed a return in this function */
+static inline void mark_return_found(void)
+{
+    if (ret_sp) ret_flag_stack[ret_sp-1] = 1;
+}
+
+
 
 %}
 
@@ -132,7 +175,7 @@ struct Node *node;
 
 %type<node> program function_list function main_function function_item returns_spec parameter_list param_decl_list 
 %type<node> param_decl type opt_var var_decl_list var_decl var_item_list var_item 
-%type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat optional_return
+%type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat
 %type<node> for_stat assignment_stat return_stat expression  expression_list for_header update_exp
 
 %left PLUS MINUS 
@@ -162,6 +205,7 @@ main_function : DEF MAIN_FUNC OPENPAREN
 } 
 parameter_list CLOSEPAREN
 {
+
     if(has_main)
     {
         semantic_error("Multiply definitions of '_main_' function are not allowed",$2);
@@ -177,7 +221,7 @@ parameter_list CLOSEPAREN
 }
  COLON opt_var BEGIN_T stat_list END
 {
-    
+    push_return(TYPE_VOID);
 
     /* create nodes for readability */
     Node *idnode = mkNode("_main_", NULL, NULL);
@@ -185,6 +229,7 @@ parameter_list CLOSEPAREN
     Node *bodynode = mkNode("BODY", $9, $11);
     $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
     print_symbol_table();
+    pop_return();
     exit_scope();
 };
 
@@ -210,26 +255,23 @@ function : DEF ID OPENPAREN
             enter_scope();
             add_parameters_to_scope($5,param_types,param_count);
         }
-        COLON returns_spec opt_var BEGIN_T stat_list return_stat END
+        COLON returns_spec opt_var BEGIN_T stat_list END
         {
+            DataType decl = get_type_from_string($9->token);
             Symbol *f=find_function($2);
-            if(f) f->return_type=get_type_from_string($9->token);
+            if(f) f->return_type=decl;
 
-            DataType declared = get_type_from_string($9->token);
-            DataType delivered = get_expression_type($13->left);
-            current_function_return_type=declared;
-
-            check_type_compatibility(declared, delivered, "return statement");
 
             /* create nodes for readability */
             Node *idnode = mkNode($2, NULL, NULL);
             Node *parametersnodes = mkNode("PARAMETERS", $5, NULL);
             Node *returnsnode = mkNode("RETURNS", $9, NULL);
-            Node *body_statements = mkNode("statements", $12, $13);
+            Node *body_statements = mkNode("statements", $12, NULL);
             Node *bodynode = mkNode("BODY", $10, body_statements);
             Node *defbody = mkNode("DEF_BODY", returnsnode, bodynode);
             $$ = mkNode("FUNCTION", idnode, mkNode("FUNC_PARTS", parametersnodes, defbody));
             print_symbol_table();
+            pop_return();                                    
             exit_scope();
         }
 | DEF ID OPENPAREN
@@ -246,7 +288,6 @@ function : DEF ID OPENPAREN
 
     DataType *param_types=NULL;
     int param_count=0;
-    current_function_return_type=TYPE_VOID;
     extract_param_types($5,&param_types,&param_count);
     add_function($2,TYPE_VOID,param_count,NULL);
     printf("DEBUG: Added function '%s' with %d parameters, return type %s at scope %d\n", 
@@ -259,7 +300,8 @@ function : DEF ID OPENPAREN
 }
  COLON opt_var BEGIN_T stat_list END
 {
-    DataType ret_type=TYPE_VOID;
+
+    push_return(TYPE_VOID); 
 
 
     /* create nodes for readability */
@@ -268,15 +310,18 @@ function : DEF ID OPENPAREN
     Node *bodynode = mkNode("BODY", $9, $11);
     $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
     print_symbol_table();
+    pop_return(); 
     exit_scope();
 };
 
 returns_spec : RETURNS type {
                 if(strcmp($2->token, "STRING") == 0){
-                    semantic_error("Return type of a function cannot be STRING", $2->token);
-                }
+                    semantic_error("Return type of a function cannot be STRING", $2->token);}
+                push_return(get_type_from_string($2->token));
                 $$ = $2;}
-                | {$$=mkNode("RETURN VOID",NULL,NULL);};
+                | {
+                    push_return(TYPE_VOID); 
+                    $$=mkNode("RETURN VOID",NULL,NULL);};
 
 
 parameter_list:
@@ -394,7 +439,7 @@ stat : function { $$ = $1; }
 | for_stat { $$ = $1; }
 | do_while_stat { $$ = $1; }
 | block_stat { $$ = $1; }
-/* | return_stat {$$ = $1;} */
+| return_stat {$$ = $1;}
 | call_stat { $$ = $1; };
 
 call_stat : ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
@@ -498,13 +543,10 @@ update_exp : ID ASSIGNMENT expression {
 | B_TRUE { $$ = mkNode("true", NULL, NULL); }
 | B_FALSE { $$ = mkNode("false", NULL, NULL); };
 */
-block_stat : opt_var BEGIN_T stat_list optional_return END {$$ = mkNode("block", $1, mkNode("BLOCK_BODY",$3,$4));}
+block_stat : opt_var BEGIN_T stat_list END {$$ = mkNode("block", $1, mkNode("BLOCK_BODY",$3,NULL));}
             | assignment_stat {$$=$1;}
             ;
 
-optional_return : return_stat {$$=$1;}
-                  | {$$=mkNode("NO RETURN IN BLOCK",NULL,NULL);}
-                  ;
 
 assignment_stat : ID ASSIGNMENT expression SEMICOLON 
 {
@@ -565,8 +607,11 @@ assignment_stat : ID ASSIGNMENT expression SEMICOLON
     $$ = mkNode("array_assign", mkNode($1, $3, NULL), $6);
 };
 
-return_stat : RETURN expression SEMICOLON { $$ = mkNode("RETURN", $2, NULL);}
-                | {$$=mkNode("RETURN VOID",NULL,NULL);}; 
+return_stat
+    : RETURN expression SEMICOLON
+      { verify_return($2); $$ = mkNode("RETURN", $2, NULL); }
+    | RETURN SEMICOLON
+      { verify_return(NULL); $$ = mkNode("RETURN", NULL, NULL); } ; 
 
 expression_list : expression { $$ = $1; }
 | expression COMMA expression_list { $$ = mkNode("expr_list", $1, $3); };
@@ -1575,6 +1620,28 @@ static void add_params_rec(Node *plist,
 }
 
 
+void verify_return(Node *expr_node)
+{
+    DataType expected = current_return();   
+
+    /* 1. VOID procedure rules */
+    if (expected == TYPE_VOID)
+    {
+        if (expr_node)
+            semantic_error("VOID procedure cannot return a value", "");
+        mark_return_found();                /* bare return is OK */
+        return;
+    }
+
+    /* 2. Non-void function rules */
+    if (!expr_node)
+        semantic_error("Function must return a value", "");
+
+    DataType delivered = get_expression_type(expr_node);
+    check_type_compatibility(expected, delivered, "return statement");
+
+    mark_return_found();                    /* type is fine */
+}
 
 
 
@@ -1598,7 +1665,7 @@ void print_symbol_table() {
             
             printf("%-20s %-10s %-10s %-8d %-8d\n", 
                    sym->name, 
-                   type_to_string(sym->type),
+                   type_to_string(sym->kind == KIND_FUNCTION? sym->return_type: sym->type),
                    kind_str,
                    sym->scope_level,
                    sym->line_number);
