@@ -175,8 +175,8 @@ struct Node *node;
 
 %type<node> program function_list function main_function function_item returns_spec parameter_list param_decl_list 
 %type<node> param_decl type opt_var var_decl_list var_decl var_item_list var_item 
-%type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat
-%type<node> for_stat assignment_stat return_stat expression  expression_list for_header update_exp
+%type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat single_statement
+%type<node> for_stat assignment_stat return_stat expression  expression_list for_header update_exp for_body
 
 %left PLUS MINUS 
 %left MULTI DIV 
@@ -233,11 +233,12 @@ parameter_list CLOSEPAREN
     exit_scope();
 };
 
-function : DEF ID OPENPAREN
-    {
-        expected_param_num = 1;
-    }
-    parameter_list CLOSEPAREN 
+function: DEF ID OPENPAREN 
+        {
+            expected_param_num = 1;
+            // Common code from both $@3 and $@5 actions
+        }
+        parameter_list CLOSEPAREN
         {
             if(find_symbol_in_scope($2,current_scope)){
                 semantic_error("Function with the same name already exists in the current scope",$2);
@@ -246,73 +247,41 @@ function : DEF ID OPENPAREN
 
             DataType *param_types=NULL;
             int param_count=0;
-
             extract_param_types($5,&param_types,&param_count);
+            add_function($2, TYPE_VOID, param_count, param_types);
+        }
+        COLON 
+        returns_spec 
+        {
+            // Store return type
+            Symbol *f = find_function($<str>2);
+            if(f) f->return_type = get_type_from_string($9->token);
             
-            add_function($2,TYPE_INVALID,param_count,param_types);
-            
-
+            // Enter scope for function body
             enter_scope();
+            
+            // Add parameters to scope
+            DataType *param_types=NULL;
+            int param_count=0;
+            extract_param_types($5,&param_types,&param_count);
             add_parameters_to_scope($5,param_types,param_count);
         }
-        COLON returns_spec opt_var BEGIN_T stat_list END
+        opt_var BEGIN_T stat_list END
         {
-            DataType decl = get_type_from_string($9->token);
-            Symbol *f=find_function($2);
-            if(f) f->return_type=decl;
-
-
             /* create nodes for readability */
             Node *idnode = mkNode($2, NULL, NULL);
             Node *parametersnodes = mkNode("PARAMETERS", $5, NULL);
             Node *returnsnode = mkNode("RETURNS", $9, NULL);
-            Node *body_statements = mkNode("statements", $12, NULL);
-            Node *bodynode = mkNode("BODY", $10, body_statements);
+            Node *body_statements = mkNode("statements", $13, NULL);
+            Node *bodynode = mkNode("BODY", $11, body_statements);
             Node *defbody = mkNode("DEF_BODY", returnsnode, bodynode);
             $$ = mkNode("FUNCTION", idnode, mkNode("FUNC_PARTS", parametersnodes, defbody));
+            
             print_symbol_table();
-            pop_return();                                    
+            pop_return();
             exit_scope();
         }
-| DEF ID OPENPAREN
-{
-    
-    expected_param_num = 1;  
-}
- parameter_list CLOSEPAREN
-{
-    if(find_symbol_in_scope($2,current_scope)){
-        semantic_error("Procedure with the same name already exists in the current scope",$2);
-    }
-    printf("DEBUG: Entering function definition for '%s'\n", $2);
-
-    DataType *param_types=NULL;
-    int param_count=0;
-    extract_param_types($5,&param_types,&param_count);
-    add_function($2,TYPE_VOID,param_count,NULL);
-    printf("DEBUG: Added function '%s' with %d parameters, return type %s at scope %d\n", 
-       $2, param_count, type_to_string(TYPE_VOID), current_scope_level);
-
-
-    enter_scope();
-    add_parameters_to_scope($5,param_types,param_count);
-    
-}
- COLON opt_var BEGIN_T stat_list END
-{
-
-    push_return(TYPE_VOID); 
-
-
-    /* create nodes for readability */
-    Node *idnode = mkNode($2, NULL, NULL);
-    Node *parametersnodes = mkNode("PARAMETERS", $5, NULL);
-    Node *bodynode = mkNode("BODY", $9, $11);
-    $$ = mkNode("PROCEDURE", idnode, mkNode("PROC_PARTS", parametersnodes, bodynode));
-    print_symbol_table();
-    pop_return(); 
-    exit_scope();
-};
+        ;
 
 returns_spec : RETURNS type {
                 if(strcmp($2->token, "STRING") == 0){
@@ -522,8 +491,17 @@ do_while_stat : DO COLON block_stat WHILE expression SEMICOLON {
     verify_bool($5, "DO-WHILE statement");    
     $$ = mkNode("do-while", $3, mkNode("cond", $5, NULL)); };
 
-for_stat : FOR for_header COLON block_stat { $$ = mkNode("for", $2, $4); }
-| FOR for_header COLON opt_var block_stat { $$ = mkNode("for", $2, mkNode("block", $5, $4)); };
+for_stat : FOR for_header COLON for_body { $$ = mkNode("for", $2, $4); }
+
+for_body: block_stat 
+        { 
+            $$ = $1; 
+        }
+        | opt_var block_stat 
+        { 
+            $$ = mkNode("block", $1, $2); 
+        }
+        ;
 
 for_header : OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
 {
@@ -543,9 +521,12 @@ update_exp : ID ASSIGNMENT expression {
 | B_TRUE { $$ = mkNode("true", NULL, NULL); }
 | B_FALSE { $$ = mkNode("false", NULL, NULL); };
 */
-block_stat : opt_var BEGIN_T stat_list END {$$ = mkNode("block", $1, mkNode("BLOCK_BODY",$3,NULL));}
-            | assignment_stat {$$=$1;}
-            ;
+block_stat: opt_var BEGIN_T stat_list END
+          | single_statement
+          ;
+
+single_statement: assignment_stat { $$ = mkNode("STATEMENT", $1, NULL); }
+                ;
 
 
 assignment_stat : ID ASSIGNMENT expression SEMICOLON 
@@ -594,8 +575,10 @@ assignment_stat : ID ASSIGNMENT expression SEMICOLON
     if(!var){
         semantic_error("Variable used before it been declared.",$1);
     }
-    verify_assignment(mkNode($1,NULL,NULL), mkNode("null",NULL,NULL));
-    $$ = mkNode("null_assign", mkNode($1, NULL, NULL), mkNode("null", NULL, NULL)); }
+    if(!is_pointer_type(var->type)){
+                       semantic_error("null may be assigned only to pointer variables", "");
+                   }
+                   $$ = mkNode("null_assign", mkNode($1, NULL, NULL), mkNode("null", NULL, NULL)); }
 | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
 {
     verify_string_index(mkNode($1,NULL,NULL), $3);
