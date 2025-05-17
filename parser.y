@@ -178,12 +178,15 @@ struct Node *node;
 %type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat single_statement
 %type<node> for_stat assignment_stat return_stat expression  expression_list for_header update_exp for_body
 
-%left PLUS MINUS 
-%left MULTI DIV 
-%left OR AND 
-%left EQL NOT_EQL GREATER GREATER_EQL LESS LESS_EQL 
-%right NOT 
-%right ADDRESS
+%left  OR                    /* ||                       */
+%left  AND   
+%right NOT                   /* unary  not, !            */                /* &&                       */
+%nonassoc EQL NOT_EQL        /* ==, !=                   */
+%nonassoc LESS LESS_EQL GREATER GREATER_EQL   /* <  <=  >  >=       */
+%left  PLUS MINUS            /* +  -                     */
+%left  MULTI DIV             /* *  /                     */
+%right ADDRESS               /* unary  &, * (dereference)*/
+
 %%
 
 program : function_list
@@ -611,7 +614,7 @@ expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
 | expression GREATER_EQL expression { $$ = mkNode(">=", $1, $3); }
 | expression LESS expression { $$ = mkNode("<", $1, $3); }
 | expression LESS_EQL expression { $$ = mkNode("<=", $1, $3); }
-| NOT expression { $$ = mkNode("not", $2, NULL); }
+| NOT expression %prec NOT { $$ = mkNode("not", $2, NULL); }
 | MINUS expression %prec NOT { $$ = mkNode("unary-", $2, NULL); }
 | ADDRESS ID 
 {
@@ -630,13 +633,8 @@ expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
     Node *array_elem = mkNode("array_element", mkNode($2, NULL, NULL), $4);
     $$ = mkNode("address", array_elem, NULL);
 }
-| MULTI ID %prec NOT 
-{
-    Symbol *var=find_symbol($2);
-    if(!var){
-        semantic_error("Variable used before it been declared.",$2);
-    }
-    $$ = mkNode("dereference", mkNode($2, NULL, NULL), NULL); }
+| MULTI expression   %prec NOT      /* *expr */
+    { $$ = mkNode("dereference", $2, NULL); }
 | LENGTH ID LENGTH 
 {
     Symbol *var=find_symbol($2);
@@ -1007,6 +1005,16 @@ DataType get_expression_type(Node *expr)
         DataType left_type = get_expression_type(expr->left);
         DataType right_type = get_expression_type(expr->right);
 
+        if (is_pointer_type(left_type) && right_type == TYPE_INT)
+            return left_type;                      /* ptr ± int */
+        if (is_pointer_type(right_type) && left_type == TYPE_INT &&
+            strcmp(expr->token, "+") == 0)         /* int + ptr */
+            return right_type;
+        if (is_pointer_type(left_type) && is_pointer_type(right_type) &&
+            strcmp(expr->token, "-") == 0)
+            return TYPE_INT;
+
+
         // Check that both operands are numeric types (INT or REAL)
         if (!is_numeric_type(left_type) || !is_numeric_type(right_type))
         {
@@ -1179,27 +1187,21 @@ DataType get_expression_type(Node *expr)
     }
 
     // Dereference operator
-    if (strcmp(expr->token, "dereference") == 0) {
-        Node *var_node = expr->left;
-        if (!var_node)
-            return TYPE_INVALID;
+   if (strcmp(expr->token, "dereference") == 0) {
 
-        Symbol *var_sym = find_symbol(var_node->token);
-        if (!var_sym)
-            return TYPE_INVALID;
+    /* 1.  Get the type of the operand expression (whatever it is) */
+    DataType ptr_type = get_expression_type(expr->left);
 
-        // Check that the variable is a pointer type
-        if (!is_pointer_type(var_sym->type)) {
-            char error_msg[100];
-            sprintf(error_msg, "Cannot dereference non-pointer variable of type '%s'", 
-                    type_to_string(var_sym->type));
-            semantic_error(error_msg, var_node->token);
-            return TYPE_INVALID;
-        }
-
-        // Return base type of pointer
-        return get_base_type(var_sym->type);
+    /* 2.  Make sure it is really a pointer                           */
+    if (!is_pointer_type(ptr_type)) {
+        semantic_error("Cannot dereference a non-pointer expression", "");
+        /* semantic_error exits, but return keeps the compiler happy  */
+        return TYPE_INVALID;
     }
+
+    /* 3.  Dereferencing gives the base type of that pointer          */
+    return get_base_type(ptr_type);
+}
 
     // Length operator
     if (strcmp(expr->token, "length") == 0)            

@@ -24,14 +24,11 @@ end
 
 def _main_():
 var
- type char*:x;
- type string: y[10];
- type char:z;
+ type int:x;
+ type int*:y;
 begin
- y = "foobar";
- x = &y[5]; #-> x points to 'r' <-#
- 
- y = "barfoo"; #-> z is still 'f', but x now points to 'o' <-#
+ x = 5;
+ y = &x;
+ x = 6;
 end
-
 

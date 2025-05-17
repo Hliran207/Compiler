@@ -158,7 +158,7 @@ Grammar
   101           | MINUS expression
   102           | ADDRESS ID
   103           | ADDRESS ID OPENBRACKET expression CLOSEBRACKET
-  104           | MULTI ID
+  104           | MULTI expression
   105           | LENGTH ID LENGTH
   106           | OPENPAREN expression CLOSEPAREN
   107           | ID
@@ -227,7 +227,7 @@ Terminals, with rules where they appear
     DEC_LIT <str> (311) 39 40 41
     HEX_LIT <str> (312) 46
     REAL_LIT <str> (313) 47
-    ID <str> (314) 12 20 37 38 39 40 60 61 62 63 73 74 78 79 80 81 82 83 102 103 104 105 107 108 109
+    ID <str> (314) 12 20 37 38 39 40 60 61 62 63 73 74 78 79 80 81 82 83 102 103 105 107 108 109
     MAIN_FUNC <str> (315) 8
 
 
@@ -351,7 +351,7 @@ Nonterminals, with rules where they appear
         on right: 60 62 87
     expression <node> (100)
         on left: 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110
-        on right: 64 65 66 67 68 69 73 74 78 79 80 83 84 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 103 106 108
+        on right: 64 65 66 67 68 69 73 74 78 79 80 83 84 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 103 104 106 108
 
 
 State 0
@@ -1224,9 +1224,27 @@ State 80
 
 State 81
 
-  104 expression: MULTI • ID
+  104 expression: MULTI • expression
 
-    ID  shift, and go to state 113
+    NULLL       shift, and go to state 77
+    CALL        shift, and go to state 78
+    NOT         shift, and go to state 79
+    MINUS       shift, and go to state 80
+    MULTI       shift, and go to state 81
+    ADDRESS     shift, and go to state 82
+    LENGTH      shift, and go to state 83
+    OPENPAREN   shift, and go to state 84
+    B_TRUE      shift, and go to state 85
+    B_FALSE     shift, and go to state 86
+    CHAR_LIT    shift, and go to state 87
+    STRING_LIT  shift, and go to state 88
+    DEC_LIT     shift, and go to state 89
+    HEX_LIT     shift, and go to state 90
+    REAL_LIT    shift, and go to state 91
+    ID          shift, and go to state 92
+
+    literal     go to state 93
+    expression  go to state 113
 
 
 State 82
@@ -1625,6 +1643,17 @@ State 111
    99           | expression • LESS_EQL expression
   100           | NOT expression •
 
+    DIV          shift, and go to state 120
+    EQL          shift, and go to state 121
+    GREATER      shift, and go to state 122
+    GREATER_EQL  shift, and go to state 123
+    LESS         shift, and go to state 124
+    LESS_EQL     shift, and go to state 125
+    MINUS        shift, and go to state 126
+    NOT_EQL      shift, and go to state 127
+    PLUS         shift, and go to state 128
+    MULTI        shift, and go to state 129
+
     $default  reduce using rule 100 (expression)
 
 
@@ -1644,12 +1673,46 @@ State 112
    99           | expression • LESS_EQL expression
   101           | MINUS expression •
 
+    DIV          shift, and go to state 120
+    EQL          shift, and go to state 121
+    GREATER      shift, and go to state 122
+    GREATER_EQL  shift, and go to state 123
+    LESS         shift, and go to state 124
+    LESS_EQL     shift, and go to state 125
+    MINUS        shift, and go to state 126
+    NOT_EQL      shift, and go to state 127
+    PLUS         shift, and go to state 128
+    MULTI        shift, and go to state 129
+
     $default  reduce using rule 101 (expression)
 
 
 State 113
 
-  104 expression: MULTI ID •
+   88 expression: expression • PLUS expression
+   89           | expression • MINUS expression
+   90           | expression • MULTI expression
+   91           | expression • DIV expression
+   92           | expression • AND expression
+   93           | expression • OR expression
+   94           | expression • EQL expression
+   95           | expression • NOT_EQL expression
+   96           | expression • GREATER expression
+   97           | expression • GREATER_EQL expression
+   98           | expression • LESS expression
+   99           | expression • LESS_EQL expression
+  104           | MULTI expression •
+
+    DIV          shift, and go to state 120
+    EQL          shift, and go to state 121
+    GREATER      shift, and go to state 122
+    GREATER_EQL  shift, and go to state 123
+    LESS         shift, and go to state 124
+    LESS_EQL     shift, and go to state 125
+    MINUS        shift, and go to state 126
+    NOT_EQL      shift, and go to state 127
+    PLUS         shift, and go to state 128
+    MULTI        shift, and go to state 129
 
     $default  reduce using rule 104 (expression)
 
@@ -2409,12 +2472,16 @@ State 155
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
 
+    DIV          shift, and go to state 120
     EQL          shift, and go to state 121
     GREATER      shift, and go to state 122
     GREATER_EQL  shift, and go to state 123
     LESS         shift, and go to state 124
     LESS_EQL     shift, and go to state 125
+    MINUS        shift, and go to state 126
     NOT_EQL      shift, and go to state 127
+    PLUS         shift, and go to state 128
+    MULTI        shift, and go to state 129
 
     $default  reduce using rule 92 (expression)
 
@@ -2435,12 +2502,17 @@ State 156
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
 
+    AND          shift, and go to state 118
+    DIV          shift, and go to state 120
     EQL          shift, and go to state 121
     GREATER      shift, and go to state 122
     GREATER_EQL  shift, and go to state 123
     LESS         shift, and go to state 124
     LESS_EQL     shift, and go to state 125
+    MINUS        shift, and go to state 126
     NOT_EQL      shift, and go to state 127
+    PLUS         shift, and go to state 128
+    MULTI        shift, and go to state 129
 
     $default  reduce using rule 93 (expression)
 
@@ -2461,15 +2533,6 @@ State 157
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 118
-    OR           shift, and go to state 119
-    EQL          shift, and go to state 121
-    GREATER      shift, and go to state 122
-    GREATER_EQL  shift, and go to state 123
-    LESS         shift, and go to state 124
-    LESS_EQL     shift, and go to state 125
-    NOT_EQL      shift, and go to state 127
-
     $default  reduce using rule 91 (expression)
 
 
@@ -2488,6 +2551,18 @@ State 158
    97           | expression • GREATER_EQL expression
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
+
+    DIV          shift, and go to state 120
+    GREATER      shift, and go to state 122
+    GREATER_EQL  shift, and go to state 123
+    LESS         shift, and go to state 124
+    LESS_EQL     shift, and go to state 125
+    MINUS        shift, and go to state 126
+    PLUS         shift, and go to state 128
+    MULTI        shift, and go to state 129
+
+    EQL      error (nonassociative)
+    NOT_EQL  error (nonassociative)
 
     $default  reduce using rule 94 (expression)
 
@@ -2508,6 +2583,16 @@ State 159
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
 
+    DIV    shift, and go to state 120
+    MINUS  shift, and go to state 126
+    PLUS   shift, and go to state 128
+    MULTI  shift, and go to state 129
+
+    GREATER      error (nonassociative)
+    GREATER_EQL  error (nonassociative)
+    LESS         error (nonassociative)
+    LESS_EQL     error (nonassociative)
+
     $default  reduce using rule 96 (expression)
 
 
@@ -2526,6 +2611,16 @@ State 160
    97           | expression GREATER_EQL expression •
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
+
+    DIV    shift, and go to state 120
+    MINUS  shift, and go to state 126
+    PLUS   shift, and go to state 128
+    MULTI  shift, and go to state 129
+
+    GREATER      error (nonassociative)
+    GREATER_EQL  error (nonassociative)
+    LESS         error (nonassociative)
+    LESS_EQL     error (nonassociative)
 
     $default  reduce using rule 97 (expression)
 
@@ -2546,6 +2641,16 @@ State 161
    98           | expression LESS expression •
    99           | expression • LESS_EQL expression
 
+    DIV    shift, and go to state 120
+    MINUS  shift, and go to state 126
+    PLUS   shift, and go to state 128
+    MULTI  shift, and go to state 129
+
+    GREATER      error (nonassociative)
+    GREATER_EQL  error (nonassociative)
+    LESS         error (nonassociative)
+    LESS_EQL     error (nonassociative)
+
     $default  reduce using rule 98 (expression)
 
 
@@ -2564,6 +2669,16 @@ State 162
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
    99           | expression LESS_EQL expression •
+
+    DIV    shift, and go to state 120
+    MINUS  shift, and go to state 126
+    PLUS   shift, and go to state 128
+    MULTI  shift, and go to state 129
+
+    GREATER      error (nonassociative)
+    GREATER_EQL  error (nonassociative)
+    LESS         error (nonassociative)
+    LESS_EQL     error (nonassociative)
 
     $default  reduce using rule 99 (expression)
 
@@ -2584,16 +2699,8 @@ State 163
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 118
-    OR           shift, and go to state 119
-    DIV          shift, and go to state 120
-    EQL          shift, and go to state 121
-    GREATER      shift, and go to state 122
-    GREATER_EQL  shift, and go to state 123
-    LESS         shift, and go to state 124
-    LESS_EQL     shift, and go to state 125
-    NOT_EQL      shift, and go to state 127
-    MULTI        shift, and go to state 129
+    DIV    shift, and go to state 120
+    MULTI  shift, and go to state 129
 
     $default  reduce using rule 89 (expression)
 
@@ -2614,6 +2721,18 @@ State 164
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
 
+    DIV          shift, and go to state 120
+    GREATER      shift, and go to state 122
+    GREATER_EQL  shift, and go to state 123
+    LESS         shift, and go to state 124
+    LESS_EQL     shift, and go to state 125
+    MINUS        shift, and go to state 126
+    PLUS         shift, and go to state 128
+    MULTI        shift, and go to state 129
+
+    EQL      error (nonassociative)
+    NOT_EQL  error (nonassociative)
+
     $default  reduce using rule 95 (expression)
 
 
@@ -2633,16 +2752,8 @@ State 165
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
 
-    AND          shift, and go to state 118
-    OR           shift, and go to state 119
-    DIV          shift, and go to state 120
-    EQL          shift, and go to state 121
-    GREATER      shift, and go to state 122
-    GREATER_EQL  shift, and go to state 123
-    LESS         shift, and go to state 124
-    LESS_EQL     shift, and go to state 125
-    NOT_EQL      shift, and go to state 127
-    MULTI        shift, and go to state 129
+    DIV    shift, and go to state 120
+    MULTI  shift, and go to state 129
 
     $default  reduce using rule 88 (expression)
 
@@ -2662,15 +2773,6 @@ State 166
    97           | expression • GREATER_EQL expression
    98           | expression • LESS expression
    99           | expression • LESS_EQL expression
-
-    AND          shift, and go to state 118
-    OR           shift, and go to state 119
-    EQL          shift, and go to state 121
-    GREATER      shift, and go to state 122
-    GREATER_EQL  shift, and go to state 123
-    LESS         shift, and go to state 124
-    LESS_EQL     shift, and go to state 125
-    NOT_EQL      shift, and go to state 127
 
     $default  reduce using rule 90 (expression)
 
