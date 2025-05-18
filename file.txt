@@ -1,34 +1,33 @@
-def foo(): returns int begin return 0; end
-def foo_2(): returns int
-var
- type int:a;
+def foo(par1 int:i; par2 int:j; par3 int:k): returns int
+var #-> variable declarations <-#
+ type int:temp;
+ type int:total;
 begin
- a = 2;
- return a;
-end
-def foo_3(): returns int
-begin
- if TRUE:
+ def square(par1 int:t): returns int #-> func declarations <-#
+ var
+ type int:temp;
+ 
  begin
- return call foo();
+ temp = t*t;
+ return temp;
  end
- return 0;
-end
-def foo_4():
-var
- type int:a;
-begin
- a = 2;
+ total = 1; #-> statements <-#
+ return total;
 end
 
 
 def _main_():
 var
- type int:x;
- type int*:y;
+type string:a[30],b[100]:"moshe",s[11];
+type char:c;
+type int:i;
 begin
- x = 5;
- y = &x;
- x = 6;
-end
+c = 'e';
+a[19] = 'f';
+a[4+2] = 'g';
+b = a;
+b[3] = c;
+a = "test";
+i = |b|;
+end 
 

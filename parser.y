@@ -108,7 +108,6 @@ DataType get_ptr_type(DataType base_type);
 int count_parameters(Node * param_list);
 void extract_param_types(Node * param_list, DataType * *types, int *param_count);
 void extract_param_types_helper(Node *param_node, DataType *types, int *index);
-void check_param_order(Node * param_list);
 void check_main_exists();
 void check_type_compatibility(DataType target_type, DataType source_type, char *context);
 void semantic_error(const char *message, const char *token);
@@ -1539,21 +1538,6 @@ void verify_assignment(Node *left, Node *right)
     check_type_compatibility(left_type, right_type, "Assignment");
 }
 
-// Check parameter ordering
-void check_param_order(Node *param_list) {
-    
-    
-    if (!param_list) return;
-    
-    if (strcmp(param_list->token, "PARAMS_LIST") == 0) {
-        check_param_order(param_list->left);
-        check_param_order(param_list->right);
-    } else if (strcmp(param_list->token, "PARAM") == 0) {
-        // Get parameter token from PAR token (should start with "par")
-        char *param_token = param_list->right->token;
-        // Could add checks here
-    }
-}
 
 void check_main_exists() {
     if (!has_main) {
