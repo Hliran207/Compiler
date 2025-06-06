@@ -523,10 +523,26 @@ update_exp : ID ASSIGNMENT expression {
 | B_TRUE { $$ = mkNode("true", NULL, NULL); }
 | B_FALSE { $$ = mkNode("false", NULL, NULL); };
 */
-block_stat: opt_var BEGIN_T stat_list END
+/*block_stat: opt_var BEGIN_T stat_list END
           | single_statement
           ;
-
+*/
+block_stat: 
+           {
+               /* Enter new scope before processing opt_var */
+               enter_scope();
+           }
+           opt_var BEGIN_T stat_list END
+           {
+               /* Exit scope when block ends */
+               exit_scope();
+               $$ = mkNode("BLOCK", $2, $4);
+           }
+          | single_statement
+          {
+               $$ = $1;
+          }
+          ;
 single_statement: assignment_stat { $$ = mkNode("STATEMENT", $1, NULL); }
                 ;
 

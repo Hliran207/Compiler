@@ -1,0 +1,328 @@
+parser.y: warning: 7 shift/reduce conflicts [-Wconflicts-sr]
+parser.y: warning: 14 reduce/reduce conflicts [-Wconflicts-rr]
+parser.y: warning: reduce/reduce conflict on tokens IF, WHILE, FOR, VAR, RETURN, DO, BEGIN_T, END, DEF, CALL, MULTI, ID [-Wcounterexamples]
+  Example: assignment_stat •
+  First reduce derivation
+    stat
+    ↳ 52: assignment_stat •
+  Second reduce derivation
+    stat
+    ↳ 57: block_stat
+          ↳ 77: single_statement
+                ↳ 78: assignment_stat •
+parser.y: warning: shift/reduce conflict on token VAR [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • VAR var_decl_list block_stat stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                       $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                             END
+                                                                                                             ↳ 50: for_stat                                                              stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 72: opt_var                   block_stat
+                                                                                                                                                    ↳ 30: • VAR var_decl_list
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • $@8 VAR var_decl_list opt_var BEGIN_T stat_list END stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                  $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                                        END
+                                                                                                             ↳ 50: stat                                                                                                             stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 76: $@8 opt_var                 opt_var BEGIN_T stat_list END
+                                                                                                                                                                              ↳ 30: VAR var_decl_list
+parser.y: warning: shift/reduce conflict on token ID [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                         $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                               END
+                                                                                                             ↳ 50: for_stat                                                                                stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 71: block_stat
+                                                                                                                                                    ↳ 77: single_statement
+                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                ↳ 79: • ID ASSIGNMENT expression SEMICOLON
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                       $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                             END
+                                                                                                             ↳ 50: stat                                                                                                  stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 77: single_statement
+                                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                                ↳ 79: ID ASSIGNMENT expression SEMICOLON
+parser.y: warning: shift/reduce conflict on token ID [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                           $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                                                 END
+                                                                                                             ↳ 50: for_stat                                                                                                                  stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 71: block_stat
+                                                                                                                                                    ↳ 77: single_statement
+                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                ↳ 80: • ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                       $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                             END
+                                                                                                             ↳ 50: stat                                                                                                  stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 77: single_statement
+                                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                                ↳ 79: ID ASSIGNMENT expression SEMICOLON
+parser.y: warning: shift/reduce conflict on token MULTI [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • MULTI ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                               $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                     END
+                                                                                                             ↳ 50: for_stat                                                                                      stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 71: block_stat
+                                                                                                                                                    ↳ 77: single_statement
+                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                ↳ 81: • MULTI ID ASSIGNMENT expression SEMICOLON
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • MULTI ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                             $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                                   END
+                                                                                                             ↳ 50: stat                                                                                                        stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 77: single_statement
+                                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                                ↳ 81: MULTI ID ASSIGNMENT expression SEMICOLON
+parser.y: warning: shift/reduce conflict on token ID [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT ADDRESS ID SEMICOLON stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                         $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                               END
+                                                                                                             ↳ 50: for_stat                                                                                stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 71: block_stat
+                                                                                                                                                    ↳ 77: single_statement
+                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                ↳ 82: • ID ASSIGNMENT ADDRESS ID SEMICOLON
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                       $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                             END
+                                                                                                             ↳ 50: stat                                                                                                  stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 77: single_statement
+                                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                                ↳ 79: ID ASSIGNMENT expression SEMICOLON
+parser.y: warning: shift/reduce conflict on token ID [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT NULLL SEMICOLON stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                    $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                          END
+                                                                                                             ↳ 50: for_stat                                                                           stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 71: block_stat
+                                                                                                                                                    ↳ 77: single_statement
+                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                ↳ 83: • ID ASSIGNMENT NULLL SEMICOLON
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                       $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                             END
+                                                                                                             ↳ 50: stat                                                                                                  stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 77: single_statement
+                                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                                ↳ 79: ID ASSIGNMENT expression SEMICOLON
+parser.y: warning: shift/reduce conflict on token ID [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                             $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                                                   END
+                                                                                                             ↳ 50: for_stat                                                                                                                    stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 71: block_stat
+                                                                                                                                                    ↳ 77: single_statement
+                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                ↳ 84: • ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • ID ASSIGNMENT expression SEMICOLON stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                       $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                             END
+                                                                                                             ↳ 50: stat                                                                                                  stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 77: single_statement
+                                                                                                                                                                          ↳ 78: assignment_stat
+                                                                                                                                                                                ↳ 79: ID ASSIGNMENT expression SEMICOLON
+parser.y: warning: reduce/reduce conflict on tokens VAR, BEGIN_T [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • $@8 VAR var_decl_list opt_var BEGIN_T stat_list END stat_list END $end
+  First reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                  $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                                        END
+                                                                                                             ↳ 50: stat                                                                                                             stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 72: opt_var   block_stat
+                                                                                                                                                          ↳ 29: ε • ↳ 76: $@8 opt_var                 opt_var BEGIN_T stat_list END
+                                                                                                                                                                              ↳ 30: VAR var_decl_list
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • VAR var_decl_list BEGIN_T stat_list END stat_list END $end
+  Second reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                      $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                            END
+                                                                                                             ↳ 50: stat                                                                                                 stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 71: block_stat
+                                                                                                                                                          ↳ 76: $@8       opt_var                 BEGIN_T stat_list END
+                                                                                                                                                                ↳ 75: ε • ↳ 30: VAR var_decl_list
+parser.y: warning: shift/reduce conflict on token VAR [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • VAR var_decl_list block_stat stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                       $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                             END
+                                                                                                             ↳ 50: for_stat                                                              stat_list
+                                                                                                                   ↳ 70: FOR for_header COLON for_body
+                                                                                                                                              ↳ 72: opt_var                   block_stat
+                                                                                                                                                    ↳ 30: • VAR var_decl_list
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T FOR for_header COLON • VAR var_decl_list BEGIN_T stat_list END stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                      $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                                            END
+                                                                                                             ↳ 50: stat                                                                                                 stat_list
+                                                                                                                   ↳ 55: for_stat
+                                                                                                                         ↳ 70: FOR for_header COLON for_body
+                                                                                                                                                    ↳ 71: block_stat
+                                                                                                                                                          ↳ 76: $@8       opt_var                 BEGIN_T stat_list END
+                                                                                                                                                                ↳ 75: ε • ↳ 30: VAR var_decl_list
+parser.y: warning: shift/reduce conflict on token SEMICOLON [-Wcounterexamples]
+  Example: ID ASSIGNMENT NULLL • SEMICOLON
+  Shift derivation
+    assignment_stat
+    ↳ 83: ID ASSIGNMENT NULLL • SEMICOLON
+  Reduce derivation
+    assignment_stat
+    ↳ 79: ID ASSIGNMENT expression           SEMICOLON
+                        ↳ 111: literal
+                               ↳ 48: NULLL •
+parser.y: warning: shift/reduce conflict on token SEMICOLON [-Wcounterexamples]
+  Example: ID ASSIGNMENT ADDRESS ID • SEMICOLON
+  Shift derivation
+    assignment_stat
+    ↳ 82: ID ASSIGNMENT ADDRESS ID • SEMICOLON
+  Reduce derivation
+    assignment_stat
+    ↳ 79: ID ASSIGNMENT expression          SEMICOLON
+                        ↳ 103: ADDRESS ID •
+parser.y: warning: shift/reduce conflict on token CLOSEPAREN [-Wcounterexamples]
+  First example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T ID ASSIGNMENT CALL ID OPENPAREN • CLOSEPAREN SEMICOLON stat_list END $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                               $end
+         ↳ 1: function_list
+              ↳ 3: main_function
+                   ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                          END
+                                                                                                        ↳ 50: stat                                                               stat_list
+                                                                                                              ↳ 59: call_stat
+                                                                                                                    ↳ 61: ID ASSIGNMENT CALL ID OPENPAREN • CLOSEPAREN SEMICOLON
+  Second example: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T ID ASSIGNMENT CALL ID OPENPAREN • CLOSEPAREN SEMICOLON stat_list END $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                        $end
+         ↳ 1: function_list
+              ↳ 3: function_item
+                   ↳ 5: main_function
+                        ↳ 8: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list                                                                                              END
+                                                                                                             ↳ 50: stat                                                                                   stat_list
+                                                                                                                   ↳ 52: assignment_stat
+                                                                                                                         ↳ 79: ID ASSIGNMENT expression                                         SEMICOLON
+                                                                                                                                             ↳ 110: CALL ID OPENPAREN parameter_list CLOSEPAREN
+                                                                                                                                                                      ↳ 15: ε •
+parser.y: warning: shift/reduce conflict on token SEMICOLON [-Wcounterexamples]
+  Example: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT • SEMICOLON
+  Shift derivation
+    assignment_stat
+    ↳ 80: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT • SEMICOLON
+  Reduce derivation
+    assignment_stat
+    ↳ 84: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression              SEMICOLON
+                                                            ↳ 111: literal
+                                                                   ↳ 44: CHAR_LIT •
