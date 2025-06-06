@@ -175,7 +175,7 @@ struct Node *node;
 %type<node> program function_list function main_function function_item returns_spec parameter_list param_decl_list 
 %type<node> param_decl type opt_var var_decl_list var_decl var_item_list var_item 
 %type<node> literal stat_list stat call_stat if_stat while_stat do_while_stat block_stat single_statement
-%type<node> for_stat assignment_stat return_stat expression  expression_list for_header update_exp for_body
+%type<node> for_stat assignment_stat return_stat expression  expression_list for_header update_exp
 
 %left  OR                    /* ||                       */
 %left  AND   
@@ -404,7 +404,6 @@ stat_list:
 ;
 
 stat : function { $$ = $1; }
-| assignment_stat { $$ = $1; }
 | if_stat { $$ = $1; }
 | while_stat { $$ = $1; }
 | for_stat { $$ = $1; }
@@ -431,27 +430,6 @@ call_stat : ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
     check_type_compatibility(var->type, func->return_type, "function-call assignment");
     $$ = mkNode("ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4, NULL, NULL), $6));
 }
-| ID ASSIGNMENT CALL ID OPENPAREN CLOSEPAREN SEMICOLON
-{
-    Symbol *func=find_function($4);
-    Symbol *var=find_symbol($1);
-    if(!var){
-        semantic_error("Variable used before it been declared.",$1);
-    }
-    if(!func){
-        semantic_error("Function called before it was defined or does not exist.",$4);
-    }
-    verify_argument_type(NULL, func);
-
-      if (func->return_type == TYPE_VOID) {
-        semantic_error("Cannot assign the result of a VOID procedure",
-                       func->name);
-    }
-    check_type_compatibility(var->type, func->return_type, "function-call assignment");
-
-
-    $$ = mkNode("ASSIGNMENT", mkNode($1, NULL, NULL), mkNode("CALL", mkNode($4, NULL, NULL), NULL));
-}
 | CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
 {
     Symbol *func=find_function($2);
@@ -461,15 +439,10 @@ call_stat : ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON
     verify_argument_type($4, func);
     $$ = mkNode("FUNC_CALL", mkNode($2, NULL, NULL), $4);
 }
-| CALL ID OPENPAREN CLOSEPAREN SEMICOLON
-{
-    Symbol *func=find_function($2);
-    if(!func){
-        semantic_error("Function called before it was defined or does not exist.",$2);
-    }
-    verify_argument_type(NULL, func);
-    $$ = mkNode("PROC_CALL", mkNode($2, NULL, NULL), NULL);
-};
+;
+
+
+
 if_stat : IF expression COLON block_stat { 
     verify_bool($2, "IF statement");    
     $$ = mkNode("if", $2, $4); }
@@ -493,17 +466,8 @@ do_while_stat : DO COLON block_stat WHILE expression SEMICOLON {
     verify_bool($5, "DO-WHILE statement");    
     $$ = mkNode("do-while", $3, mkNode("cond", $5, NULL)); };
 
-for_stat : FOR for_header COLON for_body { $$ = mkNode("for", $2, $4); }
+for_stat : FOR for_header COLON block_stat { $$ = mkNode("for", $2, $4); }
 
-for_body: block_stat 
-        { 
-            $$ = $1; 
-        }
-        | opt_var block_stat 
-        { 
-            $$ = mkNode("block", $1, $2); 
-        }
-        ;
 
 for_header : OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN
 {
@@ -543,6 +507,7 @@ block_stat:
                $$ = $1;
           }
           ;
+
 single_statement: assignment_stat { $$ = mkNode("STATEMENT", $1, NULL); }
                 ;
 
@@ -556,16 +521,6 @@ assignment_stat : ID ASSIGNMENT expression SEMICOLON
     verify_assignment(mkNode($1,NULL,NULL), $3);
     $$ = mkNode("assign", mkNode($1, NULL, NULL), $3); 
 }
-| ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT CHAR_LIT SEMICOLON
-{
-    verify_string_index(mkNode($1,NULL,NULL), $3); 
-    Symbol *var=find_symbol($1);
-    if(!var){
-        semantic_error("Variable used before it been declared.",$1);
-    }
-    verify_assignment(mkNode("array_element", mkNode($1,NULL,NULL), $3), mkNode($6,NULL,NULL));
-    $$ = mkNode("array_assign", mkNode($1, $3, NULL), mkNode($6, NULL, NULL));
-}
 | MULTI ID ASSIGNMENT expression SEMICOLON 
 { 
     Symbol *var=find_symbol($2);
@@ -575,28 +530,6 @@ assignment_stat : ID ASSIGNMENT expression SEMICOLON
     Node *point   = mkNode("dereference", mkNode($2,NULL,NULL), NULL);
     verify_assignment(point, $4);
     $$ = mkNode("pointer_assign", mkNode($2, NULL, NULL), $4); }
-| ID ASSIGNMENT ADDRESS ID SEMICOLON 
-{
-    Symbol *var1=find_symbol($1);
-    Symbol *var4=find_symbol($4);
-    if(!var1){
-        semantic_error("Variable used before it been declared.",$1);
-    }
-    if(!var4){
-        semantic_error("Variable used before it been declared.",$4);
-    }
-    verify_assignment(mkNode($1,NULL,NULL), mkNode("address", mkNode($4,NULL,NULL), NULL));
-    $$ = mkNode("ref_assign", mkNode($1, NULL, NULL), mkNode($4, NULL, NULL)); }
-| ID ASSIGNMENT NULLL SEMICOLON 
-{
-    Symbol *var=find_symbol($1);
-    if(!var){
-        semantic_error("Variable used before it been declared.",$1);
-    }
-    if(!is_pointer_type(var->type)){
-                       semantic_error("null may be assigned only to pointer variables", "");
-                   }
-                   $$ = mkNode("null_assign", mkNode($1, NULL, NULL), mkNode("null", NULL, NULL)); }
 | ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON
 {
     verify_string_index(mkNode($1,NULL,NULL), $3);
@@ -614,8 +547,13 @@ return_stat
     | RETURN SEMICOLON
       { verify_return(NULL); $$ = mkNode("RETURN", NULL, NULL); } ; 
 
-expression_list : expression { $$ = $1; }
+expression_list : 
+{
+    $$ = NULL; /* Empty expression list */
+}
+| expression { $$ = $1; }
 | expression COMMA expression_list { $$ = mkNode("expr_list", $1, $3); };
+
 
 expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
 | expression MINUS expression { $$ = mkNode("-", $1, $3); }
@@ -674,20 +612,7 @@ expression : expression PLUS expression { $$ = mkNode("+", $1, $3); }
     }
     $$ = mkNode("array_element", mkNode($1, NULL, NULL), $3);
 }
-| CALL ID OPENPAREN parameter_list CLOSEPAREN
-{
-    Symbol *func=find_function($2);
-    if(!func){
-        semantic_error("Function called before it was defined or does not exist.",$2);
-    }
-    int actual_param_count=count_parameters($4);
-    if(func->param_count!=actual_param_count){
-        char msg[100];
-        sprintf(msg,"Function '%s' expect %d parameters, but %d parameters provided",$2,func->param_count,actual_param_count);
-        semantic_error(msg,$2);
-    }
-    $$ = mkNode("function_call", mkNode($2, NULL, NULL), $4);
-}
+
 | literal { $$ = $1; };
 
 %%

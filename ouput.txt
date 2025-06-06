@@ -267,23 +267,27 @@ foo1                 BOOL       Function   1        3
 							)
 							)
 						(statements
-							(assign
-								(b)
-							('&')
+							(STATEMENT
+								(assign
+									(b)
+								('&')
+								)
 							)
 						(statements
-							(assign
-								(a)
-							(-
-								(/
-									(*
-										(y)
-									(7)
+							(STATEMENT
+								(assign
+									(a)
+								(-
+									(/
+										(*
+											(y)
+										(7)
+										)
+									(a)
 									)
-								(a)
+								(y)
 								)
-							(y)
-							)
+								)
 							)
 						(empty_state_list)
 						)
@@ -383,17 +387,21 @@ foo1                 BOOL       Function   1        3
 						)
 					(statements
 						(statements
-							(assign
-								(k)
-							('@')
+							(STATEMENT
+								(assign
+									(k)
+								('@')
+								)
 							)
 						(statements
-							(assign
-								(i)
-							(+
+							(STATEMENT
+								(assign
+									(i)
+								(+
+									(l)
 								(l)
-							(l)
-							)
+								)
+								)
 							)
 						(statements
 							(if
@@ -474,9 +482,11 @@ foo1                 BOOL       Function   1        3
 					)
 					)
 				(statements
-					(assign
-						(x)
-					(k)
+					(STATEMENT
+						(assign
+							(x)
+						(k)
+						)
 					)
 				(empty_state_list)
 				)
@@ -552,12 +562,14 @@ foo1                 BOOL       Function   1        3
 					)
 				(statements
 					(statements
-						(assign
-							(temp)
-						(*
+						(STATEMENT
+							(assign
+								(temp)
+							(*
+								(t)
 							(t)
-						(t)
-						)
+							)
+							)
 						)
 					(statements
 						(RETURN
@@ -663,9 +675,11 @@ foo1                 BOOL       Function   1        3
 		)
 	(statements
 		(statements
-			(assign
-				(cnt)
-			(1)
+			(STATEMENT
+				(assign
+					(cnt)
+				(1)
+				)
 			)
 		(statements
 			(while
@@ -694,23 +708,27 @@ foo1                 BOOL       Function   1        3
 					(BLOCK
 						(VAR_EMPTY)
 					(statements
-						(assign
-							(cnt)
-						(*
-							(cnt)
-						(2)
-						)
+						(STATEMENT
+							(assign
+								(cnt)
+							(*
+								(cnt)
+							(2)
+							)
+							)
 						)
 					(empty_state_list)
 					)
 					)
 				(statements
-					(assign
-						(j)
-					(+
-						(j)
-					(1)
-					)
+					(STATEMENT
+						(assign
+							(j)
+						(+
+							(j)
+						(1)
+						)
+						)
 					)
 				(empty_state_list)
 				)
@@ -718,12 +736,14 @@ foo1                 BOOL       Function   1        3
 				)
 				)
 			(statements
-				(assign
-					(i)
-				(+
-					(i)
-				(1)
-				)
+				(STATEMENT
+					(assign
+						(i)
+					(+
+						(i)
+					(1)
+					)
+					)
 				)
 			(empty_state_list)
 			)
