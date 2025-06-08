@@ -1,0 +1,31 @@
+
+foo:
+    BeginFunc 76
+    t0 = 23
+    a = t0
+    if a == 23 goto L1
+    goto L2
+L1:
+    t1 = 10
+    b = t1
+    goto L3
+L2:
+    t2 = 19
+    b = t2
+L3:
+    Return +
+    EndFunc
+
+main:
+    BeginFunc 68
+    t3 = 0
+    a = t3
+L4:
+    if a < 10 goto L5
+    goto L6
+L5:
+    b = CALL
+    a = +
+    goto L4
+L6:
+    EndFunc

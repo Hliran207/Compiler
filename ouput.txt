@@ -1,639 +1,80 @@
-DEBUG: Entering function definition for 'foo1'
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
+DEBUG: Entering function definition for 'foo'
 DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: CHAR
-param_count=4 
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: CHAR
-DEBUG: Adding parameter 'a' of type 'INT' to scope 2
-DEBUG: Adding parameter 'b' of type 'INT' to scope 2
-DEBUG: Adding parameter 'c' of type 'INT' to scope 2
-DEBUG: Adding parameter 'c1' of type 'CHAR' to scope 2
-
-=== Symbol Table ===
-Name                 Type       Kind       Scope    Line    
-------------------------------------------------
-res                  BOOL       Variable   2        5       
-c1                   CHAR       Parameter  2        3       
-c                    INT        Parameter  2        3       
-b                    INT        Parameter  2        3       
-a                    INT        Parameter  2        3       
-foo1                 BOOL       Function   1        3       
-------------------------------------------------
-DEBUG: Entering function definition for 'goo1'
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-param_count=4 
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Adding parameter 'i' of type 'INT' to scope 2
-DEBUG: Adding parameter 'j' of type 'INT' to scope 2
-DEBUG: Adding parameter 'k' of type 'INT' to scope 2
-DEBUG: Adding parameter 'x' of type 'INT' to scope 2
-DEBUG: Entering function definition for 'goo2'
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-param_count=3 
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Adding parameter 'l' of type 'INT' to scope 3
-DEBUG: Adding parameter 'm' of type 'INT' to scope 3
-DEBUG: Adding parameter 'n' of type 'INT' to scope 3
-
-=== Symbol Table ===
-Name                 Type       Kind       Scope    Line    
-------------------------------------------------
-k                    CHAR       Variable   3        30      
-j                    BOOL       Variable   3        28      
-x                    BOOL       Variable   3        28      
-n                    INT        Parameter  3        26      
-m                    INT        Parameter  3        26      
-l                    INT        Parameter  3        26      
-goo2                 BOOL       Function   2        26      
-x                    INT        Parameter  2        25      
-k                    INT        Parameter  2        25      
-j                    INT        Parameter  2        25      
-i                    INT        Parameter  2        25      
-goo1                 INVALID    Function   1        24      
-foo1                 BOOL       Function   1        3       
-------------------------------------------------
-
-=== Symbol Table ===
-Name                 Type       Kind       Scope    Line    
-------------------------------------------------
-goo2                 BOOL       Function   2        26      
-x                    INT        Parameter  2        25      
-k                    INT        Parameter  2        25      
-j                    INT        Parameter  2        25      
-i                    INT        Parameter  2        25      
-goo1                 INVALID    Function   1        24      
-foo1                 BOOL       Function   1        3       
-------------------------------------------------
-DEBUG: Entering function definition for 'foo3'
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-param_count=3 
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAMS_LIST
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Adding parameter 'i' of type 'INT' to scope 2
-DEBUG: Adding parameter 'j' of type 'INT' to scope 2
-DEBUG: Adding parameter 'k' of type 'INT' to scope 2
-DEBUG: Entering function definition for 'si1'
-DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
+DEBUG: Extracting type from: REAL
 param_count=1 
 DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: INT
-DEBUG: Adding parameter 't' of type 'INT' to scope 3
+DEBUG: Extracting type from: REAL
+DEBUG: Adding parameter 'x' of type 'REAL' to scope 2
+DEBUG: get_expression_type called with token: '23'
+DEBUG: Returning TYPE_INT for numeric literal '23'
+DEBUG: get_expression_type called with token: '10'
+DEBUG: Returning TYPE_INT for numeric literal '10'
+DEBUG: get_expression_type called with token: '19'
+DEBUG: Returning TYPE_INT for numeric literal '19'
+DEBUG: get_expression_type called with token: '=='
+DEBUG: get_expression_type called with token: 'a'
+DEBUG: Looking up variable 'a' in current scope 2
+DEBUG: Found variable 'a' with type INT in scope 2
+DEBUG: get_expression_type called with token: '23'
+DEBUG: Returning TYPE_INT for numeric literal '23'
+DEBUG: get_expression_type called with token: '+'
+DEBUG: Processing binary operator '+'
+DEBUG: get_expression_type called with token: 'b'
+DEBUG: Looking up variable 'b' in current scope 2
+DEBUG: Found variable 'b' with type INT in scope 2
+DEBUG: get_expression_type called with token: 'a'
+DEBUG: Looking up variable 'a' in current scope 2
+DEBUG: Found variable 'a' with type INT in scope 2
+DEBUG: Binary op '+' - left_type: INT, right_type: INT
+DEBUG: Binary op '+' returning TYPE_INT
 
 === Symbol Table ===
 Name                 Type       Kind       Scope    Line    
 ------------------------------------------------
-temp                 INT        Variable   3        60      
-t                    INT        Parameter  3        58      
-si1                  INT        Function   2        58      
-bo                   BOOL       Variable   2        56      
-total                INT        Variable   2        55      
-k                    INT        Parameter  2        53      
-j                    INT        Parameter  2        53      
-i                    INT        Parameter  2        53      
-foo3                 INT        Function   1        53      
-goo1                 INVALID    Function   1        24      
-foo1                 BOOL       Function   1        3       
-------------------------------------------------
-
-=== Symbol Table ===
-Name                 Type       Kind       Scope    Line    
-------------------------------------------------
-si1                  INT        Function   2        58      
-bo                   BOOL       Variable   2        56      
-total                INT        Variable   2        55      
-k                    INT        Parameter  2        53      
-j                    INT        Parameter  2        53      
-i                    INT        Parameter  2        53      
-foo3                 INT        Function   1        53      
-goo1                 INVALID    Function   1        24      
-foo1                 BOOL       Function   1        3       
-------------------------------------------------
-DEBUG: Entering function definition for 'foo2'
-param_count=0 
-
-=== Symbol Table ===
-Name                 Type       Kind       Scope    Line    
-------------------------------------------------
-cnt                  INT        Variable   2        73      
-j                    INT        Variable   2        73      
-i                    INT        Variable   2        73      
-s2                   STRING     Variable   2        72      
-s1                   STRING     Variable   2        72      
-foo2                 INT        Function   1        70      
-foo3                 INT        Function   1        53      
-goo1                 INVALID    Function   1        24      
-foo1                 BOOL       Function   1        3       
+b                    INT        Variable   2        2       
+a                    INT        Variable   2        2       
+x                    REAL       Parameter  2        1       
+foo                  INT        Function   1        1       
 ------------------------------------------------
 param_count=0 
+DEBUG: get_expression_type called with token: '0'
+DEBUG: Returning TYPE_INT for numeric literal '0'
+DEBUG: get_expression_type called with token: '3.14'
+DEBUG: Returning TYPE_REAL for numeric literal '3.14'
+DEBUG: get_expression_type called with token: '+'
+DEBUG: Processing binary operator '+'
+DEBUG: get_expression_type called with token: 'a'
+DEBUG: Looking up variable 'a' in current scope 3
+DEBUG: Found variable 'a' with type INT in scope 2
+DEBUG: get_expression_type called with token: 'b'
+DEBUG: Looking up variable 'b' in current scope 3
+DEBUG: Found variable 'b' with type INT in scope 2
+DEBUG: Binary op '+' - left_type: INT, right_type: INT
+DEBUG: Binary op '+' returning TYPE_INT
+DEBUG: get_expression_type called with token: '<'
+DEBUG: get_expression_type called with token: 'a'
+DEBUG: Looking up variable 'a' in current scope 2
+DEBUG: Found variable 'a' with type INT in scope 2
+DEBUG: get_expression_type called with token: '10'
+DEBUG: Returning TYPE_INT for numeric literal '10'
 
 === Symbol Table ===
 Name                 Type       Kind       Scope    Line    
 ------------------------------------------------
-x1                   INT        Variable   2        90      
-_main_               VOID       Function   1        88      
-foo2                 INT        Function   1        70      
-foo3                 INT        Function   1        53      
-goo1                 INVALID    Function   1        24      
-foo1                 BOOL       Function   1        3       
+b                    INT        Variable   2        15      
+a                    INT        Variable   2        15      
+_main_               VOID       Function   1        14      
+foo                  INT        Function   1        1       
 ------------------------------------------------
 (Function_list
-	(Function_list
-		(Function_list
-			(Function_list
-				(FUNCTION
-					(foo1)
-				(FUNC_PARTS
-					(PARAMETERS
-						(PARAMS_LIST
-							(PARAMS_LIST
-								(PARAMS_LIST
-									(PARAM
-										(INT)
-									(a)
-									)
-								(PARAM
-									(INT)
-								(b)
-								)
-								)
-							(PARAM
-								(INT)
-							(c)
-							)
-							)
-						(PARAM
-							(CHAR)
-						(c1)
-						)
-						)
-					)
-				(DEF_BODY
-					(RETURNS
-						(BOOL)
-					)
-				(BODY
-					(VAR_DECL
-						(BOOL)
-					(VAR
-						(res)
-					)
-					)
-				(statements
-					(statements
-						(BLOCK
-							(VAR_DECL
-								(VAR_DECL
-									(CHAR)
-								(VAR_ITEM_LIST
-									(VAR
-										(x)
-									)
-								(VAR
-									(b)
-								)
-								)
-								)
-							(VAR_DECL
-								(INT)
-							(VAR
-								(y)
-							)
-							)
-							)
-						(statements
-							(STATEMENT
-								(assign
-									(b)
-								('&')
-								)
-							)
-						(statements
-							(STATEMENT
-								(assign
-									(a)
-								(-
-									(/
-										(*
-											(y)
-										(7)
-										)
-									(a)
-									)
-								(y)
-								)
-								)
-							)
-						(empty_state_list)
-						)
-						)
-						)
-					(statements
-						(RETURN
-							(res)
-						)
-					(empty_state_list)
-					)
-					)
-				)
-				)
-				)
-				)
-				)
-			(FUNCTION
-				(goo1)
-			(FUNC_PARTS
-				(PARAMETERS
-					(PARAMS_LIST
-						(PARAMS_LIST
-							(PARAMS_LIST
-								(PARAM
-									(INT)
-								(i)
-								)
-							(PARAM
-								(INT)
-							(j)
-							)
-							)
-						(PARAM
-							(INT)
-						(k)
-						)
-						)
-					(PARAM
-						(INT)
-					(x)
-					)
-					)
-				)
-			(DEF_BODY
-				(RETURNS
-					(RETURN VOID)
-				)
-			(BODY
-				(VAR_EMPTY)
-			(statements
-				(statements
-					(FUNCTION
-						(goo2)
-					(FUNC_PARTS
-						(PARAMETERS
-							(PARAMS_LIST
-								(PARAMS_LIST
-									(PARAM
-										(INT)
-									(l)
-									)
-								(PARAM
-									(INT)
-								(m)
-								)
-								)
-							(PARAM
-								(INT)
-							(n)
-							)
-							)
-						)
-					(DEF_BODY
-						(RETURNS
-							(BOOL)
-						)
-					(BODY
-						(VAR_DECL
-							(VAR_DECL
-								(BOOL)
-							(VAR_ITEM_LIST
-								(VAR
-									(x)
-								)
-							(VAR
-								(j)
-							)
-							)
-							)
-						(VAR_DECL
-							(CHAR)
-						(VAR
-							(k)
-						)
-						)
-						)
-					(statements
-						(statements
-							(STATEMENT
-								(assign
-									(k)
-								('@')
-								)
-							)
-						(statements
-							(STATEMENT
-								(assign
-									(i)
-								(+
-									(l)
-								(l)
-								)
-								)
-							)
-						(statements
-							(if
-								(or
-									(==
-										(k)
-									('*')
-									)
-								(and
-									(!=
-										(x)
-									(FALSE)
-									)
-								(<
-									(+
-										(l)
-									(m)
-									)
-								(i)
-								)
-								)
-								)
-							(STATEMENT
-								(assign
-									(x)
-								(<
-									(l)
-								(m)
-								)
-								)
-							)
-							)
-						(statements
-							(RETURN
-								(x)
-							)
-						(empty_state_list)
-						)
-						)
-						)
-						)
-					)
-					)
-					)
-					)
-					)
-				(statements
-					(BLOCK
-						(VAR_DECL
-							(VAR_DECL
-								(CHAR)
-							(VAR
-								(x)
-							)
-							)
-						(VAR_DECL
-							(BOOL)
-						(VAR
-							(k)
-						)
-						)
-						)
-					(statements
-						(ASSIGNMENT
-							(k)
-						(CALL
-							(goo2)
-						(expr_list
-							(5)
-						(expr_list
-							(i)
-						(j)
-						)
-						)
-						)
-						)
-					(empty_state_list)
-					)
-					)
-				(statements
-					(STATEMENT
-						(assign
-							(x)
-						(k)
-						)
-					)
-				(empty_state_list)
-				)
-				)
-				)
-			)
-			)
-			)
-			)
-			)
-			)
-		(FUNCTION
-			(foo3)
-		(FUNC_PARTS
-			(PARAMETERS
-				(PARAMS_LIST
-					(PARAMS_LIST
-						(PARAM
-							(INT)
-						(i)
-						)
-					(PARAM
-						(INT)
-					(j)
-					)
-					)
-				(PARAM
-					(INT)
-				(k)
-				)
-				)
-			)
-		(DEF_BODY
-			(RETURNS
-				(INT)
-			)
-		(BODY
-			(VAR_DECL
-				(VAR_DECL
-					(INT)
-				(VAR
-					(total)
-				)
-				)
-			(VAR_DECL
-				(BOOL)
-			(VAR
-				(bo)
-			)
-			)
-			)
-		(statements
-			(statements
-				(FUNCTION
-					(si1)
-				(FUNC_PARTS
-					(PARAMETERS
-						(PARAM
-							(INT)
-						(t)
-						)
-					)
-				(DEF_BODY
-					(RETURNS
-						(INT)
-					)
-				(BODY
-					(VAR_DECL
-						(INT)
-					(VAR
-						(temp)
-					)
-					)
-				(statements
-					(statements
-						(STATEMENT
-							(assign
-								(temp)
-							(*
-								(t)
-							(t)
-							)
-							)
-						)
-					(statements
-						(RETURN
-							(temp)
-						)
-					(empty_state_list)
-					)
-					)
-				)
-				)
-				)
-				)
-				)
-			(statements
-				(ASSIGNMENT
-					(bo)
-				(CALL
-					(foo1)
-				(expr_list
-					(i)
-				(expr_list
-					(j)
-				(expr_list
-					(k)
-				('^')
-				)
-				)
-				)
-				)
-				)
-			(statements
-				(ASSIGNMENT
-					(total)
-				(CALL
-					(si1)
-				(+
-					(+
-						(i)
-					(j)
-					)
-				(k)
-				)
-				)
-				)
-			(statements
-				(RETURN
-					(total)
-				)
-			(empty_state_list)
-			)
-			)
-			)
-			)
-		)
-		)
-		)
-		)
-		)
-		)
 	(FUNCTION
-		(foo2)
+		(foo)
 	(FUNC_PARTS
 		(PARAMETERS
-			(PARAM_EMPTY)
+			(PARAM
+				(REAL)
+			(x)
+			)
 		)
 	(DEF_BODY
 		(RETURNS
@@ -641,35 +82,13 @@ foo1                 BOOL       Function   1        3
 		)
 	(BODY
 		(VAR_DECL
-			(VAR_DECL
-				(STRING)
-			(VAR_ITEM_LIST
-				(STRING_VAR
-					(s1)
-				(100)
-				)
-			(STRING_VAR
-				(s2)
-			(100)
-			)
-			)
-			)
-		(VAR_DECL
 			(INT)
 		(VAR_ITEM_LIST
-			(VAR_ITEM_LIST
-				(VAR_ASSIGN
-					(i)
-				(0)
-				)
-			(VAR_ASSIGN
-				(j)
-			(0)
-			)
+			(VAR
+				(a)
 			)
 		(VAR
-			(cnt)
-		)
+			(b)
 		)
 		)
 		)
@@ -677,88 +96,50 @@ foo1                 BOOL       Function   1        3
 		(statements
 			(STATEMENT
 				(assign
-					(cnt)
-				(1)
+					(a)
+				(23)
 				)
 			)
 		(statements
-			(while
-				(<
-					(i)
-				(length
-					(s1)
+			(if-else
+				(==
+					(a)
+				(23)
 				)
-				)
-			(BLOCK
-				(VAR_EMPTY)
-			(statements
-				(while
-					(<
-						(j)
-					(/
-						(length
-							(s2)
-						)
-					(2)
-					)
-					)
+			(then
 				(BLOCK
 					(VAR_EMPTY)
 				(statements
-					(BLOCK
-						(VAR_EMPTY)
-					(statements
-						(STATEMENT
-							(assign
-								(cnt)
-							(*
-								(cnt)
-							(2)
-							)
-							)
-						)
-					(empty_state_list)
-					)
-					)
-				(statements
 					(STATEMENT
 						(assign
-							(j)
-						(+
-							(j)
-						(1)
-						)
+							(b)
+						(10)
 						)
 					)
 				(empty_state_list)
 				)
 				)
-				)
-				)
-			(statements
+			(else
 				(STATEMENT
 					(assign
-						(i)
-					(+
-						(i)
-					(1)
-					)
+						(b)
+					(19)
 					)
 				)
-			(empty_state_list)
-			)
 			)
 			)
 			)
 		(statements
 			(RETURN
-				(cnt)
+				(+
+					(b)
+				(a)
+				)
 			)
 		(empty_state_list)
 		)
 		)
 		)
-	)
 	)
 	)
 	)
@@ -773,15 +154,51 @@ foo1                 BOOL       Function   1        3
 (BODY
 	(VAR_DECL
 		(INT)
+	(VAR_ITEM_LIST
+		(VAR
+			(a)
+		)
 	(VAR
-		(x1)
+		(b)
+	)
 	)
 	)
 (statements
-	(ASSIGNMENT
-		(x1)
-	(CALL
-		(foo2)
+	(STATEMENT
+		(assign
+			(a)
+		(0)
+		)
+	)
+(statements
+	(while
+		(<
+			(a)
+		(10)
+		)
+	(BLOCK
+		(VAR_EMPTY)
+	(statements
+		(ASSIGNMENT
+			(b)
+		(CALL
+			(foo)
+		(3.14)
+		)
+		)
+	(statements
+		(STATEMENT
+			(assign
+				(a)
+			(+
+				(a)
+			(b)
+			)
+			)
+		)
+	(empty_state_list)
+	)
+	)
 	)
 	)
 (empty_state_list)
@@ -790,4 +207,59 @@ foo1                 BOOL       Function   1        3
 )
 )
 )
+)
 Parsing and semantic analysis completed successfully.
+----------------------------------------3AC-----------------------------------.
+DEBUG: Processing function foo
+DEBUG: Function node type: FUNCTION
+DEBUG: Body node type: BODY
+DEBUG: About to process statements
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: STATEMENT
+DEBUG: genStmt processing node: assign
+DEBUG: genExpr processing: 23
+DEBUG: get_expression_type called with token: '23'
+DEBUG: Returning TYPE_INT for numeric literal '23'
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: if-else
+DEBUG: genStmt processing node: BLOCK
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: STATEMENT
+DEBUG: genStmt processing node: assign
+DEBUG: genExpr processing: 10
+DEBUG: get_expression_type called with token: '10'
+DEBUG: Returning TYPE_INT for numeric literal '10'
+DEBUG: genStmt processing node: empty_state_list
+DEBUG: genStmt processing node: STATEMENT
+DEBUG: genStmt processing node: assign
+DEBUG: genExpr processing: 19
+DEBUG: get_expression_type called with token: '19'
+DEBUG: Returning TYPE_INT for numeric literal '19'
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: RETURN
+DEBUG: genExpr processing: +
+DEBUG: genStmt processing node: empty_state_list
+DEBUG: Processing function main
+DEBUG: Function node type: PROCEDURE
+DEBUG: Body node type: BODY
+DEBUG: About to process statements
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: STATEMENT
+DEBUG: genStmt processing node: assign
+DEBUG: genExpr processing: 0
+DEBUG: get_expression_type called with token: '0'
+DEBUG: Returning TYPE_INT for numeric literal '0'
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: while
+DEBUG: genStmt processing node: BLOCK
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: ASSIGNMENT
+DEBUG: genExpr processing: CALL
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: STATEMENT
+DEBUG: genStmt processing node: assign
+DEBUG: genExpr processing: +
+DEBUG: genStmt processing node: empty_state_list
+DEBUG: genStmt processing node: empty_state_list
+3AC written to output.ac3

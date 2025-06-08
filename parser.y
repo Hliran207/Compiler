@@ -156,6 +156,488 @@ static inline void mark_return_found(void)
     if (ret_sp) ret_flag_stack[ret_sp-1] = 1;
 }
 
+/* ========================================================================== */
+/*                      3–ADDRESS–CODE  (3AC)  GENERATOR                      */
+/*  Paste this block once, AFTER the existing #include’s, BEFORE the grammar  */
+/* ========================================================================== */
+#include <stdarg.h>
+
+/* ------------ local instruction list ------------------------------------ */
+typedef struct TACInstr {
+    char *text;
+    struct TACInstr *next;
+} TACInstr;
+
+static TACInstr *codeHead = NULL, *codeTail = NULL;
+static int       tmpCnt   = 0;
+static int       lblCnt   = 1;
+
+static char *newTmp  (void){ char b[32]; sprintf(b,"t%d",tmpCnt++);  return strdup(b); }
+static char *newLabel(void){ char b[32]; sprintf(b,"L%d",lblCnt++); return strdup(b); }
+
+static void emit(const char *fmt, ...)
+{
+    va_list ap;  char buf[128];
+    va_start(ap, fmt); vsnprintf(buf,sizeof(buf),fmt,ap); va_end(ap);
+
+    TACInstr *n = malloc(sizeof(*n));
+    n->text = strdup(buf);  n->next = NULL;
+    if (!codeHead) codeHead = codeTail = n;
+    else           codeTail = codeTail->next = n;
+}
+
+static void dumpCode(FILE *out)
+{
+    const char *IND = "    ";
+    for (TACInstr *p = codeHead; p; p = p->next) {
+        size_t len = strlen(p->text);
+        if (len && p->text[len-1]==':')           /* labels flush-left  */
+            fprintf(out,"%s\n",p->text);
+        else
+            fprintf(out,"%s%s\n",IND,p->text);    /* everything else indented */
+    }
+}
+
+/* ------------ helpers that reuse your existing symbol infrastructure ----- */
+static int symExists(const char *name)
+{
+    
+    
+    // Check if it's a literal first
+    if (!name) return 0;
+    if (!strcmp(name,"TRUE")||!strcmp(name,"FALSE")||!strcmp(name,"null")) return 0;
+    
+    // Check if it's a number
+    char *ep; 
+    strtod(name,&ep); 
+    if (*ep=='\0') return 0;  // It's a number literal
+    
+    // If it's not a literal, assume it's a valid variable 
+    // (since semantic analysis already validated this)
+    return 1;
+}
+
+/* rough sizeof(T) just for frame-size accounting */
+static int sizeofTypeStr(const char *t)
+{
+    if (!t) return 4;
+    if (!strcasecmp(t,"REAL") || !strcasecmp(t,"REALPTR")) return 8;
+    if (!strcasecmp(t,"STRING"))                          return 8;
+    return 4;
+}
+
+/* ---------- temp-byte accounting per function --------------------------- */
+static int tmpBytesInFunc = 0;
+static int resultSize(Node *e)           /* 4- vs 8-byte result */
+{
+    DataType tp = get_expression_type(e);
+    return (tp==TYPE_REAL||tp==TYPE_REAL_PTR||tp==TYPE_STRING)? 8 : 4;
+}
+static char *tmpFor(Node *e){ tmpBytesInFunc+=resultSize(e); return newTmp(); }
+
+/* ---------- forward declarations (mutual recursion) --------------------- */
+static char *genExpr (Node *e);
+static void  genStmt (Node *s);
+
+/* ======================  EXPRESSION  ==================================== */
+static int isLit(const char *tok)
+{
+    if (!tok) return 0;
+    if (!strcmp(tok,"TRUE")||!strcmp(tok,"FALSE")||!strcmp(tok,"null")) return 1;
+    
+    // Check if it's a number
+    char *ep; 
+    strtod(tok,&ep); 
+    return *ep=='\0';          /* number */
+}
+static const char *litVal(Node *n){ return n?n->token:"0"; }
+
+
+static char *genOperand(Node *e)
+{
+    if (!e) return strdup("0");
+    
+    // Check if it's a literal
+    if (isLit(e->token)) {
+        return strdup(litVal(e));
+    }
+    
+    // Check if it's a simple variable
+    if (symExists(e->token)) {
+        return strdup(e->token);
+    }
+    
+    // Otherwise, generate a full expression
+    return genExpr(e);
+}
+static char *genExpr(Node *e)
+{
+    if (!e) return strdup("0");
+
+    printf("DEBUG: genExpr processing: %s\n", e->token);
+
+    /* ---------- literals --------------------------------------------- */
+    if (isLit(e->token)){
+        char *t = tmpFor(e);
+        if (!strcmp(e->token,"TRUE"))      emit("%s = 1", t);
+        else if (!strcmp(e->token,"FALSE"))emit("%s = 0", t);
+        else if (!strcmp(e->token,"null")) emit("%s = 0", t);
+        else                               emit("%s = %s",t,litVal(e));
+        return t;
+    }
+    
+    /* ---------- check if it's a simple number literal --------------- */
+    char *endptr;
+    strtod(e->token, &endptr);
+    if (*endptr == '\0') {
+        // It's a number literal
+        char *t = tmpFor(e);
+        emit("%s = %s", t, e->token);
+        return t;
+    }
+    
+    if (symExists(e->token))                       /* plain variable   */
+        return strdup(e->token);
+
+    /* ---------- unary ops -------------------------------------------- */
+    if (!strcmp(e->token,"unary-")){
+        char *v = genExpr(e->left), *t = tmpFor(e);
+        emit("%s = - %s", t, v); 
+        free(v);
+        return t;
+    }
+    if (!strcmp(e->token,"not")){
+        char *v = genExpr(e->left), *t = tmpFor(e);
+        emit("%s = ! %s", t, v); 
+        free(v);
+        return t;
+    }
+    if (!strcmp(e->token,"address")){
+        char *v = genExpr(e->left), *t = tmpFor(e);
+        emit("%s = & %s", t, v); 
+        free(v);
+        return t;
+    }
+    if (!strcmp(e->token,"dereference")){
+        char *v = genExpr(e->left), *t = tmpFor(e);
+        emit("%s = * %s", t, v); 
+        free(v);
+        return t;
+    }
+
+    /* ---------- binary ops (+,-,*,/,and,or,comp) --------------------- */
+    if (!strcmp(e->token,"+") || !strcmp(e->token,"-") || 
+        !strcmp(e->token,"*") || !strcmp(e->token,"/") ||
+        !strcmp(e->token,"and") || !strcmp(e->token,"or") ||
+        !strcmp(e->token,"==") || !strcmp(e->token,"!=") ||
+        !strcmp(e->token,"<") || !strcmp(e->token,">") ||
+        !strcmp(e->token,"<=") || !strcmp(e->token,">=")){
+        
+        char *l = genExpr(e->left);
+        char *r = genExpr(e->right);
+        char *t = tmpFor(e);
+        emit("%s = %s %s %s", t, l, e->token, r);
+        free(l);
+        free(r);
+        return t;
+    }
+
+    /* ---------- array element  s[i] ---------------------------------- */
+    if (!strcmp(e->token,"array_element")){
+        char *base = genExpr(e->left);
+        char *idx  = genExpr(e->right);
+        char *t    = tmpFor(e);
+        emit("%s = %s [ %s ]", t, base, idx);
+        free(base);
+        free(idx);
+        return t;
+    }
+
+    /* ---------- function call ---------------------------------------- */
+    if (!strcmp(e->token,"FUNC_CALL") || !strcmp(e->token,"CALL")){
+        const char *fname = e->left->token;
+
+        /* collect args into stack (reverse order push) */
+        Node *stk[32]; 
+        int top = 0;
+        int bytes = 0;
+        Node *args = e->right;
+        
+        printf("DEBUG: Processing function call to %s\n", fname);
+        
+        // Handle arguments - collect them first
+        if (args) {
+            printf("DEBUG: Function has arguments\n");
+            if (!strcmp(args->token,"expr_list")){
+                // Multiple arguments - traverse the list
+                Node *p = args;
+                while (p && !strcmp(p->token,"expr_list")) {
+                    stk[top++] = p->left;
+                    p = p->right;
+                }
+                if (p) stk[top++] = p; // Last argument
+            } else {
+                // Single argument
+                stk[top++] = args;
+            }
+        }
+        
+        printf("DEBUG: Found %d arguments\n", top);
+        
+        // Push parameters in reverse order
+        for (int i = top - 1; i >= 0; i--) {
+            char *val = genExpr(stk[i]);
+            emit("PushParam %s", val);
+            bytes += resultSize(stk[i]);
+            free(val);
+        }
+        
+        char *ret = tmpFor(e);
+        emit("%s = LCall %s", ret, fname);
+        if (bytes) emit("PopParams %d", bytes);
+        return ret;
+    }
+
+    /* fallback – treat as identifier */
+    printf("DEBUG: Treating '%s' as identifier\n", e->token);
+    return strdup(e->token);
+}
+
+/* ======================  STATEMENT  ===================================== */
+static int isCmp(const char *t){ return !strcmp(t,"==")||!strcmp(t,"!=")||
+                                        !strcmp(t,"<" )||!strcmp(t,">" )||
+                                        !strcmp(t,"<=")||!strcmp(t,">="); }
+
+static void genStmt(Node *s)
+{
+    if (!s) return;
+    
+    printf("DEBUG: genStmt processing node: %s\n", s->token);
+    
+    if (!strcmp(s->token,"statements")){
+        genStmt(s->left); 
+        genStmt(s->right); 
+        return;
+    }
+    
+    if (!strcmp(s->token,"empty_state_list")){
+        return; // Skip empty statement lists
+    }
+    
+    if (!strcmp(s->token,"STATEMENT")){
+        genStmt(s->left); // Process the actual statement inside
+        return;
+    }
+
+    /* ---------- assignments ----------------------------------------- */
+    if (!strcmp(s->token,"assign")){
+        char *rval = genExpr(s->right);
+        emit("%s = %s", s->left->token, rval);
+        return;
+    }
+    if (!strcmp(s->token,"pointer_assign")){
+        emit("* %s = %s", genExpr(s->left), genExpr(s->right)); return;
+    }
+    if (!strcmp(s->token,"array_assign")){
+        emit("%s [ %s ] = %s",
+             s->left->token,
+             genExpr(s->left->right),
+             genExpr(s->right));
+        return;
+    }
+    
+    /* ---------- ASSIGNMENT (function call result) ------------------- */
+    if (!strcmp(s->token,"ASSIGNMENT")){
+        char *rval = genExpr(s->right);
+        emit("%s = %s", s->left->token, rval);
+        return;
+    }
+
+    /* ---------- return ---------------------------------------------- */
+    if (!strcmp(s->token,"RETURN")){
+        if (s->left) {
+            char *retval = genExpr(s->left);
+            emit("Return %s", retval);
+        } else {
+            emit("Return");
+        }
+        return;
+    }
+
+    /* ---------- bare function call as statement --------------------- */
+    if (!strcmp(s->token,"FUNC_CALL")){ 
+        genExpr(s); 
+        return; 
+    }
+
+    /* ---------- IF / IF-ELSE ---------------------------------------- */
+    if (!strcmp(s->token,"if")){
+        char *Ltrue=newLabel(), *Lend=newLabel();
+        Node *c=s->left;
+        if (isCmp(c->token)){
+            emit("if %s %s %s goto %s",
+                 genOperand(c->left),c->token,genOperand(c->right),Ltrue);
+            emit("goto %s", Lend);
+        } else {
+            emit("if %s == 0 goto %s", genExpr(c), Lend);
+            emit("goto %s", Ltrue);
+        }
+        emit("%s:",Ltrue); 
+        genStmt(s->right); 
+        emit("%s:",Lend); 
+        return;
+    }
+    if (!strcmp(s->token,"if-else")){
+        Node *c=s->left;
+        Node *then_part = s->right->left;      // then branch
+        Node *else_part = s->right->right->left; // else branch
+        
+        char *Lthen=newLabel(), *Lelse=newLabel(), *Lend=newLabel();
+        if (isCmp(c->token)){
+            emit("if %s %s %s goto %s",
+                 genOperand(c->left),c->token,genOperand(c->right),Lthen);
+            emit("goto %s", Lelse);
+        } else {
+            emit("if %s != 0 goto %s", genExpr(c), Lthen);
+            emit("goto %s", Lelse);
+        }
+        emit("%s:",Lthen); 
+        genStmt(then_part); 
+        emit("goto %s",Lend);
+        emit("%s:",Lelse); 
+        genStmt(else_part);  
+        emit("%s:",Lend); 
+        return;
+    }
+
+    /* ---------- WHILE ----------------------------------------------- */
+    if (!strcmp(s->token,"while")){
+        char *Lc=newLabel(), *Lb=newLabel(), *Le=newLabel();
+        emit("%s:",Lc);
+        Node *c=s->left;
+        if (isCmp(c->token)){
+            emit("if %s %s %s goto %s",
+                 genOperand(c->left),c->token,genOperand(c->right),Lb);
+            emit("goto %s", Le);
+        } else {
+            emit("if %s != 0 goto %s", genExpr(c), Lb);
+            emit("goto %s", Le);
+        }
+        emit("%s:",Lb); 
+        genStmt(s->right); 
+        emit("goto %s",Lc);
+        emit("%s:",Le); 
+        return;
+    }
+
+    /* ---------- FOR -------------------------------------------------- */
+    if (!strcmp(s->token,"for")){
+        Node *hdr=s->left;
+        Node *initVar  = hdr->left->left;
+        Node *initExpr = hdr->left->right;
+        Node *condExpr = hdr->right->left;
+        Node *updExpr  = hdr->right->right;
+        char *Lc=newLabel(), *Le=newLabel();
+        emit("%s = %s", initVar->token, genExpr(initExpr));
+        emit("%s:",Lc);
+        emit("if %s == 0 goto %s", genExpr(condExpr), Le);
+        genStmt(s->right);
+        emit("%s = %s", updExpr->left->token, genExpr(updExpr->right));
+        emit("goto %s", Lc); 
+        emit("%s:",Le); 
+        return;
+    }
+
+    /* ---------- BLOCK ------------------------------------------------ */
+    if (!strcmp(s->token,"BLOCK")){ 
+        genStmt(s->right); 
+        return; 
+    }
+    
+    printf("DEBUG: Unhandled statement type: %s\n", s->token);
+}
+
+/* ======================  FUNCTION & GLOBAL  ============================ */
+static void patchBegin(TACInstr *beginLine,int bytes)
+{
+    char buf[16]; sprintf(buf,"%d",bytes);
+    strcpy(beginLine->text+10,buf);      /* overwrite the '0' */
+}
+
+static void genFunction(Node *fn)
+{
+    if (!fn) return;          
+
+    const char *fname = fn->left->token;
+    if (!strcmp(fname,"_main_")) fname="main";
+
+    emit("\n%s:",fname);
+    emit("BeginFunc 0");
+    TACInstr *beginLine = codeTail;
+    tmpBytesInFunc = 0;
+
+    printf("DEBUG: Processing function %s\n", fname);
+    printf("DEBUG: Function node type: %s\n", fn->token);
+
+    /* body = either BODY (…) or BODY inside DEF_BODY */
+    Node *body = NULL;
+    if (!strcmp(fn->token,"FUNCTION")) {
+        // FUNC_PARTS → DEF_BODY → BODY
+        Node *func_parts = fn->right;
+        Node *def_body = func_parts->right;
+        body = def_body->right;
+    } else if (!strcmp(fn->token,"PROCEDURE")) {
+        // PROC_PARTS → BODY  
+        Node *proc_parts = fn->right;
+        body = proc_parts->right;
+    }
+
+    if (!body) {
+        printf("DEBUG: No body found for function %s\n", fname);
+        emit("EndFunc");
+        return;
+    }
+
+    printf("DEBUG: Body node type: %s\n", body->token);
+
+    Node *varDecls = body->left;   // VAR_DECL nodes
+    Node *stmts = body->right;     // statements
+
+    printf("DEBUG: About to process statements\n");
+    genStmt(stmts);
+
+    /* count locals - simplified version */
+    int locals = 64; // Just use a fixed amount for now
+
+    patchBegin(beginLine, tmpBytesInFunc + locals);
+    emit("EndFunc");
+}
+
+static void genGlobal(Node *n)
+{
+    if (!n) return;
+    if (!strcmp(n->token,"Function_list")){
+        genGlobal(n->left); 
+        genGlobal(n->right); 
+        return;
+    }
+    if (!strcmp(n->token,"FUNCTION") || !strcmp(n->token,"PROCEDURE")){
+        genFunction(n);
+    }
+}
+
+void generate_3ac(Node *root)
+{
+    codeHead=codeTail=NULL; tmpCnt=0; lblCnt=1;
+    genGlobal(root);
+
+    FILE *f = fopen("output.ac3","w");
+    if (f){ dumpCode(f); fclose(f); }
+    printf("3AC written to output.ac3\n");
+}
+/* ========================================================================== */
+
+
 
 
 %}
@@ -499,8 +981,9 @@ block_stat:
            opt_var BEGIN_T stat_list END
            {
                /* Exit scope when block ends */
-               exit_scope();
+               
                $$ = mkNode("BLOCK", $2, $4);
+               exit_scope();
            }
           | single_statement
           {
@@ -891,14 +1374,19 @@ DataType get_expression_type(Node *expr)
     if (!expr)
         return TYPE_INVALID;
 
+    // Add debug output to see what we're processing
+    printf("DEBUG: get_expression_type called with token: '%s'\n", expr->token);
+
     // Literals
     if (strcmp(expr->token, "TRUE") == 0 || strcmp(expr->token, "FALSE") == 0)
     {
+        printf("DEBUG: Returning TYPE_BOOL for '%s'\n", expr->token);
         return TYPE_BOOL;
     }
 
     if (expr->token[0] == '\'' && expr->token[strlen(expr->token) - 1] == '\'')
     {
+        printf("DEBUG: Returning TYPE_CHAR for '%s'\n", expr->token);
         return TYPE_CHAR;
     }
 
@@ -906,6 +1394,7 @@ DataType get_expression_type(Node *expr)
     if (strcmp(expr->token, "STRING_LIT") == 0 ||
         (expr->token[0] == '"' && expr->token[strlen(expr->token) - 1] == '"'))
     {
+        printf("DEBUG: Returning TYPE_STRING for '%s'\n", expr->token);
         return TYPE_STRING;
     }
 
@@ -915,26 +1404,31 @@ DataType get_expression_type(Node *expr)
     {
         if (strchr(expr->token, '.') != NULL)
         {
+            printf("DEBUG: Returning TYPE_REAL for numeric literal '%s'\n", expr->token);
             return TYPE_REAL; // Real number
         }
+        printf("DEBUG: Returning TYPE_INT for numeric literal '%s'\n", expr->token);
         return TYPE_INT;
     }
 
     // Hexadecimal literal
     if (expr->token[0] == '0' && (expr->token[1] == 'x' || expr->token[1] == 'X'))
     {
+        printf("DEBUG: Returning TYPE_INT for hex literal '%s'\n", expr->token);
         return TYPE_INT;
     }
 
     // Real literal
     if (strchr(expr->token, '.') != NULL)
     {
+        printf("DEBUG: Returning TYPE_REAL for real literal '%s'\n", expr->token);
         return TYPE_REAL;
     }
 
     // Null
     if (strcmp(expr->token, "null") == 0)
     {
+        printf("DEBUG: Returning TYPE_INVALID for null\n");
         return TYPE_INVALID; // Special case for null
     }
 
@@ -942,8 +1436,12 @@ DataType get_expression_type(Node *expr)
     if (strcmp(expr->token, "+") == 0 || strcmp(expr->token, "-") == 0 ||
         strcmp(expr->token, "*") == 0 || strcmp(expr->token, "/") == 0){
 
+        printf("DEBUG: Processing binary operator '%s'\n", expr->token);
         DataType left_type = get_expression_type(expr->left);
         DataType right_type = get_expression_type(expr->right);
+
+        printf("DEBUG: Binary op '%s' - left_type: %s, right_type: %s\n", 
+               expr->token, type_to_string(left_type), type_to_string(right_type));
 
         if (is_pointer_type(left_type) && right_type == TYPE_INT)
             return left_type;                      /* ptr ± int */
@@ -954,11 +1452,10 @@ DataType get_expression_type(Node *expr)
             strcmp(expr->token, "-") == 0)
             return TYPE_INT;
 
-
         // Check that both operands are numeric types (INT or REAL)
         if (!is_numeric_type(left_type) || !is_numeric_type(right_type))
         {
-            char error_msg[100];
+            char error_msg[200];
             sprintf(error_msg, "Operator '%s' requires numeric operands, got '%s' and '%s'",
                     expr->token, type_to_string(left_type), type_to_string(right_type));
             semantic_error(error_msg, "");
@@ -968,10 +1465,12 @@ DataType get_expression_type(Node *expr)
         // If either operand is real, result is real
         if (left_type == TYPE_REAL || right_type == TYPE_REAL)
         {
+            printf("DEBUG: Binary op '%s' returning TYPE_REAL\n", expr->token);
             return TYPE_REAL;
         }
 
         // Otherwise, result is integer
+        printf("DEBUG: Binary op '%s' returning TYPE_INT\n", expr->token);
         return TYPE_INT;
     }
 
@@ -1197,7 +1696,6 @@ DataType get_expression_type(Node *expr)
         return TYPE_CHAR;
     }
 
-
     // Function call
     if (strcmp(expr->token, "function_call") == 0)
     {
@@ -1212,14 +1710,37 @@ DataType get_expression_type(Node *expr)
         return func_sym->return_type;
     }
 
-    // Variable
+    // Variable lookup - this is the critical part
+    printf("DEBUG: Looking up variable '%s' in current scope %d\n", expr->token, current_scope_level);
     Symbol *var_sym = find_symbol(expr->token);
     if (var_sym)
     {
+        printf("DEBUG: Found variable '%s' with type %s in scope %d\n", 
+               expr->token, type_to_string(var_sym->type), var_sym->scope_level);
         return var_sym->type;
     }
-
-    return TYPE_INVALID;
+    else
+    {
+        printf("DEBUG: Variable '%s' not found in any visible scope\n", expr->token);
+        
+        // Check if this is a simple decimal number that we missed earlier
+        char *endptr;
+        double val = strtod(expr->token, &endptr);
+        if (*endptr == '\0') {
+            // It's a valid number
+            if (strchr(expr->token, '.') != NULL) {
+                printf("DEBUG: Late recognition of REAL literal '%s'\n", expr->token);
+                return TYPE_REAL;
+            } else {
+                printf("DEBUG: Late recognition of INT literal '%s'\n", expr->token);
+                return TYPE_INT;
+            }
+        }
+        
+        printf("DEBUG: '%s' is not a number and not found as variable - semantic error\n", expr->token);
+        semantic_error("Undefined variable", expr->token);
+        return TYPE_INVALID;
+    }
 }
 
 // Convert string to DataType
@@ -1625,6 +2146,8 @@ int main() {
     if (yyparse() == 0) {
         check_main_exists();
         printf("Parsing and semantic analysis completed successfully.\n");
+        printf("----------------------------------------3AC-----------------------------------.\n");
+        generate_3ac(ast_root);
     } else{
         printf("Parsing failed due to syntax or semantic erros.\n");
     }
