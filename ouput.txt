@@ -219,8 +219,6 @@ DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
 DEBUG: genExpr processing: 23
-DEBUG: get_expression_type called with token: '23'
-DEBUG: Returning TYPE_INT for numeric literal '23'
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: if-else
 DEBUG: genStmt processing node: BLOCK
@@ -228,17 +226,17 @@ DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
 DEBUG: genExpr processing: 10
-DEBUG: get_expression_type called with token: '10'
-DEBUG: Returning TYPE_INT for numeric literal '10'
 DEBUG: genStmt processing node: empty_state_list
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
 DEBUG: genExpr processing: 19
-DEBUG: get_expression_type called with token: '19'
-DEBUG: Returning TYPE_INT for numeric literal '19'
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: RETURN
 DEBUG: genExpr processing: +
+DEBUG: Processing binary op '+'
+DEBUG: Left operand: b
+DEBUG: Right operand: a
+DEBUG: Generated: t3 = b + a
 DEBUG: genStmt processing node: empty_state_list
 DEBUG: Processing function main
 DEBUG: Function node type: PROCEDURE
@@ -248,18 +246,24 @@ DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
 DEBUG: genExpr processing: 0
-DEBUG: get_expression_type called with token: '0'
-DEBUG: Returning TYPE_INT for numeric literal '0'
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: while
 DEBUG: genStmt processing node: BLOCK
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: ASSIGNMENT
 DEBUG: genExpr processing: CALL
+DEBUG: Processing function call to foo
+DEBUG: Function has arguments
+DEBUG: Found 1 arguments
+DEBUG: genExpr processing: 3.14
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
 DEBUG: genExpr processing: +
+DEBUG: Processing binary op '+'
+DEBUG: Left operand: a
+DEBUG: Right operand: b
+DEBUG: Generated: t7 = a + b
 DEBUG: genStmt processing node: empty_state_list
 DEBUG: genStmt processing node: empty_state_list
 3AC written to output.ac3

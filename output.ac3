@@ -1,6 +1,6 @@
 
 foo:
-    BeginFunc 76
+    BeginFunc 80
     t0 = 23
     a = t0
     if a == 23 goto L1
@@ -13,19 +13,25 @@ L2:
     t2 = 19
     b = t2
 L3:
-    Return +
+    t3 = b + a
+    Return t3
     EndFunc
 
 main:
-    BeginFunc 68
-    t3 = 0
-    a = t3
+    BeginFunc 80
+    t4 = 0
+    a = t4
 L4:
     if a < 10 goto L5
     goto L6
 L5:
-    b = CALL
-    a = +
+    t5 = 3.14
+    PushParam t5
+    t6 = LCall foo
+    PopParams 4
+    b = t6
+    t7 = a + b
+    a = t7
     goto L4
 L6:
     EndFunc

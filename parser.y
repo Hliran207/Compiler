@@ -201,10 +201,9 @@ static void dumpCode(FILE *out)
 /* ------------ helpers that reuse your existing symbol infrastructure ----- */
 static int symExists(const char *name)
 {
-    
+    if (!name) return 0;
     
     // Check if it's a literal first
-    if (!name) return 0;
     if (!strcmp(name,"TRUE")||!strcmp(name,"FALSE")||!strcmp(name,"null")) return 0;
     
     // Check if it's a number
@@ -212,9 +211,9 @@ static int symExists(const char *name)
     strtod(name,&ep); 
     if (*ep=='\0') return 0;  // It's a number literal
     
-    // If it's not a literal, assume it's a valid variable 
-    // (since semantic analysis already validated this)
-    return 1;
+    // Actually check if the symbol exists in the symbol table
+    Symbol *sym = find_symbol((char*)name);
+    return sym != NULL;
 }
 
 /* rough sizeof(T) just for frame-size accounting */
@@ -230,8 +229,10 @@ static int sizeofTypeStr(const char *t)
 static int tmpBytesInFunc = 0;
 static int resultSize(Node *e)           /* 4- vs 8-byte result */
 {
-    DataType tp = get_expression_type(e);
-    return (tp==TYPE_REAL||tp==TYPE_REAL_PTR||tp==TYPE_STRING)? 8 : 4;
+    // During 3AC generation, just use a default size
+    // Semantic analysis already validated types
+    (void)e; // Suppress unused parameter warning
+    return 4;
 }
 static char *tmpFor(Node *e){ tmpBytesInFunc+=resultSize(e); return newTmp(); }
 
@@ -262,8 +263,16 @@ static char *genOperand(Node *e)
         return strdup(litVal(e));
     }
     
-    // Check if it's a simple variable
-    if (symExists(e->token)) {
+    // Check if it's a simple number literal that we might have missed
+    char *endptr;
+    strtod(e->token, &endptr);
+    if (*endptr == '\0') {
+        // It's a number literal
+        return strdup(e->token);
+    }
+    
+    // For identifiers, just return the name directly (semantic analysis already validated)
+    if (e->left == NULL && e->right == NULL) {
         return strdup(e->token);
     }
     
@@ -326,21 +335,28 @@ static char *genExpr(Node *e)
     }
 
     /* ---------- binary ops (+,-,*,/,and,or,comp) --------------------- */
-    if (!strcmp(e->token,"+") || !strcmp(e->token,"-") || 
-        !strcmp(e->token,"*") || !strcmp(e->token,"/") ||
-        !strcmp(e->token,"and") || !strcmp(e->token,"or") ||
-        !strcmp(e->token,"==") || !strcmp(e->token,"!=") ||
-        !strcmp(e->token,"<") || !strcmp(e->token,">") ||
-        !strcmp(e->token,"<=") || !strcmp(e->token,">=")){
-        
-        char *l = genExpr(e->left);
-        char *r = genExpr(e->right);
-        char *t = tmpFor(e);
-        emit("%s = %s %s %s", t, l, e->token, r);
-        free(l);
-        free(r);
-        return t;
-    }
+if (!strcmp(e->token,"+") || !strcmp(e->token,"-") || 
+    !strcmp(e->token,"*") || !strcmp(e->token,"/") ||
+    !strcmp(e->token,"and") || !strcmp(e->token,"or") ||
+    !strcmp(e->token,"==") || !strcmp(e->token,"!=") ||
+    !strcmp(e->token,"<") || !strcmp(e->token,">") ||
+    !strcmp(e->token,"<=") || !strcmp(e->token,">=")){
+    
+    printf("DEBUG: Processing binary op '%s'\n", e->token);
+    printf("DEBUG: Left operand: %s\n", e->left ? e->left->token : "NULL");
+    printf("DEBUG: Right operand: %s\n", e->right ? e->right->token : "NULL");
+    
+    char *l = genOperand(e->left);
+    char *r = genOperand(e->right);
+    char *t = tmpFor(e);
+    
+    printf("DEBUG: Generated: %s = %s %s %s\n", t, l, e->token, r);
+    emit("%s = %s %s %s", t, l, e->token, r);
+    
+    free(l);
+    free(r);
+    return t;
+}
 
     /* ---------- array element  s[i] ---------------------------------- */
     if (!strcmp(e->token,"array_element")){
