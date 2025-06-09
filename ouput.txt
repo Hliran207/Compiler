@@ -1,79 +1,79 @@
-DEBUG: Entering function definition for 'foo'
+DEBUG: Entering function definition for 'calculate'
 DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: REAL
+DEBUG: Extracting type from: INT
 param_count=1 
 DEBUG: Visiting node with token: PARAM
-DEBUG: Extracting type from: REAL
-DEBUG: Adding parameter 'x' of type 'REAL' to scope 2
-DEBUG: get_expression_type called with token: '23'
-DEBUG: Returning TYPE_INT for numeric literal '23'
-DEBUG: get_expression_type called with token: '10'
-DEBUG: Returning TYPE_INT for numeric literal '10'
-DEBUG: get_expression_type called with token: '19'
-DEBUG: Returning TYPE_INT for numeric literal '19'
-DEBUG: get_expression_type called with token: '=='
-DEBUG: get_expression_type called with token: 'a'
-DEBUG: Looking up variable 'a' in current scope 2
-DEBUG: Found variable 'a' with type INT in scope 2
-DEBUG: get_expression_type called with token: '23'
-DEBUG: Returning TYPE_INT for numeric literal '23'
+DEBUG: Extracting type from: INT
+DEBUG: Adding parameter 'num' of type 'INT' to scope 2
+DEBUG: get_expression_type called with token: 'unary-'
+DEBUG: get_expression_type called with token: '1'
+DEBUG: Returning TYPE_INT for numeric literal '1'
+DEBUG: get_expression_type called with token: '*'
+DEBUG: Processing binary operator '*'
+DEBUG: get_expression_type called with token: 'num'
+DEBUG: Looking up variable 'num' in current scope 3
+DEBUG: Found variable 'num' with type INT in scope 2
+DEBUG: get_expression_type called with token: '2'
+DEBUG: Returning TYPE_INT for numeric literal '2'
+DEBUG: Binary op '*' - left_type: INT, right_type: INT
+DEBUG: Binary op '*' returning TYPE_INT
 DEBUG: get_expression_type called with token: '+'
 DEBUG: Processing binary operator '+'
-DEBUG: get_expression_type called with token: 'b'
-DEBUG: Looking up variable 'b' in current scope 2
-DEBUG: Found variable 'b' with type INT in scope 2
-DEBUG: get_expression_type called with token: 'a'
-DEBUG: Looking up variable 'a' in current scope 2
-DEBUG: Found variable 'a' with type INT in scope 2
+DEBUG: get_expression_type called with token: 'temp'
+DEBUG: Looking up variable 'temp' in current scope 3
+DEBUG: Found variable 'temp' with type INT in scope 2
+DEBUG: get_expression_type called with token: '5'
+DEBUG: Returning TYPE_INT for numeric literal '5'
 DEBUG: Binary op '+' - left_type: INT, right_type: INT
 DEBUG: Binary op '+' returning TYPE_INT
-
-=== Symbol Table ===
-Name                 Type       Kind       Scope    Line    
-------------------------------------------------
-b                    INT        Variable   2        2       
-a                    INT        Variable   2        2       
-x                    REAL       Parameter  2        1       
-foo                  INT        Function   1        1       
-------------------------------------------------
-param_count=0 
+DEBUG: get_expression_type called with token: 'or'
+DEBUG: get_expression_type called with token: '<'
+DEBUG: get_expression_type called with token: 'num'
+DEBUG: Looking up variable 'num' in current scope 2
+DEBUG: Found variable 'num' with type INT in scope 2
 DEBUG: get_expression_type called with token: '0'
 DEBUG: Returning TYPE_INT for numeric literal '0'
-DEBUG: get_expression_type called with token: '3.14'
-DEBUG: Returning TYPE_REAL for numeric literal '3.14'
-DEBUG: get_expression_type called with token: '+'
-DEBUG: Processing binary operator '+'
-DEBUG: get_expression_type called with token: 'a'
-DEBUG: Looking up variable 'a' in current scope 3
-DEBUG: Found variable 'a' with type INT in scope 2
-DEBUG: get_expression_type called with token: 'b'
-DEBUG: Looking up variable 'b' in current scope 3
-DEBUG: Found variable 'b' with type INT in scope 2
-DEBUG: Binary op '+' - left_type: INT, right_type: INT
-DEBUG: Binary op '+' returning TYPE_INT
-DEBUG: get_expression_type called with token: '<'
-DEBUG: get_expression_type called with token: 'a'
-DEBUG: Looking up variable 'a' in current scope 2
-DEBUG: Found variable 'a' with type INT in scope 2
-DEBUG: get_expression_type called with token: '10'
-DEBUG: Returning TYPE_INT for numeric literal '10'
+DEBUG: get_expression_type called with token: '>'
+DEBUG: get_expression_type called with token: 'num'
+DEBUG: Looking up variable 'num' in current scope 2
+DEBUG: Found variable 'num' with type INT in scope 2
+DEBUG: get_expression_type called with token: '5'
+DEBUG: Returning TYPE_INT for numeric literal '5'
+DEBUG: get_expression_type called with token: 'result'
+DEBUG: Looking up variable 'result' in current scope 2
+DEBUG: Found variable 'result' with type INT in scope 2
 
 === Symbol Table ===
 Name                 Type       Kind       Scope    Line    
 ------------------------------------------------
-b                    INT        Variable   2        15      
-a                    INT        Variable   2        15      
-_main_               VOID       Function   1        14      
-foo                  INT        Function   1        1       
+temp                 INT        Variable   2        3       
+result               INT        Variable   2        3       
+num                  INT        Parameter  2        1       
+calculate            INT        Function   1        1       
+------------------------------------------------
+param_count=0 
+DEBUG: get_expression_type called with token: '15'
+DEBUG: Returning TYPE_INT for numeric literal '15'
+DEBUG: get_expression_type called with token: 'x'
+DEBUG: Looking up variable 'x' in current scope 2
+DEBUG: Found variable 'x' with type INT in scope 2
+
+=== Symbol Table ===
+Name                 Type       Kind       Scope    Line    
+------------------------------------------------
+y                    INT        Variable   2        19      
+x                    INT        Variable   2        19      
+_main_               VOID       Function   1        17      
+calculate            INT        Function   1        1       
 ------------------------------------------------
 (Function_list
 	(FUNCTION
-		(foo)
+		(calculate)
 	(FUNC_PARTS
 		(PARAMETERS
 			(PARAM
-				(REAL)
-			(x)
+				(INT)
+			(num)
 			)
 		)
 	(DEF_BODY
@@ -85,26 +85,25 @@ foo                  INT        Function   1        1
 			(INT)
 		(VAR_ITEM_LIST
 			(VAR
-				(a)
+				(result)
 			)
 		(VAR
-			(b)
+			(temp)
 		)
 		)
 		)
 	(statements
 		(statements
-			(STATEMENT
-				(assign
-					(a)
-				(23)
-				)
-			)
-		(statements
 			(if-else
-				(==
-					(a)
-				(23)
+				(or
+					(<
+						(num)
+					(0)
+					)
+				(>
+					(num)
+				(5)
+				)
 				)
 			(then
 				(BLOCK
@@ -112,32 +111,50 @@ foo                  INT        Function   1        1
 				(statements
 					(STATEMENT
 						(assign
-							(b)
-						(10)
+							(result)
+						(unary-
+							(1)
+						)
 						)
 					)
 				(empty_state_list)
 				)
 				)
 			(else
-				(STATEMENT
-					(assign
-						(b)
-					(19)
+				(BLOCK
+					(VAR_EMPTY)
+				(statements
+					(STATEMENT
+						(assign
+							(temp)
+						(*
+							(num)
+						(2)
+						)
+						)
 					)
+				(statements
+					(STATEMENT
+						(assign
+							(result)
+						(+
+							(temp)
+						(5)
+						)
+						)
+					)
+				(empty_state_list)
+				)
+				)
 				)
 			)
 			)
 			)
 		(statements
 			(RETURN
-				(+
-					(b)
-				(a)
-				)
+				(result)
 			)
 		(empty_state_list)
-		)
 		)
 		)
 	)
@@ -156,49 +173,26 @@ foo                  INT        Function   1        1
 		(INT)
 	(VAR_ITEM_LIST
 		(VAR
-			(a)
+			(x)
 		)
 	(VAR
-		(b)
+		(y)
 	)
 	)
 	)
 (statements
 	(STATEMENT
 		(assign
-			(a)
-		(0)
+			(x)
+		(15)
 		)
 	)
 (statements
-	(while
-		(<
-			(a)
-		(10)
-		)
-	(BLOCK
-		(VAR_EMPTY)
-	(statements
-		(ASSIGNMENT
-			(b)
-		(CALL
-			(foo)
-		(3.14)
-		)
-		)
-	(statements
-		(STATEMENT
-			(assign
-				(a)
-			(+
-				(a)
-			(b)
-			)
-			)
-		)
-	(empty_state_list)
-	)
-	)
+	(ASSIGNMENT
+		(y)
+	(CALL
+		(calculate)
+	(x)
 	)
 	)
 (empty_state_list)
@@ -210,34 +204,59 @@ foo                  INT        Function   1        1
 )
 Parsing and semantic analysis completed successfully.
 ----------------------------------------3AC-----------------------------------.
-DEBUG: Processing function foo
+DEBUG: Processing function calculate
 DEBUG: Function node type: FUNCTION
 DEBUG: Body node type: BODY
 DEBUG: About to process statements
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: statements
-DEBUG: genStmt processing node: STATEMENT
-DEBUG: genStmt processing node: assign
-DEBUG: genExpr processing: 23
-DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: if-else
+DEBUG: genExpr processing: or
+DEBUG: Processing binary op 'or'
+DEBUG: Left operand: <
+DEBUG: Right operand: >
+DEBUG: genExpr processing: <
+DEBUG: Processing binary op '<'
+DEBUG: Left operand: num
+DEBUG: Right operand: 0
+DEBUG: Generated: t0 = num < 0
+DEBUG: genExpr processing: >
+DEBUG: Processing binary op '>'
+DEBUG: Left operand: num
+DEBUG: Right operand: 5
+DEBUG: Generated: t1 = num > 5
+DEBUG: Generated: t2 = t0 or t1
 DEBUG: genStmt processing node: BLOCK
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
-DEBUG: genExpr processing: 10
+DEBUG: genExpr processing: unary-
+DEBUG: genExpr processing: 1
 DEBUG: genStmt processing node: empty_state_list
+DEBUG: genStmt processing node: BLOCK
+DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
-DEBUG: genExpr processing: 19
+DEBUG: genExpr processing: *
+DEBUG: Processing binary op '*'
+DEBUG: Left operand: num
+DEBUG: Right operand: 2
+DEBUG: Generated: t5 = num * 2
 DEBUG: genStmt processing node: statements
-DEBUG: genStmt processing node: RETURN
+DEBUG: genStmt processing node: STATEMENT
+DEBUG: genStmt processing node: assign
 DEBUG: genExpr processing: +
 DEBUG: Processing binary op '+'
-DEBUG: Left operand: b
-DEBUG: Right operand: a
-DEBUG: Generated: t3 = b + a
+DEBUG: Left operand: temp
+DEBUG: Right operand: 5
+DEBUG: Generated: t6 = temp + 5
 DEBUG: genStmt processing node: empty_state_list
+DEBUG: genStmt processing node: statements
+DEBUG: genStmt processing node: RETURN
+DEBUG: genExpr processing: result
+DEBUG: Treating 'result' as identifier
+DEBUG: genStmt processing node: empty_state_list
+DEBUG: calculate --> locals = 8 , temp = 28, total = 36
 DEBUG: Processing function main
 DEBUG: Function node type: PROCEDURE
 DEBUG: Body node type: BODY
@@ -245,25 +264,15 @@ DEBUG: About to process statements
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: STATEMENT
 DEBUG: genStmt processing node: assign
-DEBUG: genExpr processing: 0
-DEBUG: genStmt processing node: statements
-DEBUG: genStmt processing node: while
-DEBUG: genStmt processing node: BLOCK
+DEBUG: genExpr processing: 15
 DEBUG: genStmt processing node: statements
 DEBUG: genStmt processing node: ASSIGNMENT
 DEBUG: genExpr processing: CALL
-DEBUG: Processing function call to foo
+DEBUG: Processing function call to calculate
 DEBUG: Function has arguments
 DEBUG: Found 1 arguments
-DEBUG: genExpr processing: 3.14
-DEBUG: genStmt processing node: statements
-DEBUG: genStmt processing node: STATEMENT
-DEBUG: genStmt processing node: assign
-DEBUG: genExpr processing: +
-DEBUG: Processing binary op '+'
-DEBUG: Left operand: a
-DEBUG: Right operand: b
-DEBUG: Generated: t7 = a + b
+DEBUG: genExpr processing: x
+DEBUG: Treating 'x' as identifier
 DEBUG: genStmt processing node: empty_state_list
-DEBUG: genStmt processing node: empty_state_list
+DEBUG: main --> locals = 8 , temp = 8, total = 16
 3AC written to output.ac3

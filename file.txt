@@ -1,23 +1,23 @@
-def foo(par1 real:x): returns int
-var type int:a,b;
+def calculate(par1 int:num): returns int
+var
+    type int:result,temp;
 begin
-    a = 23;
-    if a == 23:
-    begin
-        b = 10;
-    end
+    if (num < 0 or num >5):
+        begin
+            result = -1;
+        end
     else:
-        b = 19;
-    return b + a;
+        begin
+            temp = num * 2;
+            result = temp + 5;
+        end
+    return result;
 end
 
 def _main_():
-var type int:a,b;
+var
+ type int:x,y;
 begin
-    a = 0;
-    while a < 10:
-    begin
-        b = call foo(3.14);
-        a = a + b;
-    end
-end
+x = 15;
+y = call calculate(x);
+end 

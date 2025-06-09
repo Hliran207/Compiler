@@ -70,7 +70,7 @@ typedef struct Node
 {
     char *token;
     struct Node *left;
-    struct Node *right;
+    struct Node *right; 
 } Node;
 
 
@@ -227,12 +227,19 @@ static int sizeofTypeStr(const char *t)
 
 /* ---------- temp-byte accounting per function --------------------------- */
 static int tmpBytesInFunc = 0;
-static int resultSize(Node *e)           /* 4- vs 8-byte result */
+static int resultSize(Node *e)
 {
-    // During 3AC generation, just use a default size
-    // Semantic analysis already validated types
-    (void)e; // Suppress unused parameter warning
-    return 4;
+    if (!e) return 4;
+    
+    
+    /* Fallback if type wasn't set - use token string */
+    if (e->token) {
+        if (!strcasecmp(e->token, "REAL") || !strcasecmp(e->token, "REALPTR")) return 8;
+        if (!strcasecmp(e->token, "STRING")) return 8;
+        if (strchr(e->token, '.') != NULL) return 8;  /* Real literal */
+    }
+    
+    return 4; /* Default */
 }
 static char *tmpFor(Node *e){ tmpBytesInFunc+=resultSize(e); return newTmp(); }
 
@@ -622,9 +629,27 @@ static void genFunction(Node *fn)
     printf("DEBUG: About to process statements\n");
     genStmt(stmts);
 
-    /* count locals - simplified version */
-    int locals = 64; // Just use a fixed amount for now
-
+    int locals = 0;
+    Node *decl = body ? body->left : NULL;
+    if (decl && !strcmp(decl->token, "VAR_DECL")) {
+        const char *type = decl->left->token;
+        Node *items = decl->right;
+        while (items) {
+            if (!strcmp(items->token, "VAR_ITEM_LIST")) {
+                Node *var = items->left;
+                if (var && !strcmp(var->token, "VAR")) {
+                    locals += sizeofTypeStr(type);
+                }
+                items = items->right;
+            } else if (!strcmp(items->token, "VAR")) {
+                locals += sizeofTypeStr(type);
+                break;
+            } else {
+                break;
+            }
+        }
+    }
+    printf("DEBUG: %s --> locals = %d , temp = %d, total = %d\n", fname,locals,tmpBytesInFunc,tmpBytesInFunc+locals);
     patchBegin(beginLine, tmpBytesInFunc + locals);
     emit("EndFunc");
 }
@@ -1126,9 +1151,10 @@ Node *mkNode(char *token, Node *left, Node *right)
     }
     newNode->token = strdup(token);
     newNode->left = left;
-    newNode->right = right;
+    newNode->right = right;           
     return newNode;
 }
+
 
 void printTabs(int numOfTabs)
 {
