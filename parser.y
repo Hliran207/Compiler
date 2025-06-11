@@ -43,13 +43,13 @@ struct Symbol
     DataType type;         // Data type
     SymbolKind kind;       // Kind of symbol
     int scope_level;       // Scope level
-    int is_array;          // Is it an array?
+    int is_array;          // check if It's an array?
     int array_size;        // Array size
     int line_number;       // Line where defined
     int param_count;       // Number of parameters (for functions)
     DataType *param_types; // Parameter types (for functions)
     DataType return_type;  // Return type (for functions)
-    int is_defined;        // Is function defined?
+    int is_defined;        // Is the function defined?
     struct Symbol *next;   // Next symbol in the same scope
 };
 
@@ -61,7 +61,7 @@ struct SymbolList
 
 struct Scope
 {
-    Symbol *symbols;      // Linked list of symbols in this scope
+    Symbol *symbols;      // Linked list of symbols in the current scope
     int scope_level;      // Scope nesting level
     struct Scope *parent; // Parent scope
 };
@@ -157,25 +157,31 @@ static inline void mark_return_found(void)
 }
 
 /* ========================================================================== */
-/*                      3–ADDRESS–CODE  (3AC)  GENERATOR                      */
-/*  Paste this block once, AFTER the existing #include’s, BEFORE the grammar  */
+/*                      THREE–ADDRESS–CODE  (3AC)  GENERATOR                      */
 /* ========================================================================== */
 #include <stdarg.h>
 
-/* ------------ local instruction list ------------------------------------ */
 typedef struct TACInstr {
     char *text;
     struct TACInstr *next;
 } TACInstr;
 
 static TACInstr *codeHead = NULL, *codeTail = NULL;
-static int       tmpCnt   = 0;
-static int       lblCnt   = 1;
+static int       temp_counter   = 0;
+static int       lable_counter   = 0;
 
-static char *newTmp  (void){ char b[32]; sprintf(b,"t%d",tmpCnt++);  return strdup(b); }
-static char *newLabel(void){ char b[32]; sprintf(b,"L%d",lblCnt++); return strdup(b); }
+static char *newTmp  (void){ 
+    char b[32]; 
+    sprintf(b,"t%d",temp_counter++);  
+    return strdup(b);
+}
+static char *newLabel(void){
+     char b[32]; 
+     sprintf(b,"L%d",lable_counter++); 
+     return strdup(b);
+}
 
-static void emit(const char *fmt, ...)
+static void add_line_to_TAC(const char *fmt, ...)
 {
     va_list ap;  char buf[128];
     va_start(ap, fmt); vsnprintf(buf,sizeof(buf),fmt,ap); va_end(ap);
@@ -186,32 +192,32 @@ static void emit(const char *fmt, ...)
     else           codeTail = codeTail->next = n;
 }
 
-static void dumpCode(FILE *out)
+static void print_TAC(FILE *out)
 {
     const char *IND = "    ";
     for (TACInstr *p = codeHead; p; p = p->next) {
         size_t len = strlen(p->text);
-        if (len && p->text[len-1]==':')           /* labels flush-left  */
+        if (len && p->text[len-1]==':')           
             fprintf(out,"%s\n",p->text);
         else
-            fprintf(out,"%s%s\n",IND,p->text);    /* everything else indented */
+            fprintf(out,"%s%s\n",IND,p->text);    
     }
 }
 
-/* ------------ helpers that reuse your existing symbol infrastructure ----- */
+/* ------------ helpers that reuse our existing symbol infrastructure ----- */
 static int symExists(const char *name)
 {
     if (!name) return 0;
     
-    // Check if it's a literal first
+    // if it's a literal
     if (!strcmp(name,"TRUE")||!strcmp(name,"FALSE")||!strcmp(name,"null")) return 0;
     
-    // Check if it's a number
+    //  if it's a number
     char *ep; 
     strtod(name,&ep); 
     if (*ep=='\0') return 0;  // It's a number literal
     
-    // Actually check if the symbol exists in the symbol table
+    //  if the symbol exists in the symbol table
     Symbol *sym = find_symbol((char*)name);
     return sym != NULL;
 }
@@ -225,14 +231,14 @@ static int sizeofTypeStr(const char *t)
     return 4;
 }
 
-/* ---------- temp-byte accounting per function --------------------------- */
+/* ----------counting the temp-byte, per function --------------------------- */
 static int tmpBytesInFunc = 0;
 static int resultSize(Node *e)
 {
     if (!e) return 4;
     
     
-    /* Fallback if type wasn't set - use token string */
+    /* if type wasn't set - use token string */
     if (e->token) {
         if (!strcasecmp(e->token, "REAL") || !strcasecmp(e->token, "REALPTR")) return 8;
         if (!strcasecmp(e->token, "STRING")) return 8;
@@ -243,20 +249,21 @@ static int resultSize(Node *e)
 }
 static char *tmpFor(Node *e){ tmpBytesInFunc+=resultSize(e); return newTmp(); }
 
-/* ---------- forward declarations (mutual recursion) --------------------- */
+/*  part of the functions declarations  */
 static char *genExpr (Node *e);
 static void  genStmt (Node *s);
+static int isCmp(const char *t);
 
-/* ======================  EXPRESSION  ==================================== */
+/* ====================== handeling EXPRESSION  ==================================== */
 static int isLit(const char *tok)
 {
     if (!tok) return 0;
     if (!strcmp(tok,"TRUE")||!strcmp(tok,"FALSE")||!strcmp(tok,"null")) return 1;
     
-    // Check if it's a number
+    // if it's a number
     char *ep; 
     strtod(tok,&ep); 
-    return *ep=='\0';          /* number */
+    return *ep=='\0';          
 }
 static const char *litVal(Node *n){ return n?n->token:"0"; }
 
@@ -265,78 +272,102 @@ static char *genOperand(Node *e)
 {
     if (!e) return strdup("0");
     
-    // Check if it's a literal
+    // if it's a literal
     if (isLit(e->token)) {
         return strdup(litVal(e));
     }
     
-    // Check if it's a simple number literal that we might have missed
+    // Check again if it's a simple number literal 
     char *endptr;
     strtod(e->token, &endptr);
     if (*endptr == '\0') {
-        // It's a number literal
         return strdup(e->token);
     }
     
-    // For identifiers, just return the name directly (semantic analysis already validated)
+    // For identifiers, return the name directly 
     if (e->left == NULL && e->right == NULL) {
         return strdup(e->token);
     }
     
-    // Otherwise, generate a full expression
+    
     return genExpr(e);
 }
+
+static void genBoolExpr(Node *e, const char *Ltrue, const char *Lfalse) {
+    if (!strcmp(e->token, "and")) {
+        char *Lmid = newLabel();
+        genBoolExpr(e->left, Lmid, Lfalse);
+        add_line_to_TAC("%s:", Lmid);
+        genBoolExpr(e->right, Ltrue, Lfalse);
+    } else if (!strcmp(e->token, "or")) {
+        char *Lmid = newLabel();
+        genBoolExpr(e->left, Ltrue, Lmid);
+        add_line_to_TAC("%s:", Lmid);
+        genBoolExpr(e->right, Ltrue, Lfalse);
+    } else if (isCmp(e->token)) {
+        char *l = genOperand(e->left);
+        char *r = genOperand(e->right);
+        add_line_to_TAC("if %s %s %s goto %s", l, e->token, r, Ltrue);
+        add_line_to_TAC("goto %s", Lfalse);
+        free(l); free(r);
+    } else {
+        char *t = genExpr(e);
+        add_line_to_TAC("if %s != 0 goto %s", t, Ltrue);
+        add_line_to_TAC("goto %s", Lfalse);
+        free(t);
+    }
+}
+
 static char *genExpr(Node *e)
 {
     if (!e) return strdup("0");
 
     printf("DEBUG: genExpr processing: %s\n", e->token);
 
-    /* ---------- literals --------------------------------------------- */
+    /* ---------- handleing literals --------------------------------------------- */
     if (isLit(e->token)){
         char *t = tmpFor(e);
-        if (!strcmp(e->token,"TRUE"))      emit("%s = 1", t);
-        else if (!strcmp(e->token,"FALSE"))emit("%s = 0", t);
-        else if (!strcmp(e->token,"null")) emit("%s = 0", t);
-        else                               emit("%s = %s",t,litVal(e));
+        if (!strcmp(e->token,"TRUE"))      add_line_to_TAC("%s = 1", t);
+        else if (!strcmp(e->token,"FALSE"))add_line_to_TAC("%s = 0", t);
+        else if (!strcmp(e->token,"null")) add_line_to_TAC("%s = 0", t);
+        else                               add_line_to_TAC("%s = %s",t,litVal(e));
         return t;
     }
     
-    /* ---------- check if it's a simple number literal --------------- */
+    /* ---------- if it's a simple number literal --------------- */
     char *endptr;
     strtod(e->token, &endptr);
     if (*endptr == '\0') {
-        // It's a number literal
         char *t = tmpFor(e);
-        emit("%s = %s", t, e->token);
+        add_line_to_TAC("%s = %s", t, e->token);
         return t;
     }
     
-    if (symExists(e->token))                       /* plain variable   */
+    if (symExists(e->token))                       
         return strdup(e->token);
 
     /* ---------- unary ops -------------------------------------------- */
     if (!strcmp(e->token,"unary-")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = - %s", t, v); 
+        add_line_to_TAC("%s = - %s", t, v); 
         free(v);
         return t;
     }
     if (!strcmp(e->token,"not")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = ! %s", t, v); 
+        add_line_to_TAC("%s = ! %s", t, v); 
         free(v);
         return t;
     }
     if (!strcmp(e->token,"address")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = & %s", t, v); 
+        add_line_to_TAC("%s = & %s", t, v); 
         free(v);
         return t;
     }
     if (!strcmp(e->token,"dereference")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = * %s", t, v); 
+        add_line_to_TAC("%s = * %s", t, v); 
         free(v);
         return t;
     }
@@ -358,7 +389,7 @@ if (!strcmp(e->token,"+") || !strcmp(e->token,"-") ||
     char *t = tmpFor(e);
     
     printf("DEBUG: Generated: %s = %s %s %s\n", t, l, e->token, r);
-    emit("%s = %s %s %s", t, l, e->token, r);
+    add_line_to_TAC("%s = %s %s %s", t, l, e->token, r);
     
     free(l);
     free(r);
@@ -370,7 +401,7 @@ if (!strcmp(e->token,"+") || !strcmp(e->token,"-") ||
         char *base = genExpr(e->left);
         char *idx  = genExpr(e->right);
         char *t    = tmpFor(e);
-        emit("%s = %s [ %s ]", t, base, idx);
+        add_line_to_TAC("%s = %s [ %s ]", t, base, idx);
         free(base);
         free(idx);
         return t;
@@ -410,23 +441,22 @@ if (!strcmp(e->token,"+") || !strcmp(e->token,"-") ||
         // Push parameters in reverse order
         for (int i = top - 1; i >= 0; i--) {
             char *val = genExpr(stk[i]);
-            emit("PushParam %s", val);
+            add_line_to_TAC("PushParam %s", val);
             bytes += resultSize(stk[i]);
             free(val);
         }
         
         char *ret = tmpFor(e);
-        emit("%s = LCall %s", ret, fname);
-        if (bytes) emit("PopParams %d", bytes);
+        add_line_to_TAC("%s = LCall %s", ret, fname);
+        if (bytes) add_line_to_TAC("PopParams %d", bytes);
         return ret;
     }
 
-    /* fallback – treat as identifier */
     printf("DEBUG: Treating '%s' as identifier\n", e->token);
     return strdup(e->token);
 }
 
-/* ======================  STATEMENT  ===================================== */
+/* ====================== handling STATEMENT  ===================================== */
 static int isCmp(const char *t){ return !strcmp(t,"==")||!strcmp(t,"!=")||
                                         !strcmp(t,"<" )||!strcmp(t,">" )||
                                         !strcmp(t,"<=")||!strcmp(t,">="); }
@@ -452,108 +482,92 @@ static void genStmt(Node *s)
         return;
     }
 
-    /* ---------- assignments ----------------------------------------- */
+    /* ---------- handleing assignments ----------------------------------------- */
     if (!strcmp(s->token,"assign")){
         char *rval = genExpr(s->right);
-        emit("%s = %s", s->left->token, rval);
+        add_line_to_TAC("%s = %s", s->left->token, rval);
         return;
     }
     if (!strcmp(s->token,"pointer_assign")){
-        emit("* %s = %s", genExpr(s->left), genExpr(s->right)); return;
+        add_line_to_TAC("* %s = %s", genExpr(s->left), genExpr(s->right)); return;
     }
     if (!strcmp(s->token,"array_assign")){
-        emit("%s [ %s ] = %s",
+        add_line_to_TAC("%s [ %s ] = %s",
              s->left->token,
              genExpr(s->left->right),
              genExpr(s->right));
         return;
     }
     
-    /* ---------- ASSIGNMENT (function call result) ------------------- */
+    /* ---------- handling ASSIGNMENT (function call result) ------------------- */
     if (!strcmp(s->token,"ASSIGNMENT")){
         char *rval = genExpr(s->right);
-        emit("%s = %s", s->left->token, rval);
+        add_line_to_TAC("%s = %s", s->left->token, rval);
         return;
     }
 
-    /* ---------- return ---------------------------------------------- */
+    /* ---------- handling return ---------------------------------------------- */
     if (!strcmp(s->token,"RETURN")){
         if (s->left) {
             char *retval = genExpr(s->left);
-            emit("Return %s", retval);
+            add_line_to_TAC("Return %s", retval);
         } else {
-            emit("Return");
+            add_line_to_TAC("Return");
         }
         return;
     }
 
-    /* ---------- bare function call as statement --------------------- */
+    /* ---------- handling function call --------------------- */
     if (!strcmp(s->token,"FUNC_CALL")){ 
         genExpr(s); 
         return; 
     }
 
-    /* ---------- IF / IF-ELSE ---------------------------------------- */
-    if (!strcmp(s->token,"if")){
-        char *Ltrue=newLabel(), *Lend=newLabel();
-        Node *c=s->left;
-        if (isCmp(c->token)){
-            emit("if %s %s %s goto %s",
-                 genOperand(c->left),c->token,genOperand(c->right),Ltrue);
-            emit("goto %s", Lend);
-        } else {
-            emit("if %s == 0 goto %s", genExpr(c), Lend);
-            emit("goto %s", Ltrue);
-        }
-        emit("%s:",Ltrue); 
-        genStmt(s->right); 
-        emit("%s:",Lend); 
-        return;
-    }
-    if (!strcmp(s->token,"if-else")){
-        Node *c=s->left;
-        Node *then_part = s->right->left;      // then branch
-        Node *else_part = s->right->right->left; // else branch
-        
-        char *Lthen=newLabel(), *Lelse=newLabel(), *Lend=newLabel();
-        if (isCmp(c->token)){
-            emit("if %s %s %s goto %s",
-                 genOperand(c->left),c->token,genOperand(c->right),Lthen);
-            emit("goto %s", Lelse);
-        } else {
-            emit("if %s != 0 goto %s", genExpr(c), Lthen);
-            emit("goto %s", Lelse);
-        }
-        emit("%s:",Lthen); 
-        genStmt(then_part); 
-        emit("goto %s",Lend);
-        emit("%s:",Lelse); 
-        genStmt(else_part);  
-        emit("%s:",Lend); 
+    /* ---------- handling IF / IF-ELSE ---------------------------------------- */
+    if (!strcmp(s->token,"if")) {
+        char *Ltrue = newLabel(), *Lend = newLabel();
+        genBoolExpr(s->left, Ltrue, Lend);
+        add_line_to_TAC("%s:", Ltrue);
+        genStmt(s->right);
+        add_line_to_TAC("%s:", Lend);
         return;
     }
 
-    /* ---------- WHILE ----------------------------------------------- */
-    if (!strcmp(s->token,"while")){
-        char *Lc=newLabel(), *Lb=newLabel(), *Le=newLabel();
-        emit("%s:",Lc);
-        Node *c=s->left;
-        if (isCmp(c->token)){
-            emit("if %s %s %s goto %s",
-                 genOperand(c->left),c->token,genOperand(c->right),Lb);
-            emit("goto %s", Le);
-        } else {
-            emit("if %s != 0 goto %s", genExpr(c), Lb);
-            emit("goto %s", Le);
-        }
-        emit("%s:",Lb); 
-        genStmt(s->right); 
-        emit("goto %s",Lc);
-        emit("%s:",Le); 
+    if (!strcmp(s->token,"if-else")) {
+        Node *cond = s->left;
+        Node *thenPart = s->right->left;
+        Node *elsePart = s->right->right->left;
+
+        char *Lthen = newLabel();
+        char *Lelse = newLabel();
+        char *Lend = newLabel();
+
+        genBoolExpr(cond, Lthen, Lelse);
+        add_line_to_TAC("%s:", Lthen);
+        genStmt(thenPart);
+        add_line_to_TAC("goto %s", Lend);
+        add_line_to_TAC("%s:", Lelse);
+        genStmt(elsePart);
+        add_line_to_TAC("%s:", Lend);
         return;
     }
 
-    /* ---------- FOR -------------------------------------------------- */
+    /* ---------- handling WHILE ----------------------------------------------- */
+    if (!strcmp(s->token,"while")) {
+        char *Lstart = newLabel();
+        char *Lbody = newLabel();
+        char *Lend = newLabel();
+
+        add_line_to_TAC("%s:", Lstart);
+        genBoolExpr(s->left, Lbody, Lend);
+        add_line_to_TAC("%s:", Lbody);
+        genStmt(s->right);
+        add_line_to_TAC("goto %s", Lstart);
+        add_line_to_TAC("%s:", Lend);
+        return;
+    }
+
+    /* ---------- handling FOR -------------------------------------------------- */
     if (!strcmp(s->token,"for")){
         Node *hdr=s->left;
         Node *initVar  = hdr->left->left;
@@ -561,17 +575,17 @@ static void genStmt(Node *s)
         Node *condExpr = hdr->right->left;
         Node *updExpr  = hdr->right->right;
         char *Lc=newLabel(), *Le=newLabel();
-        emit("%s = %s", initVar->token, genExpr(initExpr));
-        emit("%s:",Lc);
-        emit("if %s == 0 goto %s", genExpr(condExpr), Le);
+        add_line_to_TAC("%s = %s", initVar->token, genExpr(initExpr));
+        add_line_to_TAC("%s:",Lc);
+        add_line_to_TAC("if %s == 0 goto %s", genExpr(condExpr), Le);
         genStmt(s->right);
-        emit("%s = %s", updExpr->left->token, genExpr(updExpr->right));
-        emit("goto %s", Lc); 
-        emit("%s:",Le); 
+        add_line_to_TAC("%s = %s", updExpr->left->token, genExpr(updExpr->right));
+        add_line_to_TAC("goto %s", Lc); 
+        add_line_to_TAC("%s:",Le); 
         return;
     }
 
-    /* ---------- BLOCK ------------------------------------------------ */
+    /* ---------- handling BLOCK ------------------------------------------------ */
     if (!strcmp(s->token,"BLOCK")){ 
         genStmt(s->right); 
         return; 
@@ -584,7 +598,7 @@ static void genStmt(Node *s)
 static void patchBegin(TACInstr *beginLine,int bytes)
 {
     char buf[16]; sprintf(buf,"%d",bytes);
-    strcpy(beginLine->text+10,buf);      /* overwrite the '0' */
+    strcpy(beginLine->text+10,buf);      
 }
 
 static void genFunction(Node *fn)
@@ -594,8 +608,8 @@ static void genFunction(Node *fn)
     const char *fname = fn->left->token;
     if (!strcmp(fname,"_main_")) fname="main";
 
-    emit("\n%s:",fname);
-    emit("BeginFunc 0");
+    add_line_to_TAC("\n%s:",fname);
+    add_line_to_TAC("BeginFunc 0");
     TACInstr *beginLine = codeTail;
     tmpBytesInFunc = 0;
 
@@ -617,7 +631,7 @@ static void genFunction(Node *fn)
 
     if (!body) {
         printf("DEBUG: No body found for function %s\n", fname);
-        emit("EndFunc");
+        add_line_to_TAC("EndFunc");
         return;
     }
 
@@ -627,7 +641,7 @@ static void genFunction(Node *fn)
     Node *stmts = body->right;     // statements
 
     printf("DEBUG: About to process statements\n");
-    genStmt(stmts);
+    genStmt(stmts); 
 
     int locals = 0;
     Node *decl = body ? body->left : NULL;
@@ -651,7 +665,7 @@ static void genFunction(Node *fn)
     }
     printf("DEBUG: %s --> locals = %d , temp = %d, total = %d\n", fname,locals,tmpBytesInFunc,tmpBytesInFunc+locals);
     patchBegin(beginLine, tmpBytesInFunc + locals);
-    emit("EndFunc");
+    add_line_to_TAC("EndFunc");
 }
 
 static void genGlobal(Node *n)
@@ -667,13 +681,13 @@ static void genGlobal(Node *n)
     }
 }
 
-void generate_3ac(Node *root)
+void tac_creation(Node *root)
 {
-    codeHead=codeTail=NULL; tmpCnt=0; lblCnt=1;
+    codeHead=codeTail=NULL; temp_counter=0; lable_counter=0;
     genGlobal(root);
 
     FILE *f = fopen("output.ac3","w");
-    if (f){ dumpCode(f); fclose(f); }
+    if (f){ print_TAC(f); fclose(f); }
     printf("3AC written to output.ac3\n");
 }
 /* ========================================================================== */
@@ -2189,7 +2203,7 @@ int main() {
         check_main_exists();
         printf("Parsing and semantic analysis completed successfully.\n");
         printf("----------------------------------------3AC-----------------------------------.\n");
-        generate_3ac(ast_root);
+        tac_creation(ast_root);
     } else{
         printf("Parsing failed due to syntax or semantic erros.\n");
     }

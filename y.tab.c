@@ -113,13 +113,13 @@ struct Symbol
     DataType type;         // Data type
     SymbolKind kind;       // Kind of symbol
     int scope_level;       // Scope level
-    int is_array;          // Is it an array?
+    int is_array;          // check if It's an array?
     int array_size;        // Array size
     int line_number;       // Line where defined
     int param_count;       // Number of parameters (for functions)
     DataType *param_types; // Parameter types (for functions)
     DataType return_type;  // Return type (for functions)
-    int is_defined;        // Is function defined?
+    int is_defined;        // Is the function defined?
     struct Symbol *next;   // Next symbol in the same scope
 };
 
@@ -131,7 +131,7 @@ struct SymbolList
 
 struct Scope
 {
-    Symbol *symbols;      // Linked list of symbols in this scope
+    Symbol *symbols;      // Linked list of symbols in the current scope
     int scope_level;      // Scope nesting level
     struct Scope *parent; // Parent scope
 };
@@ -227,25 +227,31 @@ static inline void mark_return_found(void)
 }
 
 /* ========================================================================== */
-/*                      3–ADDRESS–CODE  (3AC)  GENERATOR                      */
-/*  Paste this block once, AFTER the existing #include’s, BEFORE the grammar  */
+/*                      THREE–ADDRESS–CODE  (3AC)  GENERATOR                      */
 /* ========================================================================== */
 #include <stdarg.h>
 
-/* ------------ local instruction list ------------------------------------ */
 typedef struct TACInstr {
     char *text;
     struct TACInstr *next;
 } TACInstr;
 
 static TACInstr *codeHead = NULL, *codeTail = NULL;
-static int       tmpCnt   = 0;
-static int       lblCnt   = 1;
+static int       temp_counter   = 0;
+static int       lable_counter   = 0;
 
-static char *newTmp  (void){ char b[32]; sprintf(b,"t%d",tmpCnt++);  return strdup(b); }
-static char *newLabel(void){ char b[32]; sprintf(b,"L%d",lblCnt++); return strdup(b); }
+static char *newTmp  (void){ 
+    char b[32]; 
+    sprintf(b,"t%d",temp_counter++);  
+    return strdup(b);
+}
+static char *newLabel(void){
+     char b[32]; 
+     sprintf(b,"L%d",lable_counter++); 
+     return strdup(b);
+}
 
-static void emit(const char *fmt, ...)
+static void add_line_to_TAC(const char *fmt, ...)
 {
     va_list ap;  char buf[128];
     va_start(ap, fmt); vsnprintf(buf,sizeof(buf),fmt,ap); va_end(ap);
@@ -256,32 +262,32 @@ static void emit(const char *fmt, ...)
     else           codeTail = codeTail->next = n;
 }
 
-static void dumpCode(FILE *out)
+static void print_TAC(FILE *out)
 {
     const char *IND = "    ";
     for (TACInstr *p = codeHead; p; p = p->next) {
         size_t len = strlen(p->text);
-        if (len && p->text[len-1]==':')           /* labels flush-left  */
+        if (len && p->text[len-1]==':')           
             fprintf(out,"%s\n",p->text);
         else
-            fprintf(out,"%s%s\n",IND,p->text);    /* everything else indented */
+            fprintf(out,"%s%s\n",IND,p->text);    
     }
 }
 
-/* ------------ helpers that reuse your existing symbol infrastructure ----- */
+/* ------------ helpers that reuse our existing symbol infrastructure ----- */
 static int symExists(const char *name)
 {
     if (!name) return 0;
     
-    // Check if it's a literal first
+    // if it's a literal
     if (!strcmp(name,"TRUE")||!strcmp(name,"FALSE")||!strcmp(name,"null")) return 0;
     
-    // Check if it's a number
+    //  if it's a number
     char *ep; 
     strtod(name,&ep); 
     if (*ep=='\0') return 0;  // It's a number literal
     
-    // Actually check if the symbol exists in the symbol table
+    //  if the symbol exists in the symbol table
     Symbol *sym = find_symbol((char*)name);
     return sym != NULL;
 }
@@ -295,14 +301,14 @@ static int sizeofTypeStr(const char *t)
     return 4;
 }
 
-/* ---------- temp-byte accounting per function --------------------------- */
+/* ----------counting the temp-byte, per function --------------------------- */
 static int tmpBytesInFunc = 0;
 static int resultSize(Node *e)
 {
     if (!e) return 4;
     
     
-    /* Fallback if type wasn't set - use token string */
+    /* if type wasn't set - use token string */
     if (e->token) {
         if (!strcasecmp(e->token, "REAL") || !strcasecmp(e->token, "REALPTR")) return 8;
         if (!strcasecmp(e->token, "STRING")) return 8;
@@ -313,20 +319,21 @@ static int resultSize(Node *e)
 }
 static char *tmpFor(Node *e){ tmpBytesInFunc+=resultSize(e); return newTmp(); }
 
-/* ---------- forward declarations (mutual recursion) --------------------- */
+/*  part of the functions declarations  */
 static char *genExpr (Node *e);
 static void  genStmt (Node *s);
+static int isCmp(const char *t);
 
-/* ======================  EXPRESSION  ==================================== */
+/* ====================== handeling EXPRESSION  ==================================== */
 static int isLit(const char *tok)
 {
     if (!tok) return 0;
     if (!strcmp(tok,"TRUE")||!strcmp(tok,"FALSE")||!strcmp(tok,"null")) return 1;
     
-    // Check if it's a number
+    // if it's a number
     char *ep; 
     strtod(tok,&ep); 
-    return *ep=='\0';          /* number */
+    return *ep=='\0';          
 }
 static const char *litVal(Node *n){ return n?n->token:"0"; }
 
@@ -335,78 +342,102 @@ static char *genOperand(Node *e)
 {
     if (!e) return strdup("0");
     
-    // Check if it's a literal
+    // if it's a literal
     if (isLit(e->token)) {
         return strdup(litVal(e));
     }
     
-    // Check if it's a simple number literal that we might have missed
+    // Check again if it's a simple number literal 
     char *endptr;
     strtod(e->token, &endptr);
     if (*endptr == '\0') {
-        // It's a number literal
         return strdup(e->token);
     }
     
-    // For identifiers, just return the name directly (semantic analysis already validated)
+    // For identifiers, return the name directly 
     if (e->left == NULL && e->right == NULL) {
         return strdup(e->token);
     }
     
-    // Otherwise, generate a full expression
+    
     return genExpr(e);
 }
+
+static void genBoolExpr(Node *e, const char *Ltrue, const char *Lfalse) {
+    if (!strcmp(e->token, "and")) {
+        char *Lmid = newLabel();
+        genBoolExpr(e->left, Lmid, Lfalse);
+        add_line_to_TAC("%s:", Lmid);
+        genBoolExpr(e->right, Ltrue, Lfalse);
+    } else if (!strcmp(e->token, "or")) {
+        char *Lmid = newLabel();
+        genBoolExpr(e->left, Ltrue, Lmid);
+        add_line_to_TAC("%s:", Lmid);
+        genBoolExpr(e->right, Ltrue, Lfalse);
+    } else if (isCmp(e->token)) {
+        char *l = genOperand(e->left);
+        char *r = genOperand(e->right);
+        add_line_to_TAC("if %s %s %s goto %s", l, e->token, r, Ltrue);
+        add_line_to_TAC("goto %s", Lfalse);
+        free(l); free(r);
+    } else {
+        char *t = genExpr(e);
+        add_line_to_TAC("if %s != 0 goto %s", t, Ltrue);
+        add_line_to_TAC("goto %s", Lfalse);
+        free(t);
+    }
+}
+
 static char *genExpr(Node *e)
 {
     if (!e) return strdup("0");
 
     printf("DEBUG: genExpr processing: %s\n", e->token);
 
-    /* ---------- literals --------------------------------------------- */
+    /* ---------- handleing literals --------------------------------------------- */
     if (isLit(e->token)){
         char *t = tmpFor(e);
-        if (!strcmp(e->token,"TRUE"))      emit("%s = 1", t);
-        else if (!strcmp(e->token,"FALSE"))emit("%s = 0", t);
-        else if (!strcmp(e->token,"null")) emit("%s = 0", t);
-        else                               emit("%s = %s",t,litVal(e));
+        if (!strcmp(e->token,"TRUE"))      add_line_to_TAC("%s = 1", t);
+        else if (!strcmp(e->token,"FALSE"))add_line_to_TAC("%s = 0", t);
+        else if (!strcmp(e->token,"null")) add_line_to_TAC("%s = 0", t);
+        else                               add_line_to_TAC("%s = %s",t,litVal(e));
         return t;
     }
     
-    /* ---------- check if it's a simple number literal --------------- */
+    /* ---------- if it's a simple number literal --------------- */
     char *endptr;
     strtod(e->token, &endptr);
     if (*endptr == '\0') {
-        // It's a number literal
         char *t = tmpFor(e);
-        emit("%s = %s", t, e->token);
+        add_line_to_TAC("%s = %s", t, e->token);
         return t;
     }
     
-    if (symExists(e->token))                       /* plain variable   */
+    if (symExists(e->token))                       
         return strdup(e->token);
 
     /* ---------- unary ops -------------------------------------------- */
     if (!strcmp(e->token,"unary-")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = - %s", t, v); 
+        add_line_to_TAC("%s = - %s", t, v); 
         free(v);
         return t;
     }
     if (!strcmp(e->token,"not")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = ! %s", t, v); 
+        add_line_to_TAC("%s = ! %s", t, v); 
         free(v);
         return t;
     }
     if (!strcmp(e->token,"address")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = & %s", t, v); 
+        add_line_to_TAC("%s = & %s", t, v); 
         free(v);
         return t;
     }
     if (!strcmp(e->token,"dereference")){
         char *v = genExpr(e->left), *t = tmpFor(e);
-        emit("%s = * %s", t, v); 
+        add_line_to_TAC("%s = * %s", t, v); 
         free(v);
         return t;
     }
@@ -428,7 +459,7 @@ if (!strcmp(e->token,"+") || !strcmp(e->token,"-") ||
     char *t = tmpFor(e);
     
     printf("DEBUG: Generated: %s = %s %s %s\n", t, l, e->token, r);
-    emit("%s = %s %s %s", t, l, e->token, r);
+    add_line_to_TAC("%s = %s %s %s", t, l, e->token, r);
     
     free(l);
     free(r);
@@ -440,7 +471,7 @@ if (!strcmp(e->token,"+") || !strcmp(e->token,"-") ||
         char *base = genExpr(e->left);
         char *idx  = genExpr(e->right);
         char *t    = tmpFor(e);
-        emit("%s = %s [ %s ]", t, base, idx);
+        add_line_to_TAC("%s = %s [ %s ]", t, base, idx);
         free(base);
         free(idx);
         return t;
@@ -480,23 +511,22 @@ if (!strcmp(e->token,"+") || !strcmp(e->token,"-") ||
         // Push parameters in reverse order
         for (int i = top - 1; i >= 0; i--) {
             char *val = genExpr(stk[i]);
-            emit("PushParam %s", val);
+            add_line_to_TAC("PushParam %s", val);
             bytes += resultSize(stk[i]);
             free(val);
         }
         
         char *ret = tmpFor(e);
-        emit("%s = LCall %s", ret, fname);
-        if (bytes) emit("PopParams %d", bytes);
+        add_line_to_TAC("%s = LCall %s", ret, fname);
+        if (bytes) add_line_to_TAC("PopParams %d", bytes);
         return ret;
     }
 
-    /* fallback – treat as identifier */
     printf("DEBUG: Treating '%s' as identifier\n", e->token);
     return strdup(e->token);
 }
 
-/* ======================  STATEMENT  ===================================== */
+/* ====================== handling STATEMENT  ===================================== */
 static int isCmp(const char *t){ return !strcmp(t,"==")||!strcmp(t,"!=")||
                                         !strcmp(t,"<" )||!strcmp(t,">" )||
                                         !strcmp(t,"<=")||!strcmp(t,">="); }
@@ -522,108 +552,92 @@ static void genStmt(Node *s)
         return;
     }
 
-    /* ---------- assignments ----------------------------------------- */
+    /* ---------- handleing assignments ----------------------------------------- */
     if (!strcmp(s->token,"assign")){
         char *rval = genExpr(s->right);
-        emit("%s = %s", s->left->token, rval);
+        add_line_to_TAC("%s = %s", s->left->token, rval);
         return;
     }
     if (!strcmp(s->token,"pointer_assign")){
-        emit("* %s = %s", genExpr(s->left), genExpr(s->right)); return;
+        add_line_to_TAC("* %s = %s", genExpr(s->left), genExpr(s->right)); return;
     }
     if (!strcmp(s->token,"array_assign")){
-        emit("%s [ %s ] = %s",
+        add_line_to_TAC("%s [ %s ] = %s",
              s->left->token,
              genExpr(s->left->right),
              genExpr(s->right));
         return;
     }
     
-    /* ---------- ASSIGNMENT (function call result) ------------------- */
+    /* ---------- handling ASSIGNMENT (function call result) ------------------- */
     if (!strcmp(s->token,"ASSIGNMENT")){
         char *rval = genExpr(s->right);
-        emit("%s = %s", s->left->token, rval);
+        add_line_to_TAC("%s = %s", s->left->token, rval);
         return;
     }
 
-    /* ---------- return ---------------------------------------------- */
+    /* ---------- handling return ---------------------------------------------- */
     if (!strcmp(s->token,"RETURN")){
         if (s->left) {
             char *retval = genExpr(s->left);
-            emit("Return %s", retval);
+            add_line_to_TAC("Return %s", retval);
         } else {
-            emit("Return");
+            add_line_to_TAC("Return");
         }
         return;
     }
 
-    /* ---------- bare function call as statement --------------------- */
+    /* ---------- handling function call --------------------- */
     if (!strcmp(s->token,"FUNC_CALL")){ 
         genExpr(s); 
         return; 
     }
 
-    /* ---------- IF / IF-ELSE ---------------------------------------- */
-    if (!strcmp(s->token,"if")){
-        char *Ltrue=newLabel(), *Lend=newLabel();
-        Node *c=s->left;
-        if (isCmp(c->token)){
-            emit("if %s %s %s goto %s",
-                 genOperand(c->left),c->token,genOperand(c->right),Ltrue);
-            emit("goto %s", Lend);
-        } else {
-            emit("if %s == 0 goto %s", genExpr(c), Lend);
-            emit("goto %s", Ltrue);
-        }
-        emit("%s:",Ltrue); 
-        genStmt(s->right); 
-        emit("%s:",Lend); 
-        return;
-    }
-    if (!strcmp(s->token,"if-else")){
-        Node *c=s->left;
-        Node *then_part = s->right->left;      // then branch
-        Node *else_part = s->right->right->left; // else branch
-        
-        char *Lthen=newLabel(), *Lelse=newLabel(), *Lend=newLabel();
-        if (isCmp(c->token)){
-            emit("if %s %s %s goto %s",
-                 genOperand(c->left),c->token,genOperand(c->right),Lthen);
-            emit("goto %s", Lelse);
-        } else {
-            emit("if %s != 0 goto %s", genExpr(c), Lthen);
-            emit("goto %s", Lelse);
-        }
-        emit("%s:",Lthen); 
-        genStmt(then_part); 
-        emit("goto %s",Lend);
-        emit("%s:",Lelse); 
-        genStmt(else_part);  
-        emit("%s:",Lend); 
+    /* ---------- handling IF / IF-ELSE ---------------------------------------- */
+    if (!strcmp(s->token,"if")) {
+        char *Ltrue = newLabel(), *Lend = newLabel();
+        genBoolExpr(s->left, Ltrue, Lend);
+        add_line_to_TAC("%s:", Ltrue);
+        genStmt(s->right);
+        add_line_to_TAC("%s:", Lend);
         return;
     }
 
-    /* ---------- WHILE ----------------------------------------------- */
-    if (!strcmp(s->token,"while")){
-        char *Lc=newLabel(), *Lb=newLabel(), *Le=newLabel();
-        emit("%s:",Lc);
-        Node *c=s->left;
-        if (isCmp(c->token)){
-            emit("if %s %s %s goto %s",
-                 genOperand(c->left),c->token,genOperand(c->right),Lb);
-            emit("goto %s", Le);
-        } else {
-            emit("if %s != 0 goto %s", genExpr(c), Lb);
-            emit("goto %s", Le);
-        }
-        emit("%s:",Lb); 
-        genStmt(s->right); 
-        emit("goto %s",Lc);
-        emit("%s:",Le); 
+    if (!strcmp(s->token,"if-else")) {
+        Node *cond = s->left;
+        Node *thenPart = s->right->left;
+        Node *elsePart = s->right->right->left;
+
+        char *Lthen = newLabel();
+        char *Lelse = newLabel();
+        char *Lend = newLabel();
+
+        genBoolExpr(cond, Lthen, Lelse);
+        add_line_to_TAC("%s:", Lthen);
+        genStmt(thenPart);
+        add_line_to_TAC("goto %s", Lend);
+        add_line_to_TAC("%s:", Lelse);
+        genStmt(elsePart);
+        add_line_to_TAC("%s:", Lend);
         return;
     }
 
-    /* ---------- FOR -------------------------------------------------- */
+    /* ---------- handling WHILE ----------------------------------------------- */
+    if (!strcmp(s->token,"while")) {
+        char *Lstart = newLabel();
+        char *Lbody = newLabel();
+        char *Lend = newLabel();
+
+        add_line_to_TAC("%s:", Lstart);
+        genBoolExpr(s->left, Lbody, Lend);
+        add_line_to_TAC("%s:", Lbody);
+        genStmt(s->right);
+        add_line_to_TAC("goto %s", Lstart);
+        add_line_to_TAC("%s:", Lend);
+        return;
+    }
+
+    /* ---------- handling FOR -------------------------------------------------- */
     if (!strcmp(s->token,"for")){
         Node *hdr=s->left;
         Node *initVar  = hdr->left->left;
@@ -631,17 +645,17 @@ static void genStmt(Node *s)
         Node *condExpr = hdr->right->left;
         Node *updExpr  = hdr->right->right;
         char *Lc=newLabel(), *Le=newLabel();
-        emit("%s = %s", initVar->token, genExpr(initExpr));
-        emit("%s:",Lc);
-        emit("if %s == 0 goto %s", genExpr(condExpr), Le);
+        add_line_to_TAC("%s = %s", initVar->token, genExpr(initExpr));
+        add_line_to_TAC("%s:",Lc);
+        add_line_to_TAC("if %s == 0 goto %s", genExpr(condExpr), Le);
         genStmt(s->right);
-        emit("%s = %s", updExpr->left->token, genExpr(updExpr->right));
-        emit("goto %s", Lc); 
-        emit("%s:",Le); 
+        add_line_to_TAC("%s = %s", updExpr->left->token, genExpr(updExpr->right));
+        add_line_to_TAC("goto %s", Lc); 
+        add_line_to_TAC("%s:",Le); 
         return;
     }
 
-    /* ---------- BLOCK ------------------------------------------------ */
+    /* ---------- handling BLOCK ------------------------------------------------ */
     if (!strcmp(s->token,"BLOCK")){ 
         genStmt(s->right); 
         return; 
@@ -654,7 +668,7 @@ static void genStmt(Node *s)
 static void patchBegin(TACInstr *beginLine,int bytes)
 {
     char buf[16]; sprintf(buf,"%d",bytes);
-    strcpy(beginLine->text+10,buf);      /* overwrite the '0' */
+    strcpy(beginLine->text+10,buf);      
 }
 
 static void genFunction(Node *fn)
@@ -664,8 +678,8 @@ static void genFunction(Node *fn)
     const char *fname = fn->left->token;
     if (!strcmp(fname,"_main_")) fname="main";
 
-    emit("\n%s:",fname);
-    emit("BeginFunc 0");
+    add_line_to_TAC("\n%s:",fname);
+    add_line_to_TAC("BeginFunc 0");
     TACInstr *beginLine = codeTail;
     tmpBytesInFunc = 0;
 
@@ -687,7 +701,7 @@ static void genFunction(Node *fn)
 
     if (!body) {
         printf("DEBUG: No body found for function %s\n", fname);
-        emit("EndFunc");
+        add_line_to_TAC("EndFunc");
         return;
     }
 
@@ -697,7 +711,7 @@ static void genFunction(Node *fn)
     Node *stmts = body->right;     // statements
 
     printf("DEBUG: About to process statements\n");
-    genStmt(stmts);
+    genStmt(stmts); 
 
     int locals = 0;
     Node *decl = body ? body->left : NULL;
@@ -721,7 +735,7 @@ static void genFunction(Node *fn)
     }
     printf("DEBUG: %s --> locals = %d , temp = %d, total = %d\n", fname,locals,tmpBytesInFunc,tmpBytesInFunc+locals);
     patchBegin(beginLine, tmpBytesInFunc + locals);
-    emit("EndFunc");
+    add_line_to_TAC("EndFunc");
 }
 
 static void genGlobal(Node *n)
@@ -737,13 +751,13 @@ static void genGlobal(Node *n)
     }
 }
 
-void generate_3ac(Node *root)
+void tac_creation(Node *root)
 {
-    codeHead=codeTail=NULL; tmpCnt=0; lblCnt=1;
+    codeHead=codeTail=NULL; temp_counter=0; lable_counter=0;
     genGlobal(root);
 
     FILE *f = fopen("output.ac3","w");
-    if (f){ dumpCode(f); fclose(f); }
+    if (f){ print_TAC(f); fclose(f); }
     printf("3AC written to output.ac3\n");
 }
 /* ========================================================================== */
@@ -752,7 +766,7 @@ void generate_3ac(Node *root)
 
 
 
-#line 756 "y.tab.c"
+#line 770 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -925,12 +939,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 687 "parser.y"
+#line 701 "parser.y"
 
 char *str;
 struct Node *node;
 
-#line 934 "y.tab.c"
+#line 948 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -1442,17 +1456,17 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   714,   714,   721,   722,   724,   725,   728,   732,   727,
-     762,   767,   780,   761,   811,   816,   822,   825,   827,   828,
-     831,   830,   846,   847,   848,   849,   850,   851,   852,   853,
-     856,   859,   861,   862,   865,   864,   873,   874,   877,   884,
-     893,   902,   913,   914,   915,   916,   917,   918,   919,   920,
-     923,   926,   929,   930,   931,   932,   933,   934,   935,   936,
-     938,   956,   969,   972,   975,   979,   984,   988,   992,   995,
-    1003,  1018,  1018,  1029,  1035,  1039,  1048,  1057,  1069,  1071,
-    1075,  1078,  1079,  1082,  1083,  1084,  1085,  1086,  1087,  1088,
-    1089,  1090,  1091,  1092,  1093,  1094,  1095,  1096,  1103,  1113,
-    1115,  1122,  1123,  1130,  1140
+       0,   728,   728,   735,   736,   738,   739,   742,   746,   741,
+     776,   781,   794,   775,   825,   830,   836,   839,   841,   842,
+     845,   844,   860,   861,   862,   863,   864,   865,   866,   867,
+     870,   873,   875,   876,   879,   878,   887,   888,   891,   898,
+     907,   916,   927,   928,   929,   930,   931,   932,   933,   934,
+     937,   940,   943,   944,   945,   946,   947,   948,   949,   950,
+     952,   970,   983,   986,   989,   993,   998,  1002,  1006,  1009,
+    1017,  1032,  1032,  1043,  1049,  1053,  1062,  1071,  1083,  1085,
+    1089,  1092,  1093,  1096,  1097,  1098,  1099,  1100,  1101,  1102,
+    1103,  1104,  1105,  1106,  1107,  1108,  1109,  1110,  1117,  1127,
+    1129,  1136,  1137,  1144,  1154
 };
 #endif
 
@@ -2216,49 +2230,49 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: function_list  */
-#line 715 "parser.y"
+#line 729 "parser.y"
 {
     (yyval.node) = (yyvsp[0].node);
     ast_root=(yyval.node);
     printtree((yyval.node), 0);
 }
-#line 2226 "y.tab.c"
+#line 2240 "y.tab.c"
     break;
 
   case 3: /* function_list: function_list function_item  */
-#line 721 "parser.y"
+#line 735 "parser.y"
                                             { (yyval.node) = mkNode("Function_list", (yyvsp[-1].node), (yyvsp[0].node)); }
-#line 2232 "y.tab.c"
+#line 2246 "y.tab.c"
     break;
 
   case 4: /* function_list: function_item  */
-#line 722 "parser.y"
+#line 736 "parser.y"
                 { (yyval.node) = (yyvsp[0].node); }
-#line 2238 "y.tab.c"
+#line 2252 "y.tab.c"
     break;
 
   case 5: /* function_item: function  */
-#line 724 "parser.y"
+#line 738 "parser.y"
                          {(yyval.node)=(yyvsp[0].node);}
-#line 2244 "y.tab.c"
-    break;
-
-  case 6: /* function_item: main_function  */
-#line 725 "parser.y"
-                                {(yyval.node)=(yyvsp[0].node);}
-#line 2250 "y.tab.c"
-    break;
-
-  case 7: /* $@1: %empty  */
-#line 728 "parser.y"
-{
-    expected_param_num = 1;
-}
 #line 2258 "y.tab.c"
     break;
 
+  case 6: /* function_item: main_function  */
+#line 739 "parser.y"
+                                {(yyval.node)=(yyvsp[0].node);}
+#line 2264 "y.tab.c"
+    break;
+
+  case 7: /* $@1: %empty  */
+#line 742 "parser.y"
+{
+    expected_param_num = 1;
+}
+#line 2272 "y.tab.c"
+    break;
+
   case 8: /* $@2: %empty  */
-#line 732 "parser.y"
+#line 746 "parser.y"
 {
 
     if(has_main)
@@ -2274,11 +2288,11 @@ yyreduce:
 
     enter_scope();
 }
-#line 2278 "y.tab.c"
+#line 2292 "y.tab.c"
     break;
 
   case 9: /* main_function: DEF MAIN_FUNC OPENPAREN $@1 parameter_list CLOSEPAREN $@2 COLON opt_var BEGIN_T stat_list END  */
-#line 748 "parser.y"
+#line 762 "parser.y"
 {
     push_return(TYPE_VOID);
 
@@ -2291,20 +2305,20 @@ yyreduce:
     pop_return();
     exit_scope();
 }
-#line 2295 "y.tab.c"
+#line 2309 "y.tab.c"
     break;
 
   case 10: /* $@3: %empty  */
-#line 762 "parser.y"
+#line 776 "parser.y"
         {
             expected_param_num = 1;
             // Common code from both $@3 and $@5 actions
         }
-#line 2304 "y.tab.c"
+#line 2318 "y.tab.c"
     break;
 
   case 11: /* $@4: %empty  */
-#line 767 "parser.y"
+#line 781 "parser.y"
         {
             if(find_symbol_in_scope((yyvsp[-4].str),current_scope)){
                 semantic_error("Function with the same name already exists in the current scope",(yyvsp[-4].str));
@@ -2316,11 +2330,11 @@ yyreduce:
             extract_param_types((yyvsp[-1].node),&param_types,&param_count);
             add_function((yyvsp[-4].str), TYPE_VOID, param_count, param_types);
         }
-#line 2320 "y.tab.c"
+#line 2334 "y.tab.c"
     break;
 
   case 12: /* $@5: %empty  */
-#line 780 "parser.y"
+#line 794 "parser.y"
         {
             // Store return type
             Symbol *f = find_function((yyvsp[-7].str));
@@ -2335,11 +2349,11 @@ yyreduce:
             extract_param_types((yyvsp[-4].node),&param_types,&param_count);
             add_parameters_to_scope((yyvsp[-4].node),param_types,param_count);
         }
-#line 2339 "y.tab.c"
+#line 2353 "y.tab.c"
     break;
 
   case 13: /* function: DEF ID OPENPAREN $@3 parameter_list CLOSEPAREN $@4 COLON returns_spec $@5 opt_var BEGIN_T stat_list END  */
-#line 795 "parser.y"
+#line 809 "parser.y"
         {
             /* create nodes for readability */
             Node *idnode = mkNode((yyvsp[-12].str), NULL, NULL);
@@ -2354,55 +2368,55 @@ yyreduce:
             pop_return();
             exit_scope();
         }
-#line 2358 "y.tab.c"
+#line 2372 "y.tab.c"
     break;
 
   case 14: /* returns_spec: RETURNS type  */
-#line 811 "parser.y"
+#line 825 "parser.y"
                             {
                 if(strcmp((yyvsp[0].node)->token, "STRING") == 0){
                     semantic_error("Return type of a function cannot be STRING", (yyvsp[0].node)->token);}
                 push_return(get_type_from_string((yyvsp[0].node)->token));
                 (yyval.node) = (yyvsp[0].node);}
-#line 2368 "y.tab.c"
+#line 2382 "y.tab.c"
     break;
 
   case 15: /* returns_spec: %empty  */
-#line 816 "parser.y"
+#line 830 "parser.y"
                   {
                     push_return(TYPE_VOID); 
                     (yyval.node)=mkNode("RETURN VOID",NULL,NULL);}
-#line 2376 "y.tab.c"
-    break;
-
-  case 16: /* parameter_list: %empty  */
-#line 822 "parser.y"
-{
-    (yyval.node) = mkNode("PARAM_EMPTY", NULL, NULL);
-}
-#line 2384 "y.tab.c"
-    break;
-
-  case 17: /* parameter_list: param_decl_list  */
-#line 825 "parser.y"
-                  { (yyval.node) = (yyvsp[0].node); }
 #line 2390 "y.tab.c"
     break;
 
+  case 16: /* parameter_list: %empty  */
+#line 836 "parser.y"
+{
+    (yyval.node) = mkNode("PARAM_EMPTY", NULL, NULL);
+}
+#line 2398 "y.tab.c"
+    break;
+
+  case 17: /* parameter_list: param_decl_list  */
+#line 839 "parser.y"
+                  { (yyval.node) = (yyvsp[0].node); }
+#line 2404 "y.tab.c"
+    break;
+
   case 18: /* param_decl_list: param_decl  */
-#line 827 "parser.y"
+#line 841 "parser.y"
                              { (yyval.node) = (yyvsp[0].node); }
-#line 2396 "y.tab.c"
+#line 2410 "y.tab.c"
     break;
 
   case 19: /* param_decl_list: param_decl_list SEMICOLON param_decl  */
-#line 828 "parser.y"
+#line 842 "parser.y"
                                        { (yyval.node) = mkNode("PARAMS_LIST", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2402 "y.tab.c"
+#line 2416 "y.tab.c"
     break;
 
   case 20: /* $@6: %empty  */
-#line 831 "parser.y"
+#line 845 "parser.y"
 {
     int param_num = 0;
     sscanf((yyvsp[0].str),"par%d", &param_num);
@@ -2415,119 +2429,119 @@ yyreduce:
         }
     expected_param_num = param_num+1;
 }
-#line 2419 "y.tab.c"
+#line 2433 "y.tab.c"
     break;
 
   case 21: /* param_decl: PAR $@6 type COLON ID  */
-#line 844 "parser.y"
+#line 858 "parser.y"
               { (yyval.node) = mkNode("PARAM", (yyvsp[-2].node), mkNode((yyvsp[0].str), NULL, NULL)); }
-#line 2425 "y.tab.c"
+#line 2439 "y.tab.c"
     break;
 
   case 22: /* type: INT  */
-#line 846 "parser.y"
+#line 860 "parser.y"
            { (yyval.node) = mkNode("INT", NULL, NULL); }
-#line 2431 "y.tab.c"
+#line 2445 "y.tab.c"
     break;
 
   case 23: /* type: BOOL  */
-#line 847 "parser.y"
+#line 861 "parser.y"
        { (yyval.node) = mkNode("BOOL", NULL, NULL); }
-#line 2437 "y.tab.c"
+#line 2451 "y.tab.c"
     break;
 
   case 24: /* type: CHAR  */
-#line 848 "parser.y"
+#line 862 "parser.y"
        { (yyval.node) = mkNode("CHAR", NULL, NULL); }
-#line 2443 "y.tab.c"
+#line 2457 "y.tab.c"
     break;
 
   case 25: /* type: REAL  */
-#line 849 "parser.y"
+#line 863 "parser.y"
        { (yyval.node) = mkNode("REAL", NULL, NULL); }
-#line 2449 "y.tab.c"
+#line 2463 "y.tab.c"
     break;
 
   case 26: /* type: STRING  */
-#line 850 "parser.y"
+#line 864 "parser.y"
          { (yyval.node) = mkNode("STRING", NULL, NULL); }
-#line 2455 "y.tab.c"
+#line 2469 "y.tab.c"
     break;
 
   case 27: /* type: INTPTR  */
-#line 851 "parser.y"
+#line 865 "parser.y"
          { (yyval.node) = mkNode("INTPTR", NULL, NULL); }
-#line 2461 "y.tab.c"
+#line 2475 "y.tab.c"
     break;
 
   case 28: /* type: CHARPTR  */
-#line 852 "parser.y"
+#line 866 "parser.y"
           { (yyval.node) = mkNode("CHARPTR", NULL, NULL); }
-#line 2467 "y.tab.c"
-    break;
-
-  case 29: /* type: REALPTR  */
-#line 853 "parser.y"
-          { (yyval.node) = mkNode("REALPTR", NULL, NULL); }
-#line 2473 "y.tab.c"
-    break;
-
-  case 30: /* opt_var: %empty  */
-#line 856 "parser.y"
-{
-    (yyval.node) = mkNode("VAR_EMPTY", NULL, NULL);
-}
 #line 2481 "y.tab.c"
     break;
 
-  case 31: /* opt_var: VAR var_decl_list  */
-#line 859 "parser.y"
-                    { (yyval.node) = (yyvsp[0].node); }
+  case 29: /* type: REALPTR  */
+#line 867 "parser.y"
+          { (yyval.node) = mkNode("REALPTR", NULL, NULL); }
 #line 2487 "y.tab.c"
     break;
 
+  case 30: /* opt_var: %empty  */
+#line 870 "parser.y"
+{
+    (yyval.node) = mkNode("VAR_EMPTY", NULL, NULL);
+}
+#line 2495 "y.tab.c"
+    break;
+
+  case 31: /* opt_var: VAR var_decl_list  */
+#line 873 "parser.y"
+                    { (yyval.node) = (yyvsp[0].node); }
+#line 2501 "y.tab.c"
+    break;
+
   case 32: /* var_decl_list: var_decl  */
-#line 861 "parser.y"
+#line 875 "parser.y"
                          { (yyval.node) = (yyvsp[0].node); }
-#line 2493 "y.tab.c"
-    break;
-
-  case 33: /* var_decl_list: var_decl_list var_decl  */
-#line 862 "parser.y"
-                         { (yyval.node) = mkNode("VAR_DECL", (yyvsp[-1].node), (yyvsp[0].node)); }
-#line 2499 "y.tab.c"
-    break;
-
-  case 34: /* $@7: %empty  */
-#line 865 "parser.y"
-        {
-            current_var_type=get_type_from_string((yyvsp[-1].node)->token);
-        }
 #line 2507 "y.tab.c"
     break;
 
-  case 35: /* var_decl: TYPE type COLON $@7 var_item_list SEMICOLON  */
-#line 869 "parser.y"
-{
-    current_var_type=TYPE_INVALID;
-     (yyval.node) = mkNode("VAR_DECL", (yyvsp[-4].node), (yyvsp[-1].node)); }
-#line 2515 "y.tab.c"
+  case 33: /* var_decl_list: var_decl_list var_decl  */
+#line 876 "parser.y"
+                         { (yyval.node) = mkNode("VAR_DECL", (yyvsp[-1].node), (yyvsp[0].node)); }
+#line 2513 "y.tab.c"
     break;
 
-  case 36: /* var_item_list: var_item  */
-#line 873 "parser.y"
-                         { (yyval.node) = (yyvsp[0].node); }
+  case 34: /* $@7: %empty  */
+#line 879 "parser.y"
+        {
+            current_var_type=get_type_from_string((yyvsp[-1].node)->token);
+        }
 #line 2521 "y.tab.c"
     break;
 
+  case 35: /* var_decl: TYPE type COLON $@7 var_item_list SEMICOLON  */
+#line 883 "parser.y"
+{
+    current_var_type=TYPE_INVALID;
+     (yyval.node) = mkNode("VAR_DECL", (yyvsp[-4].node), (yyvsp[-1].node)); }
+#line 2529 "y.tab.c"
+    break;
+
+  case 36: /* var_item_list: var_item  */
+#line 887 "parser.y"
+                         { (yyval.node) = (yyvsp[0].node); }
+#line 2535 "y.tab.c"
+    break;
+
   case 37: /* var_item_list: var_item_list COMMA var_item  */
-#line 874 "parser.y"
+#line 888 "parser.y"
                                { (yyval.node) = mkNode("VAR_ITEM_LIST", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2527 "y.tab.c"
+#line 2541 "y.tab.c"
     break;
 
   case 38: /* var_item: ID  */
-#line 877 "parser.y"
+#line 891 "parser.y"
     { 
         if(find_symbol_in_scope((yyvsp[0].str),current_scope)){
             semantic_error("Variable already defined in the current scope",(yyvsp[0].str));
@@ -2535,11 +2549,11 @@ yyreduce:
         add_symbol((yyvsp[0].str),current_var_type,KIND_VARIABLE);
     
         (yyval.node) = mkNode("VAR", mkNode((yyvsp[0].str), NULL, NULL), NULL); }
-#line 2539 "y.tab.c"
+#line 2553 "y.tab.c"
     break;
 
   case 39: /* var_item: ID COLON literal  */
-#line 885 "parser.y"
+#line 899 "parser.y"
 {   
     if(find_symbol_in_scope((yyvsp[-2].str),current_scope)){
         semantic_error("Variable already defined in the current scope",(yyvsp[-2].str));
@@ -2548,11 +2562,11 @@ yyreduce:
     add_symbol((yyvsp[-2].str),lit_type,KIND_VARIABLE);
 
     (yyval.node) = mkNode("VAR_ASSIGN", mkNode((yyvsp[-2].str), NULL, NULL), (yyvsp[0].node)); }
-#line 2552 "y.tab.c"
+#line 2566 "y.tab.c"
     break;
 
   case 40: /* var_item: ID OPENBRACKET DEC_LIT CLOSEBRACKET  */
-#line 894 "parser.y"
+#line 908 "parser.y"
 {
     if(find_symbol_in_scope((yyvsp[-3].str),current_scope)){
         semantic_error("Variable already defined in the current scope",(yyvsp[-3].str));
@@ -2561,11 +2575,11 @@ yyreduce:
 
     (yyval.node) = mkNode("STRING_VAR", mkNode((yyvsp[-3].str), NULL, NULL), mkNode((yyvsp[-1].str), NULL, NULL));
 }
-#line 2565 "y.tab.c"
+#line 2579 "y.tab.c"
     break;
 
   case 41: /* var_item: ID OPENBRACKET DEC_LIT CLOSEBRACKET COLON STRING_LIT  */
-#line 903 "parser.y"
+#line 917 "parser.y"
 {
     if(find_symbol_in_scope((yyvsp[-5].str),current_scope)){
         semantic_error("Variable already defined in the current scope",(yyvsp[-5].str));
@@ -2575,121 +2589,121 @@ yyreduce:
     (yyval.node) = mkNode("STRING_VAL_ASSIGN", mkNode("STRING_VAR", mkNode((yyvsp[-5].str), NULL, NULL), mkNode((yyvsp[-3].str), NULL, NULL)),
                 mkNode((yyvsp[0].str), NULL, NULL));
 }
-#line 2579 "y.tab.c"
+#line 2593 "y.tab.c"
     break;
 
   case 42: /* literal: DEC_LIT  */
-#line 913 "parser.y"
+#line 927 "parser.y"
                   { (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
-#line 2585 "y.tab.c"
+#line 2599 "y.tab.c"
     break;
 
   case 43: /* literal: B_TRUE  */
-#line 914 "parser.y"
+#line 928 "parser.y"
          { (yyval.node) = mkNode("TRUE", NULL, NULL); }
-#line 2591 "y.tab.c"
+#line 2605 "y.tab.c"
     break;
 
   case 44: /* literal: B_FALSE  */
-#line 915 "parser.y"
+#line 929 "parser.y"
           { (yyval.node) = mkNode("FALSE", NULL, NULL); }
-#line 2597 "y.tab.c"
+#line 2611 "y.tab.c"
     break;
 
   case 45: /* literal: CHAR_LIT  */
-#line 916 "parser.y"
+#line 930 "parser.y"
            { (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
-#line 2603 "y.tab.c"
+#line 2617 "y.tab.c"
     break;
 
   case 46: /* literal: STRING_LIT  */
-#line 917 "parser.y"
+#line 931 "parser.y"
              { (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
-#line 2609 "y.tab.c"
+#line 2623 "y.tab.c"
     break;
 
   case 47: /* literal: HEX_LIT  */
-#line 918 "parser.y"
+#line 932 "parser.y"
           { (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
-#line 2615 "y.tab.c"
+#line 2629 "y.tab.c"
     break;
 
   case 48: /* literal: REAL_LIT  */
-#line 919 "parser.y"
+#line 933 "parser.y"
            { (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
-#line 2621 "y.tab.c"
-    break;
-
-  case 49: /* literal: NULLL  */
-#line 920 "parser.y"
-        { (yyval.node) = mkNode("null", NULL, NULL); }
-#line 2627 "y.tab.c"
-    break;
-
-  case 50: /* stat_list: %empty  */
-#line 923 "parser.y"
-{
-    (yyval.node) = mkNode("empty_state_list", NULL, NULL);
-}
 #line 2635 "y.tab.c"
     break;
 
-  case 51: /* stat_list: stat stat_list  */
-#line 926 "parser.y"
-                 { (yyval.node) = mkNode("statements", (yyvsp[-1].node), (yyvsp[0].node)); }
+  case 49: /* literal: NULLL  */
+#line 934 "parser.y"
+        { (yyval.node) = mkNode("null", NULL, NULL); }
 #line 2641 "y.tab.c"
     break;
 
+  case 50: /* stat_list: %empty  */
+#line 937 "parser.y"
+{
+    (yyval.node) = mkNode("empty_state_list", NULL, NULL);
+}
+#line 2649 "y.tab.c"
+    break;
+
+  case 51: /* stat_list: stat stat_list  */
+#line 940 "parser.y"
+                 { (yyval.node) = mkNode("statements", (yyvsp[-1].node), (yyvsp[0].node)); }
+#line 2655 "y.tab.c"
+    break;
+
   case 52: /* stat: function  */
-#line 929 "parser.y"
+#line 943 "parser.y"
                 { (yyval.node) = (yyvsp[0].node); }
-#line 2647 "y.tab.c"
+#line 2661 "y.tab.c"
     break;
 
   case 53: /* stat: if_stat  */
-#line 930 "parser.y"
+#line 944 "parser.y"
           { (yyval.node) = (yyvsp[0].node); }
-#line 2653 "y.tab.c"
+#line 2667 "y.tab.c"
     break;
 
   case 54: /* stat: while_stat  */
-#line 931 "parser.y"
+#line 945 "parser.y"
              { (yyval.node) = (yyvsp[0].node); }
-#line 2659 "y.tab.c"
+#line 2673 "y.tab.c"
     break;
 
   case 55: /* stat: for_stat  */
-#line 932 "parser.y"
+#line 946 "parser.y"
            { (yyval.node) = (yyvsp[0].node); }
-#line 2665 "y.tab.c"
+#line 2679 "y.tab.c"
     break;
 
   case 56: /* stat: do_while_stat  */
-#line 933 "parser.y"
+#line 947 "parser.y"
                 { (yyval.node) = (yyvsp[0].node); }
-#line 2671 "y.tab.c"
+#line 2685 "y.tab.c"
     break;
 
   case 57: /* stat: block_stat  */
-#line 934 "parser.y"
+#line 948 "parser.y"
              { (yyval.node) = (yyvsp[0].node); }
-#line 2677 "y.tab.c"
+#line 2691 "y.tab.c"
     break;
 
   case 58: /* stat: return_stat  */
-#line 935 "parser.y"
+#line 949 "parser.y"
               {(yyval.node) = (yyvsp[0].node);}
-#line 2683 "y.tab.c"
+#line 2697 "y.tab.c"
     break;
 
   case 59: /* stat: call_stat  */
-#line 936 "parser.y"
+#line 950 "parser.y"
             { (yyval.node) = (yyvsp[0].node); }
-#line 2689 "y.tab.c"
+#line 2703 "y.tab.c"
     break;
 
   case 60: /* call_stat: ID ASSIGNMENT CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON  */
-#line 939 "parser.y"
+#line 953 "parser.y"
 {
     Symbol *func=find_function((yyvsp[-4].str));
     Symbol *var=find_symbol((yyvsp[-7].str));
@@ -2707,11 +2721,11 @@ yyreduce:
     check_type_compatibility(var->type, func->return_type, "function-call assignment");
     (yyval.node) = mkNode("ASSIGNMENT", mkNode((yyvsp[-7].str), NULL, NULL), mkNode("CALL", mkNode((yyvsp[-4].str), NULL, NULL), (yyvsp[-2].node)));
 }
-#line 2711 "y.tab.c"
+#line 2725 "y.tab.c"
     break;
 
   case 61: /* call_stat: CALL ID OPENPAREN expression_list CLOSEPAREN SEMICOLON  */
-#line 957 "parser.y"
+#line 971 "parser.y"
 {
     Symbol *func=find_function((yyvsp[-4].str));
     if(!func){
@@ -2720,120 +2734,120 @@ yyreduce:
     verify_argument_type((yyvsp[-2].node), func);
     (yyval.node) = mkNode("FUNC_CALL", mkNode((yyvsp[-4].str), NULL, NULL), (yyvsp[-2].node));
 }
-#line 2724 "y.tab.c"
+#line 2738 "y.tab.c"
     break;
 
   case 62: /* if_stat: IF expression COLON block_stat  */
-#line 969 "parser.y"
+#line 983 "parser.y"
                                          { 
     verify_bool((yyvsp[-2].node), "IF statement");    
     (yyval.node) = mkNode("if", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2732 "y.tab.c"
+#line 2746 "y.tab.c"
     break;
 
   case 63: /* if_stat: IF expression COLON block_stat ELSE COLON block_stat  */
-#line 972 "parser.y"
+#line 986 "parser.y"
                                                        { 
     verify_bool((yyvsp[-5].node), "IF statement");    
     (yyval.node) = mkNode("if-else", (yyvsp[-5].node), mkNode("then", (yyvsp[-3].node), mkNode("else", (yyvsp[0].node), NULL))); }
-#line 2740 "y.tab.c"
+#line 2754 "y.tab.c"
     break;
 
   case 64: /* if_stat: IF expression COLON block_stat ELIF expression COLON block_stat  */
-#line 975 "parser.y"
+#line 989 "parser.y"
                                                                   { 
     verify_bool((yyvsp[-6].node), "IF statement");    
     verify_bool((yyvsp[-2].node), "IF statement");    
     (yyval.node) = mkNode("if-elif", (yyvsp[-6].node), mkNode("then", (yyvsp[-4].node), mkNode("elif-cond", (yyvsp[-2].node), (yyvsp[0].node)))); }
-#line 2749 "y.tab.c"
+#line 2763 "y.tab.c"
     break;
 
   case 65: /* if_stat: IF expression COLON block_stat ELIF expression COLON block_stat ELSE COLON block_stat  */
-#line 979 "parser.y"
+#line 993 "parser.y"
                                                                                         { 
     verify_bool((yyvsp[-9].node), "IF statement");    
     verify_bool((yyvsp[-5].node), "IF statement");    
     (yyval.node) = mkNode("if-elif-else", (yyvsp[-9].node), mkNode("then", (yyvsp[-7].node), mkNode("elif-cond", (yyvsp[-5].node), mkNode("elif-then", (yyvsp[-3].node), mkNode("else", (yyvsp[0].node), NULL))))); }
-#line 2758 "y.tab.c"
+#line 2772 "y.tab.c"
     break;
 
   case 66: /* while_stat: WHILE expression COLON block_stat  */
-#line 984 "parser.y"
+#line 998 "parser.y"
                                                { 
     verify_bool((yyvsp[-2].node), "WHILE statement");    
     (yyval.node) = mkNode("while", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2766 "y.tab.c"
-    break;
-
-  case 67: /* do_while_stat: DO COLON block_stat WHILE expression SEMICOLON  */
-#line 988 "parser.y"
-                                                               { 
-    verify_bool((yyvsp[-1].node), "DO-WHILE statement");    
-    (yyval.node) = mkNode("do-while", (yyvsp[-3].node), mkNode("cond", (yyvsp[-1].node), NULL)); }
-#line 2774 "y.tab.c"
-    break;
-
-  case 68: /* for_stat: FOR for_header COLON block_stat  */
-#line 992 "parser.y"
-                                           { (yyval.node) = mkNode("for", (yyvsp[-2].node), (yyvsp[0].node)); }
 #line 2780 "y.tab.c"
     break;
 
+  case 67: /* do_while_stat: DO COLON block_stat WHILE expression SEMICOLON  */
+#line 1002 "parser.y"
+                                                               { 
+    verify_bool((yyvsp[-1].node), "DO-WHILE statement");    
+    (yyval.node) = mkNode("do-while", (yyvsp[-3].node), mkNode("cond", (yyvsp[-1].node), NULL)); }
+#line 2788 "y.tab.c"
+    break;
+
+  case 68: /* for_stat: FOR for_header COLON block_stat  */
+#line 1006 "parser.y"
+                                           { (yyval.node) = mkNode("for", (yyvsp[-2].node), (yyvsp[0].node)); }
+#line 2794 "y.tab.c"
+    break;
+
   case 69: /* for_header: OPENPAREN ID ASSIGNMENT expression SEMICOLON expression SEMICOLON update_exp CLOSEPAREN  */
-#line 996 "parser.y"
+#line 1010 "parser.y"
 {
     verify_assignment(mkNode((yyvsp[-7].str),NULL,NULL), (yyvsp[-5].node));
     verify_bool((yyvsp[-3].node), "FOR statement");    
     (yyval.node) = mkNode("for-header", mkNode("init", mkNode((yyvsp[-7].str), NULL, NULL), (yyvsp[-5].node)),
                 mkNode("loop", (yyvsp[-3].node), (yyvsp[-1].node)));
 }
-#line 2791 "y.tab.c"
+#line 2805 "y.tab.c"
     break;
 
   case 70: /* update_exp: ID ASSIGNMENT expression  */
-#line 1003 "parser.y"
+#line 1017 "parser.y"
                                       {
     verify_assignment(mkNode((yyvsp[-2].str),NULL,NULL), (yyvsp[0].node));
     (yyval.node) = mkNode("update", mkNode((yyvsp[-2].str), NULL, NULL), (yyvsp[0].node)); }
-#line 2799 "y.tab.c"
+#line 2813 "y.tab.c"
     break;
 
   case 71: /* $@8: %empty  */
-#line 1018 "parser.y"
+#line 1032 "parser.y"
            {
                /* Enter new scope before processing opt_var */
                enter_scope();
            }
-#line 2808 "y.tab.c"
+#line 2822 "y.tab.c"
     break;
 
   case 72: /* block_stat: $@8 opt_var BEGIN_T stat_list END  */
-#line 1023 "parser.y"
+#line 1037 "parser.y"
            {
                /* Exit scope when block ends */
                
                (yyval.node) = mkNode("BLOCK", (yyvsp[-3].node), (yyvsp[-1].node));
                exit_scope();
            }
-#line 2819 "y.tab.c"
-    break;
-
-  case 73: /* block_stat: single_statement  */
-#line 1030 "parser.y"
-          {
-               (yyval.node) = (yyvsp[0].node);
-          }
-#line 2827 "y.tab.c"
-    break;
-
-  case 74: /* single_statement: assignment_stat  */
-#line 1035 "parser.y"
-                                  { (yyval.node) = mkNode("STATEMENT", (yyvsp[0].node), NULL); }
 #line 2833 "y.tab.c"
     break;
 
+  case 73: /* block_stat: single_statement  */
+#line 1044 "parser.y"
+          {
+               (yyval.node) = (yyvsp[0].node);
+          }
+#line 2841 "y.tab.c"
+    break;
+
+  case 74: /* single_statement: assignment_stat  */
+#line 1049 "parser.y"
+                                  { (yyval.node) = mkNode("STATEMENT", (yyvsp[0].node), NULL); }
+#line 2847 "y.tab.c"
+    break;
+
   case 75: /* assignment_stat: ID ASSIGNMENT expression SEMICOLON  */
-#line 1040 "parser.y"
+#line 1054 "parser.y"
 {
     Symbol *var=find_symbol((yyvsp[-3].str));
     if(!var){
@@ -2842,11 +2856,11 @@ yyreduce:
     verify_assignment(mkNode((yyvsp[-3].str),NULL,NULL), (yyvsp[-1].node));
     (yyval.node) = mkNode("assign", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node)); 
 }
-#line 2846 "y.tab.c"
+#line 2860 "y.tab.c"
     break;
 
   case 76: /* assignment_stat: MULTI ID ASSIGNMENT expression SEMICOLON  */
-#line 1049 "parser.y"
+#line 1063 "parser.y"
 { 
     Symbol *var=find_symbol((yyvsp[-3].str));
     if(!var){
@@ -2855,11 +2869,11 @@ yyreduce:
     Node *point   = mkNode("dereference", mkNode((yyvsp[-3].str),NULL,NULL), NULL);
     verify_assignment(point, (yyvsp[-1].node));
     (yyval.node) = mkNode("pointer_assign", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node)); }
-#line 2859 "y.tab.c"
+#line 2873 "y.tab.c"
     break;
 
   case 77: /* assignment_stat: ID OPENBRACKET expression CLOSEBRACKET ASSIGNMENT expression SEMICOLON  */
-#line 1058 "parser.y"
+#line 1072 "parser.y"
 {
     verify_string_index(mkNode((yyvsp[-6].str),NULL,NULL), (yyvsp[-4].node));
     Symbol *var=find_symbol((yyvsp[-6].str));
@@ -2869,138 +2883,138 @@ yyreduce:
      verify_assignment(mkNode("array_element", mkNode((yyvsp[-6].str),NULL,NULL), (yyvsp[-4].node)),(yyvsp[-1].node));
     (yyval.node) = mkNode("array_assign", mkNode((yyvsp[-6].str), (yyvsp[-4].node), NULL), (yyvsp[-1].node));
 }
-#line 2873 "y.tab.c"
+#line 2887 "y.tab.c"
     break;
 
   case 78: /* return_stat: RETURN expression SEMICOLON  */
-#line 1070 "parser.y"
+#line 1084 "parser.y"
       { verify_return((yyvsp[-1].node)); (yyval.node) = mkNode("RETURN", (yyvsp[-1].node), NULL); }
-#line 2879 "y.tab.c"
-    break;
-
-  case 79: /* return_stat: RETURN SEMICOLON  */
-#line 1072 "parser.y"
-      { verify_return(NULL); (yyval.node) = mkNode("RETURN", NULL, NULL); }
-#line 2885 "y.tab.c"
-    break;
-
-  case 80: /* expression_list: %empty  */
-#line 1075 "parser.y"
-{
-    (yyval.node) = NULL; /* Empty expression list */
-}
 #line 2893 "y.tab.c"
     break;
 
-  case 81: /* expression_list: expression  */
-#line 1078 "parser.y"
-             { (yyval.node) = (yyvsp[0].node); }
+  case 79: /* return_stat: RETURN SEMICOLON  */
+#line 1086 "parser.y"
+      { verify_return(NULL); (yyval.node) = mkNode("RETURN", NULL, NULL); }
 #line 2899 "y.tab.c"
     break;
 
+  case 80: /* expression_list: %empty  */
+#line 1089 "parser.y"
+{
+    (yyval.node) = NULL; /* Empty expression list */
+}
+#line 2907 "y.tab.c"
+    break;
+
+  case 81: /* expression_list: expression  */
+#line 1092 "parser.y"
+             { (yyval.node) = (yyvsp[0].node); }
+#line 2913 "y.tab.c"
+    break;
+
   case 82: /* expression_list: expression COMMA expression_list  */
-#line 1079 "parser.y"
+#line 1093 "parser.y"
                                    { (yyval.node) = mkNode("expr_list", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2905 "y.tab.c"
+#line 2919 "y.tab.c"
     break;
 
   case 83: /* expression: expression PLUS expression  */
-#line 1082 "parser.y"
+#line 1096 "parser.y"
                                         { (yyval.node) = mkNode("+", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2911 "y.tab.c"
+#line 2925 "y.tab.c"
     break;
 
   case 84: /* expression: expression MINUS expression  */
-#line 1083 "parser.y"
+#line 1097 "parser.y"
                               { (yyval.node) = mkNode("-", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2917 "y.tab.c"
+#line 2931 "y.tab.c"
     break;
 
   case 85: /* expression: expression MULTI expression  */
-#line 1084 "parser.y"
+#line 1098 "parser.y"
                               { (yyval.node) = mkNode("*", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2923 "y.tab.c"
+#line 2937 "y.tab.c"
     break;
 
   case 86: /* expression: expression DIV expression  */
-#line 1085 "parser.y"
+#line 1099 "parser.y"
                             { (yyval.node) = mkNode("/", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2929 "y.tab.c"
+#line 2943 "y.tab.c"
     break;
 
   case 87: /* expression: expression AND expression  */
-#line 1086 "parser.y"
+#line 1100 "parser.y"
                             { (yyval.node) = mkNode("and", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2935 "y.tab.c"
+#line 2949 "y.tab.c"
     break;
 
   case 88: /* expression: expression OR expression  */
-#line 1087 "parser.y"
+#line 1101 "parser.y"
                            { (yyval.node) = mkNode("or", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2941 "y.tab.c"
+#line 2955 "y.tab.c"
     break;
 
   case 89: /* expression: expression EQL expression  */
-#line 1088 "parser.y"
+#line 1102 "parser.y"
                             { (yyval.node) = mkNode("==", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2947 "y.tab.c"
+#line 2961 "y.tab.c"
     break;
 
   case 90: /* expression: expression NOT_EQL expression  */
-#line 1089 "parser.y"
+#line 1103 "parser.y"
                                 { (yyval.node) = mkNode("!=", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2953 "y.tab.c"
+#line 2967 "y.tab.c"
     break;
 
   case 91: /* expression: expression GREATER expression  */
-#line 1090 "parser.y"
+#line 1104 "parser.y"
                                 { (yyval.node) = mkNode(">", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2959 "y.tab.c"
+#line 2973 "y.tab.c"
     break;
 
   case 92: /* expression: expression GREATER_EQL expression  */
-#line 1091 "parser.y"
+#line 1105 "parser.y"
                                     { (yyval.node) = mkNode(">=", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2965 "y.tab.c"
+#line 2979 "y.tab.c"
     break;
 
   case 93: /* expression: expression LESS expression  */
-#line 1092 "parser.y"
+#line 1106 "parser.y"
                              { (yyval.node) = mkNode("<", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2971 "y.tab.c"
+#line 2985 "y.tab.c"
     break;
 
   case 94: /* expression: expression LESS_EQL expression  */
-#line 1093 "parser.y"
+#line 1107 "parser.y"
                                  { (yyval.node) = mkNode("<=", (yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2977 "y.tab.c"
+#line 2991 "y.tab.c"
     break;
 
   case 95: /* expression: NOT expression  */
-#line 1094 "parser.y"
+#line 1108 "parser.y"
                            { (yyval.node) = mkNode("not", (yyvsp[0].node), NULL); }
-#line 2983 "y.tab.c"
+#line 2997 "y.tab.c"
     break;
 
   case 96: /* expression: MINUS expression  */
-#line 1095 "parser.y"
+#line 1109 "parser.y"
                              { (yyval.node) = mkNode("unary-", (yyvsp[0].node), NULL); }
-#line 2989 "y.tab.c"
+#line 3003 "y.tab.c"
     break;
 
   case 97: /* expression: ADDRESS ID  */
-#line 1097 "parser.y"
+#line 1111 "parser.y"
 {
     Symbol *var=find_symbol((yyvsp[0].str));
     if(!var){
         semantic_error("Variable used before it been declared.",(yyvsp[0].str));
     }
     (yyval.node) = mkNode("address", mkNode((yyvsp[0].str), NULL, NULL), NULL); }
-#line 3000 "y.tab.c"
+#line 3014 "y.tab.c"
     break;
 
   case 98: /* expression: ADDRESS ID OPENBRACKET expression CLOSEBRACKET  */
-#line 1104 "parser.y"
+#line 1118 "parser.y"
 {
     verify_string_index(mkNode((yyvsp[-3].str),NULL,NULL), (yyvsp[-1].node));
     Symbol *var=find_symbol((yyvsp[-3].str));
@@ -3010,45 +3024,45 @@ yyreduce:
     Node *array_elem = mkNode("array_element", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
     (yyval.node) = mkNode("address", array_elem, NULL);
 }
-#line 3014 "y.tab.c"
+#line 3028 "y.tab.c"
     break;
 
   case 99: /* expression: MULTI expression  */
-#line 1114 "parser.y"
+#line 1128 "parser.y"
     { (yyval.node) = mkNode("dereference", (yyvsp[0].node), NULL); }
-#line 3020 "y.tab.c"
+#line 3034 "y.tab.c"
     break;
 
   case 100: /* expression: LENGTH ID LENGTH  */
-#line 1116 "parser.y"
+#line 1130 "parser.y"
 {
     Symbol *var=find_symbol((yyvsp[-1].str));
     if(!var){
         semantic_error("Variable used before it been declared.",(yyvsp[-1].str));
     }
     (yyval.node) = mkNode("length", mkNode((yyvsp[-1].str), NULL, NULL), NULL); }
-#line 3031 "y.tab.c"
+#line 3045 "y.tab.c"
     break;
 
   case 101: /* expression: OPENPAREN expression CLOSEPAREN  */
-#line 1122 "parser.y"
+#line 1136 "parser.y"
                                   { (yyval.node) = (yyvsp[-1].node); }
-#line 3037 "y.tab.c"
+#line 3051 "y.tab.c"
     break;
 
   case 102: /* expression: ID  */
-#line 1124 "parser.y"
+#line 1138 "parser.y"
 {
     Symbol *var=find_symbol((yyvsp[0].str));
     if(!var){
         semantic_error("Variable used before it been declared.",(yyvsp[0].str));
     }
     (yyval.node) = mkNode((yyvsp[0].str), NULL, NULL); }
-#line 3048 "y.tab.c"
+#line 3062 "y.tab.c"
     break;
 
   case 103: /* expression: ID OPENBRACKET expression CLOSEBRACKET  */
-#line 1131 "parser.y"
+#line 1145 "parser.y"
 {
     verify_string_index(mkNode((yyvsp[-3].str),NULL,NULL), (yyvsp[-1].node));
     Symbol *var=find_symbol((yyvsp[-3].str));
@@ -3057,17 +3071,17 @@ yyreduce:
     }
     (yyval.node) = mkNode("array_element", mkNode((yyvsp[-3].str), NULL, NULL), (yyvsp[-1].node));
 }
-#line 3061 "y.tab.c"
+#line 3075 "y.tab.c"
     break;
 
   case 104: /* expression: literal  */
-#line 1140 "parser.y"
+#line 1154 "parser.y"
           { (yyval.node) = (yyvsp[0].node); }
-#line 3067 "y.tab.c"
+#line 3081 "y.tab.c"
     break;
 
 
-#line 3071 "y.tab.c"
+#line 3085 "y.tab.c"
 
       default: break;
     }
@@ -3260,7 +3274,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1142 "parser.y"
+#line 1156 "parser.y"
 
 
 Node *mkNode(char *token, Node *left, Node *right)
@@ -4311,7 +4325,7 @@ int main() {
         check_main_exists();
         printf("Parsing and semantic analysis completed successfully.\n");
         printf("----------------------------------------3AC-----------------------------------.\n");
-        generate_3ac(ast_root);
+        tac_creation(ast_root);
     } else{
         printf("Parsing failed due to syntax or semantic erros.\n");
     }
